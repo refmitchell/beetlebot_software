@@ -3,9 +3,9 @@
 
 #include "locomotion/velocity.h"
 
-#include "db_util/db_util.h"
-#include "db_util/velocity.h"
-#include "db_util/locomotion_cmd.h"
+#include "bb_util/bb_util.h"
+#include "bb_util/velocity.h"
+#include "bb_util/locomotion_cmd.h"
 
 #define ROS_LINK_DELAY = 0.3 //Found through trial and error?
 
@@ -36,8 +36,8 @@ void command_velocity(float linear, float angular){
   cmd_publisher.publish(msg);
 }
 
-bool cmd_callback (db_util::velocity::Request& req,
-                   db_util::velocity::Response& res
+bool cmd_callback (bb_util::velocity::Request& req,
+                   bb_util::velocity::Response& res
                    )
 {
   ROS_INFO("I heard: angular - %f, linear - %f", req.linear, req.angular);
@@ -58,13 +58,13 @@ bool cmd_callback (db_util::velocity::Request& req,
   return true;
 }
 
-bool loc_node_callback(db_util::locomotion_cmd::Request& req,
-                       db_util::locomotion_cmd::Response& res
+bool loc_node_callback(bb_util::locomotion_cmd::Request& req,
+                       bb_util::locomotion_cmd::Response& res
                         )
 {
   const int opcode = req.opcode;
 
-  using namespace db_util::loc_node_commands;
+  using namespace bb_util::loc_node_commands;
 
   switch(opcode){
   case driving::ALL_STOP:

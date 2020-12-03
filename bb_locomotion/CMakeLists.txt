@@ -6,7 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   message_generation
-  db_util
+  bb_util
 )
 
 add_service_files(
@@ -21,7 +21,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES locomotion
-  CATKIN_DEPENDS geometry_msgs roscpp std_msgs db_util
+  CATKIN_DEPENDS geometry_msgs roscpp std_msgs bb_util
 #  DEPENDS system_lib
 )
 
@@ -29,7 +29,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${db_util_INCLUDE_DIRS}
+  ${bb_util_INCLUDE_DIRS}
 )
 
 
@@ -41,7 +41,7 @@ add_dependencies(
   cmd_vel_service
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
-  ${db_util_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
   )
 
 

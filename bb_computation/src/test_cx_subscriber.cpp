@@ -21,8 +21,8 @@
 #include "bb_computation/cx_model.hpp"
 #include "bb_computation/vmcx_model.hpp"
 
-#include "db_util/velocity.h"
-#include "db_util/cx_activity.h"
+#include "bb_util/velocity.h"
+#include "bb_util/cx_activity.h"
 
 
 #define GOAL_ANGLE -2.0
@@ -57,7 +57,7 @@ inline double clean_velocity(double lin_vel, int factor=100){
 // Publish for graphing
 //
 void cx_status_publish(std::vector<std::vector<double>> &status){
-  db_util::cx_activity msg;
+  bb_util::cx_activity msg;
 
   msg.tl2 = status[0];
   msg.cl1 = status[1];
@@ -94,7 +94,7 @@ void cvCallback(const bb_computation::cue_vector::ConstPtr& cue_msg){
   //
   // Velocity update
   //
-  db_util::velocity msg;
+  bb_util::velocity msg;
   msg.request.angular = correction_velocity;
   msg.request.linear = 0.0;
   client.call(msg);
@@ -122,7 +122,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
   cx_status_publish(cx_status);
 
   // Update velocity
-  db_util::velocity msg;
+  bb_util::velocity msg;
 
   ///////////////////////////////////////////////////////////
   // DONT RUN THIS ON THE ROBOT; YOU WILL BREAK THE MOTORS //
@@ -147,10 +147,10 @@ int main(int argc, char **argv){
   ros::Subscriber sub = n.subscribe("odom", 1000, odomCallback);
 
   // Request velocity changes from velocity service
-  client = n.serviceClient<db_util::velocity>("update_velocity");
+  client = n.serviceClient<bb_util::velocity>("update_velocity");
 
   // Set up publisher for CX
-  pub = n.advertise<db_util::cx_activity>("cx_status", 1);
+  pub = n.advertise<bb_util::cx_activity>("cx_status", 1);
 
   ROS_INFO("Running...");
 

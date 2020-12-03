@@ -16,7 +16,7 @@
 #include "bb_improc/bb_improc.hpp"
 #include "bb_improc/argparse.h"
 
-#include "db_util/db_util.h"
+#include "bb_util/bb_util.h"
 
 //Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");
@@ -107,7 +107,7 @@ void ImageProcessingLink::imageCallback(const sensor_msgs::ImageConstPtr& msg){
 
   // Image display
   if (parser.exists("video")){
-    db_util::vision::imshow("Image Mask Output", frame);
+    bb_util::vision::imshow("Image Mask Output", frame);
   }
 
   // Translate into ROS format.

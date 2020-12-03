@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(db_util)
+project(bb_util)
 
 # Source dependencies
 find_package(catkin REQUIRED COMPONENTS
@@ -33,7 +33,7 @@ generate_messages(
 # Describe the catkin_package
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES db_util
+  LIBRARIES bb_util
   CATKIN_DEPENDS cv_bridge roscpp std_msgs
   DEPENDS system_lib
 )
@@ -46,20 +46,20 @@ include_directories(
   )
 
 add_library(
-  db_util
+  bb_util
   src/libdbutil.cpp
 )
 
-# db_util dependencies
+# bb_util dependencies
 add_dependencies(
-  db_util
+  bb_util
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
 )
 
 # Libs for any nodes built here
 target_link_libraries(
-  db_util
+  bb_util
   ${catkin_LIBRARIES}
   ${OpenCV_Libs}
   stdc++fs

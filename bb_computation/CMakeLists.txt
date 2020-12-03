@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   tf
   message_generation
-  db_util
+  bb_util
 )
 
 ## System dependencies are found with CMake's conventions
@@ -110,7 +110,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES computation
-  CATKIN_DEPENDS cv_bridge image_transport opencv roscpp std_msgs geometry_msgs tf db_util message_runtime
+  CATKIN_DEPENDS cv_bridge image_transport opencv roscpp std_msgs geometry_msgs tf bb_util message_runtime
 #  DEPENDS system_lib
 )
 
@@ -124,7 +124,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-  ${db_util_INCLUDE_DIRS}
+  ${bb_util_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -165,34 +165,34 @@ add_dependencies(
   mono_directional_prompt_node
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
-  ${db_util_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
 )
 
 add_dependencies(
   test_cue_subscriber
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${db_util_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
   )
 
 add_dependencies(
   test_cx_subscriber
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${db_util_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
   )
 
 add_dependencies(
   test_vmcx_subscriber
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${db_util_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
   )
 
 add_dependencies(
   cue_manager
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${db_util_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
   )
 

@@ -72,7 +72,7 @@ void IntensityCueManager::brightestVectorCallback(
 
     // Mark brightest point on the frame for printing
     cv::Mat& colour_frame = cue.drawCueVectorOnFrame(frame);
-    db_util::vision::imshow("Brightest point", colour_frame);
+    bb_util::vision::imshow("Brightest point", colour_frame);
   }
 
   this->pub.publish(cue.toMessage());
@@ -110,7 +110,7 @@ void IntensityCueManager::centroidVectorCallback(
 
   if (this->video){
     cv::Mat &colour_frame = cv_cue.drawCueVectorOnFrame(frame);
-    db_util::vision::imshow("Centroid Vector", colour_frame);
+    bb_util::vision::imshow("Centroid Vector", colour_frame);
   }
 
   this->pub.publish(cv_cue.toMessage());

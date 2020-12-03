@@ -10,10 +10,10 @@
 #include <cassert>
 
 // Eigen linear algebra library: https://eigen.tuxfamily.org
-#include "db_util/Eigen/Eigen"
+#include "bb_util/Eigen/Eigen"
 
 // Universal cue representation class and message.
-#include "db_util/cue.hpp"
+#include "bb_util/cue.hpp"
 
 // Using macro definitions because these values never change and I want to
 // have these defaults known at compile time for initialisation.
@@ -238,7 +238,7 @@ public:
   }
 
   // Layer-wise functions for CX Operation
-  void tl2_output(std::vector<db_util::Cue>& cue_list,
+  void tl2_output(std::vector<bb_util::Cue>& cue_list,
                   std::vector<Eigen::Ref<Eigen::MatrixXd>>& output);
   void cl1_output(std::vector<Eigen::Ref<Eigen::MatrixXd>>& tl,
                   Eigen::Ref<Eigen::MatrixXd> cl1);
@@ -369,7 +369,7 @@ void MMCX::noiselessSigmoid(Eigen::Ref<Eigen::MatrixXd> v,
 //
 
 // Compute tl2 output, store in output argument.
-void MMCX::tl2_output(std::vector<db_util::Cue>& cue_list,
+void MMCX::tl2_output(std::vector<bb_util::Cue>& cue_list,
                       std::vector<Eigen::Ref<Eigen::MatrixXd>>& output
                       ){
 
