@@ -9,7 +9,7 @@
 #include <string>
 
 // Eigen linear algebra library: https://eigen.tuxfamily.org
-#include "db_util/Eigen/Eigen"
+#include "bb_util/Eigen/Eigen"
 
 // Using macro definitions because these values never change and I want to
 // have these defaults known at compile time for initialisation.

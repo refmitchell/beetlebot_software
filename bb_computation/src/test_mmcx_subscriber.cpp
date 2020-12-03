@@ -19,10 +19,10 @@
 #include "bb_computation/cx_model.hpp"
 #include "bb_computation/mmcx_model.hpp"
 
-#include "db_util/velocity.h"
-#include "db_util/vmcx_activity.h"
-#include "db_util/cue_list.h"
-#include "db_util/cue_msg.h"
+#include "bb_util/velocity.h"
+#include "bb_util/vmcx_activity.h"
+#include "bb_util/cue_list.h"
+#include "bb_util/cue_msg.h"
 
 #define GOAL_ANGLE -2.0
 #define TRAVERSE_TIME 30
@@ -54,7 +54,7 @@ inline double clean_velocity(double lin_vel, int factor=100){
 // Publish for graphing
 //
 // void cx_status_publish(std::vector<std::vector<double>> &status){
-//   db_util::vmcx_activity msg;
+//   bb_util::vmcx_activity msg;
 
 //   msg.tl2 = status[0];
 //   msg.cl1 = status[1];
@@ -72,7 +72,7 @@ inline double clean_velocity(double lin_vel, int factor=100){
 /**
  * Cue list update
  */
-void cue_list_callback(const db_util::cue_list::ConsPtr& cue_list){
+void cue_list_callback(const bb_util::cue_list::ConsPtr& cue_list){
 
 }
 
@@ -86,13 +86,13 @@ int main(int argc, char **argv){
   ros::Subscriber sub = n.subscribe("cue_list", 1000, cue_list_callback);
 
   // Request velocity changes from velocity service
-  client = n.serviceClient<db_util::velocity>("update_velocity");
+  client = n.serviceClient<bb_util::velocity>("update_velocity");
 
   // Set up VM Server
   // vm_server = n.advertiseService("vm_management", manage_vm);
 
   // Set up publisher for CX
-  pub = n.advertise<db_util::vmcx_activity>("vmcx_status", 1);
+  pub = n.advertise<bb_util::vmcx_activity>("vmcx_status", 1);
 
   ROS_INFO("Running...");
 

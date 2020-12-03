@@ -6,7 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-namespace db_util {
+namespace bb_util {
   namespace vision {
     void imshow(const std::string, const cv::Mat&);
   }

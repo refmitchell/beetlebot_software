@@ -11,7 +11,7 @@
 #include "bb_computation/icm.h"
 #include "bb_computation/cue_vector.h"
 
-#include "db_util/velocity.h"
+#include "bb_util/velocity.h"
 
 #define GOAL_ANGLE -2.0
 #define TRAVERSE_TIME 30
@@ -30,7 +30,7 @@ void cvCallback(const bb_computation::cue_vector::ConstPtr& cue_msg){
   float error = GOAL_ANGLE - current;
   float correction_velocity = -0.09*error;
 
-  db_util::velocity msg;
+  bb_util::velocity msg;
 
   msg.request.angular = correction_velocity;
 
@@ -43,7 +43,7 @@ int main(int argc, char **argv){
   ros::NodeHandle n;
 
   ros::Subscriber sub = n.subscribe("visual_cue", 1000, cvCallback);
-  client = n.serviceClient<db_util::velocity>("update_velocity");
+  client = n.serviceClient<bb_util::velocity>("update_velocity");
 
   ROS_INFO("Running...");
 

@@ -5,7 +5,7 @@
 #include <vector>
 
 // Eigen linear algebra library: https://eigen.tuxfamily.org
-#include "db_util/Eigen/Eigen"
+#include "bb_util/Eigen/Eigen"
 
 // Definitions for neuron population sizes are included here, do not
 // override them.

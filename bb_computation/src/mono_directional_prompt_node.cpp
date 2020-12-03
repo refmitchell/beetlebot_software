@@ -20,7 +20,7 @@
 #include "bb_computation/cue.h"
 #include "bb_computation/icm.h"
 
-#include "db_util/db_util.h"
+#include "bb_util/bb_util.h"
 
 //Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");

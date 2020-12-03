@@ -7,7 +7,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "db_util/db_util.h"
+#include "bb_util/bb_util.h"
 #include "bb_computation/cue.h"
 
 #include "bb_computation/cue_vector.h"

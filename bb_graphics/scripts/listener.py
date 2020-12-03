@@ -10,7 +10,7 @@
 import rospy
 import numpy as np
 from std_msgs.msg import String
-from db_util.msg import test_population
+from bb_util.msg import test_population
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 

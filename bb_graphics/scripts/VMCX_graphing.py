@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from db_util.msg import vmcx_activity
+from bb_util.msg import vmcx_activity
 
 
 #

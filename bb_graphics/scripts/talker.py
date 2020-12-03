@@ -2,7 +2,7 @@
 
 import rospy
 from std_msgs.msg import String
-from db_util.msg import test_population
+from bb_util.msg import test_population
 import math
 
 def rotate(array, n=1):
