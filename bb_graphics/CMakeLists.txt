@@ -10,7 +10,7 @@ project(graphics)
 find_package(catkin REQUIRED
   rospy
   std_msgs
-  db_util
+  bb_util
 )
 
 
@@ -106,7 +106,7 @@ find_package(catkin REQUIRED
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES graphics
-#  CATKIN_DEPENDS db_util
+#  CATKIN_DEPENDS bb_util
 #  DEPENDS system_lib
 )
 
@@ -119,7 +119,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${db_util_INCLUDE_DIRS}
+  ${bb_util_INCLUDE_DIRS}
   )
 
 ## Declare a C++ library

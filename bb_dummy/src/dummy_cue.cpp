@@ -2,10 +2,10 @@
 
 #include <sstream>
 
-#include "db_util/db_util.h"
-#include "db_util/cue.hpp"
-#include "db_util/cue_msg.h"
-#include "db_util/argparse.h"
+#include "bb_util/bb_util.h"
+#include "bb_util/cue.hpp"
+#include "bb_util/cue_msg.h"
+#include "bb_util/argparse.h"
 
 argparse::ArgumentParser parser("Parser");
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv){
   angle = angle * (3.14159/180); // Deg to adian conversion: a * pi/180
 
   // Cue representation of the information fed in.
-  db_util::Cue cue(type, sensitivity, magnitude, angle);
+  bb_util::Cue cue(type, sensitivity, magnitude, angle);
 
   std::stringstream name;
   std::stringstream topic;
@@ -84,7 +84,7 @@ int main(int argc, char **argv){
   ros::init(argc, argv, name.str());
   ros::NodeHandle n;
 
-  ros::Publisher pub = n.advertise<db_util::cue_msg>(topic.str(), 1000);
+  ros::Publisher pub = n.advertise<bb_util::cue_msg>(topic.str(), 1000);
 
   ROS_INFO("\nDummy cue specification:"
            "Angle: %lf\nMagnitude: %lf\nSensitivity: %lf\nTopic: %s\nName: %s\n",
@@ -98,7 +98,7 @@ int main(int argc, char **argv){
   // Publish the cue message at 10hz
   ros::Rate r(10);
   while(ros::ok()){
-    pub.publish(db_util::Cue::toMsg(cue));
+    pub.publish(bb_util::Cue::toMsg(cue));
     ros::spinOnce();
     r.sleep();
   }

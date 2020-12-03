@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   OpenCV
   message_generation
-  db_util
+  bb_util
 )
 
 ## System dependencies are found with CMake's conventions
@@ -109,7 +109,7 @@ generate_messages(
 catkin_package(
  #INCLUDE_DIRS include
  # LIBRARIES raspicam_test
- CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs message_runtime db_util
+ CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs message_runtime bb_util
  # DEPENDS system_lib
 )
 
@@ -123,7 +123,7 @@ include_directories(
  include
 ${catkin_INCLUDE_DIRS}
 ${OpenCV_INCLUDE_DIRS}
-${db_util_INCLUDE_DIRS}
+${bb_util_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -157,11 +157,11 @@ add_executable(green_channel_node src/green_channel_node.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(raw_pub_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
-add_dependencies(image_mask_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${db_utils_EXPORTED_TARGETS})
-add_dependencies(subscriber_test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${db_utils_EXPORTED_TARGETS})
-add_dependencies(gaussian_blur_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${db_utils_EXPORTED_TARGETS})
-add_dependencies(blue_channel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${db_utils_EXPORTED_TARGETS})
-add_dependencies(green_channel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${db_utils_EXPORTED_TARGETS})
+add_dependencies(image_mask_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
+add_dependencies(subscriber_test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
+add_dependencies(gaussian_blur_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
+add_dependencies(blue_channel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
+add_dependencies(green_channel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
 
 
 ## Specify libraries to link a library or executable target against

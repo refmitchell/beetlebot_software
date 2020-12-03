@@ -2,10 +2,10 @@
 // The same construction should be usable from cue detection to
 // the central complex input.
 
-#include "db_util.h"
-#include "db_util/cue_msg.h"
+#include "bb_util.h"
+#include "bb_util/cue_msg.h"
 
-namespace db_util{
+namespace bb_util{
   class Cue{
   private:
     std::string type =  "";
@@ -39,7 +39,7 @@ namespace db_util{
     //
     // Static methods for msg translation
     //
-    static Cue toCue(db_util::cue_msg cue_msg){
+    static Cue toCue(bb_util::cue_msg cue_msg){
       Cue result(cue_msg.type,
                  cue_msg.sensitivity,
                  cue_msg.reliability,
@@ -51,8 +51,8 @@ namespace db_util{
       return result;
     }
 
-    static db_util::cue_msg toMsg(Cue cue){
-      db_util::cue_msg msg;
+    static bb_util::cue_msg toMsg(Cue cue){
+      bb_util::cue_msg msg;
 
       msg.type = cue.getType();
       msg.sensitivity = cue.getSensitivity();

@@ -9,7 +9,7 @@ project(dummy)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
   std_msgs
-  db_util
+  bb_util
   )
 
 ## System dependencies are found with CMake's conventions
