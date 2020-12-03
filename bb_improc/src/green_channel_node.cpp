@@ -11,8 +11,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "image_processing/image_processing.hpp"
-#include "image_processing/argparse.h"
+#include "bb_improc/bb_improc.hpp"
+#include "bb_improc/argparse.h"
 
 #include "db_util/db_util.h"
 

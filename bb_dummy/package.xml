@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>dummy</name>
+  <name>bb_dummy</name>
   <version>0.0.0</version>
   <description>The dummy package</description>
 

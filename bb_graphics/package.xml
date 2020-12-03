@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>graphics</name>
+  <name>bb_graphics</name>
   <version>0.0.0</version>
   <description>The graphics package</description>
 
