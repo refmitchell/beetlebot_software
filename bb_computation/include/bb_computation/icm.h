@@ -8,9 +8,9 @@
 #include <opencv2/opencv.hpp>
 
 #include "db_util/db_util.h"
-#include "computation/cue.h"
+#include "bb_computation/cue.h"
 
-#include "computation/cue_vector.h"
+#include "bb_computation/cue_vector.h"
 
 
 /*

@@ -16,9 +16,9 @@
 #include <sstream>
 #include <cmath>
 
-#include "computation/argparse.h"
-#include "computation/cue.h"
-#include "computation/icm.h"
+#include "bb_computation/argparse.h"
+#include "bb_computation/cue.h"
+#include "bb_computation/icm.h"
 
 #include "db_util/db_util.h"
 
@@ -26,7 +26,7 @@
 argparse::ArgumentParser parser("Parser");
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
-  //Global, all computation nodes should have these options.
+  //Global, all bb_computation nodes should have these options.
   parser.add_argument()
     .names({"-v", "--video"})
     .description("Enable video output for this node.")

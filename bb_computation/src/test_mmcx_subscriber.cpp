@@ -13,11 +13,11 @@
 #include <tf/transform_datatypes.h>
 #include "std_msgs/String.h"
 
-#include "computation/icm.h"
-#include "computation/cue_vector.h"
-#include "computation/vm_command.h"
-#include "computation/cx_model.hpp"
-#include "computation/mmcx_model.hpp"
+#include "bb_computation/icm.h"
+#include "bb_computation/cue_vector.h"
+#include "bb_computation/vm_command.h"
+#include "bb_computation/cx_model.hpp"
+#include "bb_computation/mmcx_model.hpp"
 
 #include "db_util/velocity.h"
 #include "db_util/vmcx_activity.h"

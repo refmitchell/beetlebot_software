@@ -1,4 +1,4 @@
-#include "computation/icm.h"
+#include "bb_computation/icm.h"
 #include "std_msgs/String.h" //DEBUG ONLY
 
 IntensityCueManager::IntensityCueManager(ros::NodeHandle n,
@@ -22,7 +22,7 @@ IntensityCueManager::IntensityCueManager(ros::NodeHandle n,
 
   // Plumb up the ROS subscriber and publisher
   it = new image_transport::ImageTransport(n);
-  pub = n.advertise<computation::cue_vector>(pub_topic, 1000);
+  pub = n.advertise<bb_computation::cue_vector>(pub_topic, 1000);
   sub =
     it->subscribe(sub_topic, 1, IntensityCueManager::imageCallback, this);
 

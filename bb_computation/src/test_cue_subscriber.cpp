@@ -8,8 +8,8 @@
 #include <ros/ros.h>
 #include "std_msgs/String.h"
 
-#include "computation/icm.h"
-#include "computation/cue_vector.h"
+#include "bb_computation/icm.h"
+#include "bb_computation/cue_vector.h"
 
 #include "db_util/velocity.h"
 
@@ -21,7 +21,7 @@ ros::ServiceClient client;
 // Init CX
 //CentralComplex cx;
 
-void cvCallback(const computation::cue_vector::ConstPtr& cue_msg){
+void cvCallback(const bb_computation::cue_vector::ConstPtr& cue_msg){
   ROS_INFO("Cue info: (R: %f, T: %f)",
            cue_msg->magnitude,
            cue_msg->theta);

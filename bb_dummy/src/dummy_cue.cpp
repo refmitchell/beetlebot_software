@@ -98,7 +98,7 @@ int main(int argc, char **argv){
   // Publish the cue message at 10hz
   ros::Rate r(10);
   while(ros::ok()){
-    pub.publish(db_util::bCue::toMsg(cue));
+    pub.publish(db_util::Cue::toMsg(cue));
     ros::spinOnce();
     r.sleep();
   }

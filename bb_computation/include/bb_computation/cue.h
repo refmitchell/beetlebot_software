@@ -6,7 +6,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "computation/cue_vector.h"
+#include "bb_computation/cue_vector.h"
 
 class Cue {
 private:
@@ -63,5 +63,5 @@ public:
   double direction();
 
   // Translate to a ROS message.
-  computation::cue_vector toMessage();
+  bb_computation::cue_vector toMessage();
 };

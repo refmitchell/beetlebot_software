@@ -1,4 +1,4 @@
-#include "computation/cue.h"
+#include "bb_computation/cue.h"
 
 //
 // Cue class implementation
@@ -80,8 +80,8 @@ double Cue::direction(){ return theta; }
 //
 // Translate the cue into a ROS message
 //
-computation::cue_vector Cue::toMessage(){
-  computation::cue_vector msg;
+bb_computation::cue_vector Cue::toMessage(){
+  bb_computation::cue_vector msg;
   msg.magnitude = this->strength();
   msg.theta = this->direction();
   return msg;
