@@ -1,5 +1,15 @@
 #define DEBUG 1
 
+/**
+   @file image_mask_node.cpp
+   @brief Applies a circular mask to an RGB image.
+
+   This is really meant to be first in the pipeline. Image capture is part
+   of the robot-based software; the mask is applied to provide a circular
+   "view-port". The only reason it is not applied by default is for flexibility.
+*/
+
+
 #include <cmath>
 
 #include <ros/ros.h>

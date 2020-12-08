@@ -1,8 +1,11 @@
-//
-// mono_directional_prompt_node.cpp
-// Compute single image-wide cue from cropped image. Available
-// cues are currently brightest vector and centroid vector.
-//
+/**
+   @file mono_directional_prompt_node.cpp
+   @brief Compute single image-wide cue from cropped image.
+
+   Available cues are currently brightest vector and centroid vector.
+   Current relationship with IntensityCueManager and Cue classes is overly
+   convoluted and should be simplified in the future.
+*/
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>

@@ -1,0 +1,30 @@
+#!/bin/sh
+
+#
+# Build the documentation for each package which supports it
+#
+
+echo "==========================================================="
+echo "Building docs"
+echo "==========================================================="
+echo ""
+
+# Add build commands once docs are complete
+rosdoc_lite bb_computation
+rosdoc_lite bb_dummy
+rosdoc_lite bb_improc
+
+#Complete
+echo "==========================================================="
+echo "DONE"
+echo "==========================================================="
+echo "Documentation is created per-package. You must use each"
+echo "package's documentation separately."
+echo "-----------------------------------------------------------"
+echo "Packages build:"
+echo "bb_dummy"
+echo "bb_computation"
+echo "bb_improc"
+echo "-----------------------------------------------------------"
+echo "Documentation at 'doc/html/doc_<package_name>/index.html'"
+echo "==========================================================="

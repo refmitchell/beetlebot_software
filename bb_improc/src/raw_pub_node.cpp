@@ -1,5 +1,13 @@
 #define DEBUG 0
 
+/**
+   @file raw_pub_node.cpp
+   @brief To be removed.
+
+   Unsure as to whether or not there is another capture example backed up
+   anywhere so I've left this in the package as a reference. Just in case...
+*/
+
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>

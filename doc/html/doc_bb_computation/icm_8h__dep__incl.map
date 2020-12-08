@@ -1,9 +1,4 @@
 <map id="icm.h" name="icm.h">
 <area shape="rect" id="node2" href="$icm_8cpp.html" title="Implements the IntensityCueManager class. " alt="" coords="5,87,73,114"/>
-<area shape="rect" id="node3" href="$heading__from__odom_8cpp.html" title="heading_from_odom.cpp" alt="" coords="97,87,261,114"/>
-<area shape="rect" id="node4" href="$mono__directional__prompt__node_8cpp.html" title="mono_directional_prompt\l_node.cpp" alt="" coords="285,80,452,121"/>
-<area shape="rect" id="node5" href="$test__cue__subscriber_8cpp.html" title="test_cue_subscriber.cpp" alt="" coords="476,87,640,114"/>
-<area shape="rect" id="node6" href="$test__cx__subscriber_8cpp.html" title="test_cx_subscriber.cpp" alt="" coords="665,87,822,114"/>
-<area shape="rect" id="node7" href="$test__mmcx__subscriber_8cpp.html" title="test_mmcx_subscriber.cpp" alt="" coords="846,87,1025,114"/>
-<area shape="rect" id="node8" href="$test__vmcx__subscriber_8cpp.html" title="test_vmcx_subscriber.cpp" alt="" coords="1049,87,1224,114"/>
+<area shape="rect" id="node3" href="$mono__directional__prompt__node_8cpp.html" title="Compute single image&#45;wide cue from cropped image. " alt="" coords="97,80,264,121"/>
 </map>

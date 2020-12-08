@@ -1,5 +1,14 @@
 #define DEBUG 1
 
+/**
+   @file image_subscriber_template.cpp
+   @brief Minimum working example of an image subscriber.
+
+   Retained for reference, not in active use.
+*/
+
+
+
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>

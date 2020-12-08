@@ -1,11 +1,16 @@
-/*
-  Included for the purposes of testing, not final.
+/**
+   @file cue_manager.cpp
+   @brief ROS Node for wrangling cues from sensory systems into a usable format.
+
+   This node will subscribe to a set of cue detection nodes to receive the angle
+   and strength of each available cue. This information will be compiled into a
+   single, regular data structure which can then be fed into a multi-modal
+   Central Complex model.
 */
 
 #include <ros/ros.h>
 
 #include <vector>
-#include <map>
 
 #include "bb_util/cue.hpp"
 #include "bb_util/cue_msg.h"

@@ -1,6 +1,16 @@
 #ifndef _VMCX
 #define _VMCX
 
+/**
+   @file vmcx_model.hpp
+   @brief Provides the definition and implementation of the VM extended CX.
+
+   Le Moel et al. 2019 provide a vector memory extension for the Central Complex
+   which demonstrates use of the network architecture to store a place memory
+   encoded as a displacement vector from a starting location (nest). This file
+   provides the VMCX class which implements this extension.
+ */
+
 #include <iostream>
 #include <random>
 #include <math.h>
@@ -14,16 +24,20 @@
 // override them.
 #include "cx_model.hpp"
 
-// [V]ector[M]emory[C]entralComple[X]
-// Central complex network capable of storing a single vector memory.
-// In the context of the beetle this represents multiple celestial
-// snapshots. Vector Memory architecture taken from Le Moel et al. 2019.
+/**
+   @brief [V]ector[M]emory[C]entralComple[X]
+
+   Central complex network capable of storing a single vector memory.
+   In the context of the beetle this represents multiple celestial
+   snapshots. Vector Memory architecture taken from Le Moel et al. 2019.
+*/
 class VMCX : public CentralComplex{
 private:
   //
   // The core is brought in from CentralComplex, we just need the
   // singular vector memory components.
   //
+
   // Weight matrix
   Eigen::Matrix<double, CX_N_CPU4, 1> W_VM;
 
@@ -38,35 +52,58 @@ public:
     this->W_VM.setConstant(0.5);
   }
 
-  // Need to be able to store a vector memory
+  /** Send store signal. */
   void store_vm();
 
-  // Clearing vector memory, for whatever reason.
+  /** Clear existing VM, resets to baseline value. */
   void clear_vm();
 
-  // Want to be able to turn the system on or off
+  /** Activate the VM; include the VM signal in the steering output. */
   void activate_vm();
+
+  /** Deactivate the VM; remove the VM signal from the steering output. */
   void deactivate_vm();
 
-  // Toggle is more convenient, returns the new state at the end of the
-  // function call
+  /**
+     Toggle the VM on or off.
+     @return The current status (true for active, false for inactive).
+   */
   bool toggle_vm();
 
-  // Get the current status of the vm system (on or off)
+  /*
+     Get the current status of the vm system (on or off)
+     @return The current status (true for active, false for inactive).
+  */
   bool vm_status();
 
-  // Single function for VMCX operation.
+  /**
+     VM Analog of CentralComplex::unimodal_monolithic_CX(); a single, convenient
+     method for providing input and receiving output from the model.
+     @param theta Current angular input from a given cue.
+     @param speed The agent's current speed.
+  */
   double unimodal_VMCX(double theta, double speed);
 
   //
   // Overrides
   //
 
-  // Override the CPU1 update rule
+  /**
+     Override the CPU1 output, this override will include the VM signal
+     in the activity calculation.
+     @param[in] tb1 The current TB1 activity pattern.
+     @param[in] cpu4 The current CPU4 activity pattern.
+     @param[out] cpu1 The CPU1 layer to be updated.
+     */
+
   void cpu1_output(Eigen::Ref<Eigen::MatrixXd> tb1,
                    Eigen::Ref<Eigen::MatrixXd> cpu4,
                    Eigen::Ref<Eigen::MatrixXd> cpu1);
 
+  /**
+     Override CentralComplex::get_status(). The override adds the VM weights
+     to the output so that we can visualise the memory that was stored.
+   */
   void get_status(std::vector<std::vector<double>>&);
 };
 
@@ -103,7 +140,7 @@ void VMCX::deactivate_vm(){
 
 // Invert signal
 bool VMCX::toggle_vm(){
-  this->VM = -1 * (VM - 1); 
+  this->VM = -1 * (VM - 1);
   std::string state = this->vm_status() ? "ACTIVATED" : "DEACTIVATED";
   ROS_INFO("VM %s", state.c_str());
   return this->vm_status();

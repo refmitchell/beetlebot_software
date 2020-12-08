@@ -1,5 +1,11 @@
 #define DEBUG 1
 
+/**
+@file blue_channel_node.cpp
+@brief Extracts and publishes the blue channel from an rgb image.
+*/
+
+
 #include <cmath>
 
 #include <ros/ros.h>

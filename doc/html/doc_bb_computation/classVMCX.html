@@ -25,6 +25,9 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
+<p>[V]ector[M]emory[C]entralComple[X]  
+ <a href="classVMCX.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for VMCX:</div>
@@ -178,8 +181,10 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:ga91325633694345b2f8c6e5e6a5fddf05 inherit pro_attribs_classCentralComplex"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00021">21</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<div class="textblock"><p>[V]ector[M]emory[C]entralComple[X] </p>
+<p>Central complex network capable of storing a single vector memory. In the context of the beetle this represents multiple celestial snapshots. Vector Memory architecture taken from Le Moel et al. 2019. </p>
+
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00034">34</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a97c83f5cc0ab25afdd2fd7c6fdd43abd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a97c83f5cc0ab25afdd2fd7c6fdd43abd">&#9670;&nbsp;</a></span>VMCX()</h2>
@@ -204,7 +209,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00037">37</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00051">51</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -223,8 +228,9 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Activate the VM; include the VM signal in the steering output. </p>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00093">93</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00130">130</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -242,8 +248,9 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Clear existing VM, resets to baseline value. </p>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00088">88</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00125">125</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -278,8 +285,16 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Override the CPU1 output, this override will include the VM signal in the activity calculation. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">tb1</td><td>The current TB1 activity pattern. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cpu4</td><td>The current CPU4 activity pattern. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">cpu1</td><td>The CPU1 layer to be updated. </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00144">144</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00181">181</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -297,8 +312,9 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Deactivate the VM; remove the VM signal from the steering output. </p>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00099">99</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00136">136</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -317,8 +333,9 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Override <a class="el" href="group__ANATOMY.html#ga801703f35c3571af5205a0a7f947f248">CentralComplex::get_status()</a>. The override adds the VM weights to the output so that we can visualise the memory that was stored. </p>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00162">162</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00199">199</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -336,8 +353,9 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Send store signal. </p>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00078">78</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00115">115</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -355,8 +373,9 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Toggle the VM on or off. </p><dl class="section return"><dt>Returns</dt><dd>The current status (true for active, false for inactive). </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00105">105</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00142">142</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -385,8 +404,15 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>VM Analog of <a class="el" href="group__ANATOMY.html#ga30789df01e78b7cc7bbe1ed56893e034">CentralComplex::unimodal_monolithic_CX()</a>; a single, convenient method for providing input and receiving output from the model. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">theta</td><td>Current angular input from a given cue. </td></tr>
+    <tr><td class="paramname">speed</td><td>The agent's current speed. </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00123">123</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00160">160</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -405,7 +431,7 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00113">113</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00150">150</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -430,7 +456,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00034">34</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00048">48</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -454,7 +480,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00033">33</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00047">47</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -478,7 +504,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00028">28</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="vmcx__model_8hpp_source.html#l00042">42</a> of file <a class="el" href="vmcx__model_8hpp_source.html">vmcx_model.hpp</a>.</p>
 
 </div>
 </div>
@@ -491,7 +517,7 @@ Additional Inherited Members</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/bb_computation">bb_computation</a><br />
 Author(s): </br />
-<small>autogenerated on Tue Dec 8 2020 16:10:14</small>
+<small>autogenerated on Tue Dec 8 2020 18:28:50</small>
 </div>
 </body>
 </html>

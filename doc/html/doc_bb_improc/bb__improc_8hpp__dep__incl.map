@@ -1,0 +1,6 @@
+<map id="bb_improc.hpp" name="bb_improc.hpp">
+<area shape="rect" id="node2" href="$blue__channel__node_8cpp.html" title="Extracts and publishes the blue channel from an rgb image. " alt="" coords="5,80,164,107"/>
+<area shape="rect" id="node3" href="$gaussian__blur__node_8cpp.html" title="Applies a gaussian blur to an rgb image. " alt="" coords="189,80,351,107"/>
+<area shape="rect" id="node4" href="$green__channel__node_8cpp.html" title="Extracts and publishes the green channel from an rgb image. " alt="" coords="376,80,543,107"/>
+<area shape="rect" id="node5" href="$image__mask__node_8cpp.html" title="Applies a circular mask to an RGB image. " alt="" coords="567,80,723,107"/>
+</map>

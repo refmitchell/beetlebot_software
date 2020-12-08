@@ -1,5 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classCentralComplex.html" title="Class definition of the Central Complex. The central complex path integration model as defined by Sto..." alt="" coords="5,31,121,57"/>
-<area shape="rect" id="node2" href="$classMultiVMCX.html" title="MultiVMCX" alt="" coords="169,5,259,32"/>
-<area shape="rect" id="node3" href="$classVMCX.html" title="VMCX" alt="" coords="183,56,245,83"/>
+<area shape="rect" id="node1" href="$classCentralComplex.html" title="Class definition of the Central Complex. The central complex path integration model as defined by Sto..." alt="" coords="5,5,121,32"/>
+<area shape="rect" id="node2" href="$classVMCX.html" title="[V]ector[M]emory[C]entralComple[X] " alt="" coords="169,5,231,32"/>
 </map>
