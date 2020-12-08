@@ -1,6 +1,10 @@
 #include "bb_computation/icm.h"
 #include "std_msgs/String.h" //DEBUG ONLY
 
+/**
+   @file icm.cpp
+   @brief Implements the IntensityCueManager class.
+*/
 IntensityCueManager::IntensityCueManager(ros::NodeHandle n,
                                         const std::string sub_topic,
                                         const std::string pub_topic,

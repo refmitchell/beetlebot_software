@@ -1,3 +1,15 @@
+/**
+   @file dummy_cue.cpp
+   @brief Provdes dummy input signals which can be used by the robot.
+   @author Robert Mitchell
+
+   Designed for testing purposes. Cues can be synthesised with a
+   magnitude, direction, and "sensitivity". This node is designed
+   to be simple and general, we can have any number of them running
+   on the network at any time (so long as they are uniquely named).
+ */
+
+
 #include <ros/ros.h>
 
 #include <sstream>
@@ -7,8 +19,14 @@
 #include "bb_util/cue_msg.h"
 #include "bb_util/argparse.h"
 
-argparse::ArgumentParser parser("Parser");
+argparse::ArgumentParser parser = argparse::ArgumentParser("Parser");
 
+/**
+   Initialises the argument parser defined in bb_util/argparse.h
+   @param parser The argparse::ArgumentParser object.
+   @param argc Passthrough argc from the command line.
+   @param argv Passthrough argv from the command line.
+*/
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
     .names({"-t", "--type"})
@@ -46,7 +64,6 @@ int main(int argc, char **argv){
   // Initialise the parser
   if (!initParser(parser, argc, argv)) return -1;
 
-  // Check for help, exit and show help message
   if (parser.exists("help")){
     parser.print_help();
     return 0;
@@ -69,7 +86,7 @@ int main(int argc, char **argv){
   double angle = parser.get<double>("angle");
   angle = angle * (3.14159/180); // Deg to adian conversion: a * pi/180
 
-  // Cue representation of the information fed in.
+  // Cue object defined by the arguments
   bb_util::Cue cue(type, sensitivity, magnitude, angle);
 
   std::stringstream name;
@@ -81,9 +98,11 @@ int main(int argc, char **argv){
   std::string namestring = name.str();
   std::string topicstring = topic.str();
 
+  //
+  // ROS initialisation and admin
+  //
   ros::init(argc, argv, name.str());
   ros::NodeHandle n;
-
   ros::Publisher pub = n.advertise<bb_util::cue_msg>(topic.str(), 1000);
 
   ROS_INFO("\nDummy cue specification:"
@@ -95,8 +114,13 @@ int main(int argc, char **argv){
            topic.str().c_str()
            );
 
-  // Publish the cue message at 10hz
-  ros::Rate r(10);
+  ros::Rate r(10);  // Publish the cue message at 10hz
+
+  //
+  // Publish loop, note this was chosen instead of
+  // ros::spin() so that we can add cue updates in-place
+  // later on.
+  //
   while(ros::ok()){
     pub.publish(bb_util::Cue::toMsg(cue));
     ros::spinOnce();

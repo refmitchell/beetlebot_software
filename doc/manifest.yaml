@@ -1,0 +1,26 @@
+actions: []
+authors: ''
+brief: ''
+bugtracker: ''
+depends:
+- bb_util
+- catkin
+- roscpp
+- message_runtime
+- std_msgs
+- image_transport
+- opencv
+- geometry_msgs
+- tf
+- message_generation
+- cv_bridge
+description: The computation package
+license: TODO
+maintainers: robert <robert@todo.todo>
+msgs:
+- cue_vector
+package_type: package
+repo_url: ''
+srvs:
+- vm_command
+url: ''

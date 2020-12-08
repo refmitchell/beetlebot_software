@@ -1,6 +1,17 @@
 #ifndef CX_CORE
 #define CX_CORE
 
+/**
+   @file cx_model.hpp
+   @brief Provides a definition (and implementation) for the CentralComplex class.
+   @author Robert Mitchell
+
+   Provides a definition for the CentralComplex class. This version of the model
+   was ported directly from the AntBot and time as been spent verifying that it
+   is functionally identical to that presented by Stone et al. The one exception
+   is the lack of TN neurons, this class instead takes a "speed" input.
+ */
+
 #include <iostream>
 #include <random>
 #include <math.h>
@@ -13,37 +24,57 @@
 
 // Using macro definitions because these values never change and I want to
 // have these defaults known at compile time for initialisation.
+
+/** @defgroup CX_PARAMS Central Complex Parameters
+    @brief Layer paramters for the CX, these are required at compile time.
+    @{
+ */
+
+
 #define CX_N_TL2 16
 #define CX_N_CL1 16
 #define CX_N_TB1 8
 #define CX_N_CPU4 16
 #define CX_N_CPU1 16
 
+/**@}*/
+
+/** Matrix printing macro. */
 #define MAT_LOG(x) std::cout << std::endl << x << std::endl;
+
+/** General printing macro. */
 #define LOG(x) std::cout << "cx: " << x << std::endl;
 
 // The central complex model as defined by Stone et al.
 // Ported from the AntBot; Luca's code
 // R. Mitchell
+
+/**
+   @brief Class definition of the Central Complex.
+   The central complex path integration model as defined by Stone et al.
+   Ported from the AntBot implementation provided by Luca Scimeca. This
+   version of the model does not implement TN neurons for speed measurement.
+ */
 class CentralComplex {
 protected:
-  //
-  // TODO: REMOVE? might not be needed.
-  // Model parameters kept as variables
-  //
-  int n_tl2 = CX_N_TL2;
-  int n_cl1 = CX_N_CL1;
-  int n_tb1 = CX_N_TB1;
-  int n_cpu4 = CX_N_CPU4;
-  int n_cpu1 = CX_N_CPU1;
-  double tb1_tb1_weight = 1;
+  /**
+      @defgroup NET_PARAM Network parameters
+      @brief The parameters used to define the network dynamics.
+      @{
+  */
+  int n_tl2 = CX_N_TL2; //!< The number of TL2 neurons in use.
+  int n_cl1 = CX_N_CL1; //!< The number of CL1 neurons in use.
+  int n_tb1 = CX_N_TB1; //!< The number of TB1 neurons in use
+  int n_cpu4 = CX_N_CPU4; //!< The number of CPU4 neurons in use.
+  int n_cpu1 = CX_N_CPU1; //!< The number of CPU1 neurons in use.
+  double tb1_tb1_weight = 1; //!< The default TB1-TB1 weightings.
 
   // Class parameters
-  double noise = 0.0;
+  double noise = 0.0; //<! Noise injected on the output of each layer.
 
   double tl2_slope = 6.8;
   double tl2_bias = 3.0;
-  Eigen::Matrix<double, CX_N_TL2, 1> tl2_prefs;
+  Eigen::Matrix<double, CX_N_TL2, 1> tl2_prefs; //!< The TL2 receptive fields.
 
   double cl1_slope = 3.0;
   double cl1_bias = -0.5;
@@ -57,49 +88,88 @@ protected:
   double cpu4_mem_gain = 0.0005;  //0.005, default
   double cpu4_mem_loss = 0.00026; //0.0026, default
 
-  //Why do I have two of these? MEM and cpu4_mem; Think this was a mistake
-  //  Eigen::Matrix<double, CX_N_CPU4, 1> cpu4_mem;
-
   double cpu1_slope = 6.0;
   double cpu1_bias = 2.0;
+  /**@}*/
 
-  // Anatomical matrices
-  // Note: the dimensionality here may be incorrect, probable issue.
+  /**
+     @defgroup ANATOMY Anatomical matrices
+     @brief The adjacency (weight) matrices used to define the network layout.
+     @{
+   */
   Eigen::Matrix<double, CX_N_TB1, CX_N_CL1> W_CL1_TB1;
   Eigen::Matrix<double, CX_N_TB1, CX_N_TB1> W_TB1_TB1;
   Eigen::Matrix<double, CX_N_CPU1, CX_N_TB1> W_TB1_CPU1;
   Eigen::Matrix<double, CX_N_CPU4, CX_N_TB1> W_TB1_CPU4;
   Eigen::Matrix<double, CX_N_CPU1, CX_N_CPU4> W_CPU4_CPU1;
   Eigen::Matrix<double, 1, CX_N_CPU1> W_CPU1_motor;
+  /**}*/
 
-  // Neural population matrices
+  /**
+     @defgroup POP Neural population matrices.
+     @brief Matrices used to retain the internal state of each layer.
+     @{
+  */
   Eigen::Matrix<double, CX_N_TL2, 1> TL2;
   Eigen::Matrix<double, CX_N_CL1, 1> CL1;
   Eigen::Matrix<double, CX_N_TB1, 1> TB1;
   Eigen::Matrix<double, CX_N_CPU4, 1> MEM;
   Eigen::Matrix<double, CX_N_CPU4, 1> CPU4;
   Eigen::Matrix<double, CX_N_CPU1, 1> CPU1;
+  /**@}*/
 
-  // Function pointer and declarations for sigmoid
-  // Means we can define noise or none at construction.
-  // I don't think noise was ever used in the AntBot.
-  // Function pointers can be updated at runtime if necessary.
-  // The Eigen::Ref<T> type is an eigen reference to an object
-  // of type T; required for use of Eigen types in functions.
+  /**
+     Abstraction of the sigmoid function to function pointer. We can know whether
+     we want noise at construction and this pointer allows the class to determine
+     which method to call, noiselessSigmoid or noisySigmoid, at construction to
+     avoid checking for each call. NOTE: Noise is currently excluded in the
+     constructor.
+  */
   void (*sigmoid) (Eigen::Ref<Eigen::MatrixXd>, double, double, double);
+
+  /**
+     Pass the input through a sigmoid function with the given paramters and
+     noise.
+
+     @param v The input population.
+     @param slope The slope of the sigmoid.
+     @param bias The bias (l/r shift) of the sigmoid.
+     @param noise The additional noise
+   */
   static void noisySigmoid (Eigen::Ref<Eigen::MatrixXd> v,
                             double slope,
                             double bias,
                             double noise);
-  static void noiselessSigmoid (Eigen::Ref<Eigen::MatrixXd>,
-                                double,
-                                double,
-                                double);
 
-  // For sanity; Eigen's dot product only works on Vector types.
+  /**
+     Pass the input through a sigmoid function with the given paramters.
+     This function does not add noise to the output.
+
+     @param v The input population.
+     @param slope The slope of the sigmoid.
+     @param bias The bias (l/r shift) of the sigmoid.
+     @param noise The additional noise
+   */
+  static void noiselessSigmoid (Eigen::Ref<Eigen::MatrixXd> v,
+                                double slope,
+                                double bias,
+                                double noise);
+
+
+
+  /**
+     Dot product which checks matrix dimensions while allowing Eigen Matrix types
+     to be used as the input format.
+
+     @param a
+     @param b
+   */
   double dot(Eigen::Ref<Eigen::MatrixXd> a, Eigen::Ref<Eigen::MatrixXd> b);
 
-  // Generate intra TB1 weights.
+  /**
+      Generate intra TB1 weights.
+      @param w Weight scaling factor.
+  */
   inline Eigen::Matrix<double, CX_N_TB1, CX_N_TB1> gen_tb1_tb1_weights(double w){
     double sinusoid[CX_N_TB1] =
       {0, 0.14644661, 0.5, 0.85355339, 1., 0.85355339, 0.5, 0.14644661};
@@ -118,6 +188,10 @@ protected:
   }
 
 public:
+
+  /**
+     Constructor. Initialise the model.
+   */
   CentralComplex(){
     // TL2_PREFS
     tl2_prefs <<
@@ -161,34 +235,6 @@ public:
 
 
     // Weights from CPU4 to CPU1: W_CPU4_CPU1
-
-    //Old version, this was ported directly from the AntBot;
-    // I changed it so that the weight matrix is initialised correctly rather
-    //than transposing at runtime, kept here for history's sake, at least for one
-    //commit.
-
-    /*
-    W_CPU4_CPU1 <<
-      0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,
-      1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
-      0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0;
-    W_CPU4_CPU1.transposeInPlace();
-    MAT_LOG(W_CPU4_CPU1);
-    */
-
     W_CPU4_CPU1 <<
       0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
       1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -209,8 +255,6 @@ public:
 
     W_CPU1_motor << -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1;
 
-    //    MAT_LOG(W_CPU4_CPU1);
-
     // Set sigmoid function; voids unnecessary if-checks and looping
     // if we have no noise.
     sigmoid =
@@ -230,30 +274,97 @@ public:
   }
 
   // Layer-wise functions for CX Operation
+
+  /**
+     Given angular input, compute the TL2 population response.
+     @param theta The angular input (in radians) denoting the agent's current
+                  direction.
+     @param output The population response.
+   */
   void tl2_output(double theta, Eigen::Ref<Eigen::MatrixXd> output);
+
+  /**
+     Compute CL1 response given a current TL2 response.
+     @param[in] tl2 The current TL2 activity matrix.
+     @param[out] cl1 The CL1 activity output
+   */
   void cl1_output(Eigen::Ref<Eigen::MatrixXd> tl2,
                   Eigen::Ref<Eigen::MatrixXd> cl1);
+
+  /**
+     Compute TB1 response given a current CL1 response.
+     @param[in] cl1 The current CL1 activity matrix.
+     @param[out] tb1 The TB1 activity output.
+  */
   void tb1_output(Eigen::Ref<Eigen::MatrixXd> cl1,
                   Eigen::Ref<Eigen::MatrixXd> tb1);
+
+  /**
+     Update the CPU4 layer given the current TB1 (direction) response
+     and the agent's current speed.
+     @param[in] speed The agent's current speed.
+     @param[in] tb1 The current TB1 activity.
+     @param[out] cpu4_mem The updated (unsigmoided) CPU4 activity.
+  */
   void cpu4_update(double speed,
                    Eigen::Ref<Eigen::MatrixXd> tb1,
                    Eigen::Ref<Eigen::MatrixXd> cpu4_mem);
+
+  /**
+     Compute the CPU4 layer output. Pass the CPU4 activity through the
+     CPU4 sigmoid function.
+
+     @param[in,out] cpu4_mem The CPU4 activity which will be sigmoided.
+  */
   void cpu4_output(Eigen::Ref<Eigen::MatrixXd> cpu4_mem);
+
+  /**
+     Compute the CPU1 layer output given the current TB1 and CPU4 activities.
+     @param[in] tb1 The current TB1 activity.
+     @param[in] cpu4 The current CPU4 activity.
+     @param[out] cpu1 The CPU1 layer to be updated.
+   */
   void cpu1_output(Eigen::Ref<Eigen::MatrixXd> tb1,
                    Eigen::Ref<Eigen::MatrixXd> cpu4,
                    Eigen::Ref<Eigen::MatrixXd> cpu1);
+
+  /**
+     Compute the motor output from the CPU1 layer activity.
+     @param[in] The current CPU1 population.
+     @return The network output which will be positive or negative depending on
+     @return whether the model is indicating a left or right turn.
+   */
   double motor_output(Eigen::Ref<Eigen::MatrixXd> cpu1);
 
   // Monolithic CX Operation
+  /**
+     [Deprecated] A helper function which initialises the model for
+     simple orientation along a goal angle.
+     @param theta The goal angle.
+   */
   void set_goal_direction(double theta);
+
+  /**
+     A helper function which wraps model usage, removing the need to call
+     each individual function in sequence as in the AntBot.
+     @param theta The current angular input from available cues.
+     @param speed The agent's current speed.
+     @returns The return value of CentralComplex::motor_output.
+   */
   double unimodal_monolithic_CX(double theta, double speed);
 
-  // Status
+  /**
+     Collects the current network activity into a single data so that it can be
+     read elsewhere in the ROS sofwtware ecosystem (implemented primarily for
+     visualising the CX activity).
+     @param[in,out] activity The data structure to be filled with the network
+                             state.
+   */
   void get_status(std::vector<std::vector<double>> &activity);
 };
 
 //
-// Definitions
+// Implementation
 //
 
 //

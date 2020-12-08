@@ -1,0 +1,11 @@
+/**
+\mainpage bb_computation package index
+
+\section main Package Description
+
+This package provides all computational modelling aspects of
+the BeetleBot software environment. The package should cover
+each stage of the pipeline after cue detection up to action
+resolution.
+
+*/

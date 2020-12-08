@@ -1,5 +1,10 @@
 #include "bb_computation/cue.h"
 
+/**
+   @file cue.cpp
+   @brief Provides an implementation of the Cue display class.
+*/
+
 //
 // Cue class implementation
 //
