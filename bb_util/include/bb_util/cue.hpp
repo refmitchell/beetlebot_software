@@ -69,10 +69,14 @@ namespace bb_util{
 
     /*
       For now we define two cues as equal if they
-      have the same type field.
+      have the same type field. Simple justification is that we have no evidence
+      to suggest that the beetles use multiple cues within the same modality.
+      Multiple light cues tend to confuse them, and multiple wind cues hasn't
+      been tested
     */
     bool operator== (Cue& rhs){
-      return rhs.type.compare(type);
+      bool eq = rhs.type.compare(type) ? false : true;
+      return eq;
     }
 
 
@@ -87,5 +91,5 @@ namespace bb_util{
       relative_weight = rhs.getRelativeWeight();
     }
   };
-  
+
 }
