@@ -635,7 +635,7 @@ void MMCX::get_cue_encoding(std::vector<bb_util::Cue>& encodings){
 
   // Vector representation of each neuron
   // Angle/theta
-  std::vector<std::pair<double, double>> vector_rep;
+  std::vector<bb_util::Vec2D> vector_rep;
 
   for (int cue = 0; cue < TL.size();  ++cue){
     double avg = 0; // Avg angle represented.

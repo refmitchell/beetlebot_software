@@ -23,6 +23,8 @@ add_message_files(
   vmcx_activity.msg
   cue_msg.msg
   cue_list.msg
+  polar_vector.msg
+  polar_vector_list.msg
   )
 
 generate_messages(

@@ -64,7 +64,7 @@ inline double clean_velocity(double lin_vel, int factor=100){
 //   msg.cpu1 = status[5];
 //   msg.vm = status[6];
 //   msg.active = status[7];
-
+// 
 //   pub.publish(msg);
 // }
 
@@ -72,12 +72,12 @@ inline double clean_velocity(double lin_vel, int factor=100){
 /**
  * Cue list update
  */
-void cue_list_callback(const bb_util::cue_list::ConsPtr& cue_list){
+void cue_list_callback(const bb_util::cue_list::ConstPtr& cue_list){
 
 }
 
 int main(int argc, char **argv){
-  ros::init(argc, argv, "test_cx_subscriber");
+  ros::init(argc, argv, "test_mmcx_subscriber");
   ros::NodeHandle n;
 
   // ROS networking
@@ -92,7 +92,7 @@ int main(int argc, char **argv){
   // vm_server = n.advertiseService("vm_management", manage_vm);
 
   // Set up publisher for CX
-  pub = n.advertise<bb_util::vmcx_activity>("vmcx_status", 1);
+  //pub = n.advertise<bb_util::vmcx_activity>("vmcx_status", 1);
 
   ROS_INFO("Running...");
 

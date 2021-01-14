@@ -151,6 +151,7 @@ add_executable(mono_directional_prompt_node src/mono_directional_prompt_node.cpp
 add_executable(test_cue_subscriber src/test_cue_subscriber.cpp)
 add_executable(test_cx_subscriber src/test_cx_subscriber.cpp)
 add_executable(test_vmcx_subscriber src/test_vmcx_subscriber.cpp)
+add_executable(test_mmcx_subscriber src/test_mmcx_subscriber.cpp)
 add_executable(cue_manager src/cue_manager.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -184,6 +185,13 @@ add_dependencies(
 
 add_dependencies(
   test_vmcx_subscriber
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  )
+
+add_dependencies(
+  test_mmcx_subscriber
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
@@ -225,6 +233,11 @@ target_link_libraries(
 
 target_link_libraries(
   test_vmcx_subscriber
+  ${catkin_LIBRARIES}
+  )
+
+target_link_libraries(
+  test_mmcx_subscriber
   ${catkin_LIBRARIES}
   )
 

@@ -1,0 +1,19 @@
+== Note of where you stopped ==
+SD Card-reader arrived. Just completed the bb_util::Vec2D class
+which was designed to hold all of the drawing information for the
+get_vector_representation or whatever it was called in mmcx_model.
+
+Should now be able to decode the layer phase to get the angle,
+use the stored weights for the magnitude and broadcast this to
+a python grpahing node. Notes on how to decode the layer
+are in the mmcx_model file.
+
+Finally, you need to figure out the graphing mode. Look to your
+box-plot example for this, iirc you need to find the underlying
+artist object and figure out how to modify it. We want a polar
+plot of each "cue" as perceived by the network along with the
+integrated CL1 signal. Speaking of, I haven't figured out a way
+to display a length to the CL1 signal. There's no notion of
+overall certainty in your integrated signal because all of the
+weights always sum to 1. Maybe this is what Barbara was
+talking about...
