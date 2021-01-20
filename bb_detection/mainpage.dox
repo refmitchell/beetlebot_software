@@ -1,0 +1,8 @@
+/**
+\mainpage bb_dummy package index
+
+\section main Package Description
+
+This package provides any dummy inputs required to test the
+software models in bb_computation.
+**/

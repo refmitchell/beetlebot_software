@@ -27,6 +27,8 @@ namespace bb_util {
     // won't be modified.
     const std::string WIND = "wind";
     const std::string INTENSITY = "intensity";
+
+    const double PI = 3.14159265359;
   }
 
   // More permenant node name definitions for formal nodes

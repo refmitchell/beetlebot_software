@@ -11,9 +11,12 @@
 #include "bb_computation/icm.h"
 #include "bb_computation/cue_vector.h"
 
+#include "bb_util/cue.hpp"
+#include "bb_util/cue_msg.h"
+
 #include "bb_util/velocity.h"
 
-#define GOAL_ANGLE -2.0
+#define GOAL_ANGLE 2.0
 #define TRAVERSE_TIME 30
 
 ros::ServiceClient client;
@@ -21,9 +24,9 @@ ros::ServiceClient client;
 // Init CX
 //CentralComplex cx;
 
-void cvCallback(const bb_computation::cue_vector::ConstPtr& cue_msg){
+void cvCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   ROS_INFO("Cue info: (R: %f, T: %f)",
-           cue_msg->magnitude,
+           cue_msg->reliability,
            cue_msg->theta);
 
   float current = cue_msg->theta;
@@ -42,7 +45,7 @@ int main(int argc, char **argv){
   ros::init(argc, argv, "test_cue_subscriber");
   ros::NodeHandle n;
 
-  ros::Subscriber sub = n.subscribe("visual_cue", 1000, cvCallback);
+  ros::Subscriber sub = n.subscribe("wind_cue", 1000, cvCallback);
   client = n.serviceClient<bb_util::velocity>("update_velocity");
 
   ROS_INFO("Running...");

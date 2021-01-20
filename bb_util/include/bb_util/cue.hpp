@@ -9,7 +9,7 @@ namespace bb_util{
   class Cue{
   private:
     std::string type =  "";
-    double sensitivity = 0;
+    double sensitivity = 1;
     double reliability = 0;
     double relative_weight = 0;
     double theta = 0;
@@ -35,6 +35,16 @@ namespace bb_util{
 
     // Setters
     void setRelativeWeight(double rw){ relative_weight = rw; }
+
+    void setReliability(double r){
+      // If the attempted set is invalid, don't update the value.
+      this->reliability = (r >= 0 && r <= 1) ? r : this->reliability;
+    }
+
+    void setAzimuth(double t){
+      // Assume valid value in radians.
+      this->theta = t;
+    }
 
     //
     // Static methods for msg translation

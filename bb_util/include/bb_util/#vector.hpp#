@@ -169,5 +169,5 @@ namespace bb_util{
 
     return Vec2D::init_cartesian(x, y);
   }
-  
+
 } // namespace bb_util

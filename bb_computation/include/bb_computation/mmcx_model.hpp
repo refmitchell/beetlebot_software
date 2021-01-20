@@ -170,7 +170,7 @@ public:
     n_tl_layers = n_cues;
 
     // Use even weightings for initialisation
-    double init_weight = 1 / (double) n_tl_layers; // 
+    double init_weight = 1 / (double) n_tl_layers; //
     for (int i = 0; i < n_tl_layers; i++){
       Eigen::Matrix<double, CX_N_CL1, CX_N_TL2> tl;
 
@@ -347,7 +347,7 @@ void MMCX::noiselessSigmoid(Eigen::Ref<Eigen::MatrixXd> v,
    not allow. Also serves as a dimensionality check when used.
 */
  double MMCX::dot(Eigen::Ref<Eigen::MatrixXd> a,
-                          Eigen::Ref<Eigen::MatrixXd> b){
+                  Eigen::Ref<Eigen::MatrixXd> b){
    // Local to avoid multiple function calls
   int a_r = a.rows();
   int a_c = a.cols();
@@ -444,7 +444,7 @@ void MMCX::cl1_output(std::vector<Eigen::Matrix<double, CX_N_TL2, 1>>& tl,
   for (int i = 0; i < n_tl_layers; i++){
     cl1 += W_TL_CL1[i] * tl[i];
   }
-  
+
   this->sigmoid(cl1, this->cl1_slope, this->cl1_bias, this->noise);
 }
 
@@ -566,7 +566,6 @@ double MMCX::unimodal_monolithic_CX(
   this->CPU4 = this->MEM;
 
 
-
   // Worth noting, after this call the CPU4 values all sit at about 0.99....
   // They are updated, just by minute amounts
   this->cpu4_output(this->CPU4);
@@ -619,9 +618,9 @@ double MMCX::unimodal_monolithic_CX(
 //   activity.push_back(cpu1_vec);
 //}
 
-void MMCX::get_cue_encoding(std::vector<bb_util::Cue>& encodings){
+void MMCX::get_cue_encoding(std::vector<bb_util::Vec2D>& encodings){
   //
-  // Decode the direction from each TL layer
+  // Decode the cue vector held in each TL layer
   //
 
   // Basically works out as a circular average.
@@ -635,20 +634,74 @@ void MMCX::get_cue_encoding(std::vector<bb_util::Cue>& encodings){
 
   // Vector representation of each neuron
   // Angle/theta
-  std::vector<std::pair<double, double>> vector_rep;
+  std::vector<bb_util::Vec2D> per_layer_vector_rep;
+  for (int cue = 0; cue < TL.size(); ++cue){ //For each TL layer (cue type)
+    bb_util::Vec2D avg_for_layer = bb_util::Vec2D::init_polar(0,0);
 
-  for (int cue = 0; cue < TL.size();  ++cue){
-    double avg = 0; // Avg angle represented.
+    for (int i = 0; i < TL[cue].rows(); ++i) // Sum neural representations
+      avg_for_layer += bb_util::Vec2D::init_polar(TL[cue](i,0), tl_prefs[i]);
 
-    for (int i = 0; i < TL[cue].rows(); ++i)
-      avg += TL[cue](i,0); // Sum
+    // Compute vector average for layer
+    avg_for_layer = avg_for_layer / TL[cue].rows();
 
-    avg /= TL[cue].rows(); // Mean
+    // Weight this final representation by the relative weighting.
+    avg_for_layer = avg_for_layer * TL_CL1_display_mag[cue];
+
+    // Add to list of representations
+    per_layer_vector_rep.push_back(avg_for_layer);
   }
 
   //
-  // Retrieve the relative weighting from each
+  // Compute average of the TL averages as a "ground truth" for the
+  // CL layer.
   //
+  bb_util::Vec2D true_avg = bb_util::Vec2D::init_polar(0,0);
+
+  for (int i = 0; i < per_layer_vector_rep.size(); ++i)
+    true_avg += per_layer_vec_rep[i];
+
+  true_avg = true_avg / per_layer_vector_rep.size();
+
+  per_layer_vector_rep.push_back(true_avg);
+
+  //
+  // Retrieve CL layer
+  //
+
+  // Note: I'm using tl_prefs to do the vector-avg decode. The
+  // receptive fields for the CL neurons can (technically) change in
+  // this model so it's fair to say this isn't correct; however, I
+  // don't think it causes a problem to use tl_prefs for this specific
+  // purpose. The result for display should still be valid.
+  bb_util::Vec2D cl_avg = bb_util::Vec2D::init_polar(0,0);
+
+  for (int i = 0; i < CL.rows(); ++i){
+    cl_avg += bb_util::Vec2D::init_polar(CL(i, 0), tl_prefs[i]);
+  }
+
+  cl_avg = cl_avg / CL.rows();
+
+  per_layer_vector_rep.push_back(cl_avg);
+
+
+  /*
+    Implementation notes: All of this could be done at the graphical
+    output stage but it made more sense to do it here to limit how
+    much data ROS has to deal with in the network. It may become a
+    bottleneck.
+
+    Further, this function was originally to use a
+    std::vector<bb_util::Cue>& as its parameter type. This is
+    advantagous as it allows us to maintain which type is being
+    described by which representation. Currently that information is
+    lost; I don't see this as a huge issue as ordering should be
+    preserved, however it's worth making note of it in case it does
+    become a problem.
+
+    Message packing is assumed to be done by the caller. Easy enough
+    to change I guess.
+   */
+
 }
 
 #endif
