@@ -84,7 +84,7 @@ int main(int argc, char **argv){
 
   double magnitude = parser.get<double>("magnitude");
   double angle = parser.get<double>("angle");
-  angle = angle * (3.14159/180); // Deg to adian conversion: a * pi/180
+  angle = angle * (3.14159/180); // Deg to radian conversion: a * pi/180
 
   // Cue object defined by the arguments
   bb_util::Cue cue(type, sensitivity, magnitude, angle);

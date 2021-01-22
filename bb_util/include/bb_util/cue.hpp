@@ -2,6 +2,9 @@
 // The same construction should be usable from cue detection to
 // the central complex input.
 
+#ifndef BBUTIL_CUE
+#define BBUTIL_CUE
+
 #include "bb_util.h"
 #include "bb_util/cue_msg.h"
 
@@ -103,3 +106,5 @@ namespace bb_util{
   };
 
 }
+
+#endif

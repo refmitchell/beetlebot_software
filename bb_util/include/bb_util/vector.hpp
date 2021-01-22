@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include "bb_util/polar_vector.h"
+#include "bb_util/vec2d_msg.h"
 
 /**
    @file vector.hpp
@@ -44,8 +44,8 @@ namespace bb_util{
     double get_theta()const;
 
     // ROS message conversion
-    static bb_util::polar_vector to_message(const Vec2D&);
-    static Vec2D to_vector(const bb_util::polar_vector&);
+    static bb_util::vec2d_msg to_message(const Vec2D&);
+    static Vec2D to_vector(const bb_util::vec2d_msg&);
 
     // Operator overloads
     Vec2D operator+(const Vec2D& v);
@@ -58,7 +58,7 @@ namespace bb_util{
   // Implementation
   //
   inline Vec2D Vec2D::init_cartesian(double x, double y){
-    return Vec2D(sqrt(x*x + y*y), atan(y/x));
+    return Vec2D(sqrt(x*x + y*y), atan2(y,x));
   }
 
   inline Vec2D Vec2D::init_polar(double r, double theta){
@@ -72,7 +72,7 @@ namespace bb_util{
 
   void Vec2D::update_polar(){
     r = sqrt(x*x + y*y);
-    theta = atan(y/x);
+    theta = atan2(y,x);
   }
 
   //
@@ -125,14 +125,16 @@ namespace bb_util{
   //
   // ROS Message/Class conversions
   //
-  inline bb_util::polar_vector Vec2D::to_message(const Vec2D& vec){
-    bb_util::polar_vector msg;
+  inline bb_util::vec2d_msg Vec2D::to_message(const Vec2D& vec){
+    bb_util::vec2d_msg msg;
     msg.r = vec.get_r();
     msg.theta = vec.get_theta();
+    msg.x = vec.get_x();
+    msg.y = vec.get_y();
     return msg;
   }
 
-  inline Vec2D Vec2D::to_vector(const bb_util::polar_vector& msg){
+  inline Vec2D Vec2D::to_vector(const bb_util::vec2d_msg& msg){
     return Vec2D::init_polar(msg.r, msg.theta);
   }
 
@@ -152,8 +154,8 @@ namespace bb_util{
   }
 
   Vec2D Vec2D::operator+=(const Vec2D& v){
-    this = this + v;
-    return this;
+    *this = *this + v;
+    return *this;
   }
 
   Vec2D Vec2D::operator/(const double d){

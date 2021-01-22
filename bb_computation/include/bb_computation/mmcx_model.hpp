@@ -13,6 +13,8 @@
 #include "bb_util/Eigen/Eigen"
 #include "bb_util/cue.hpp"
 #include "bb_util/vector.hpp"
+#include "bb_util/encoding_status.h"
+#include "bb_util/vec2d_msg.h"
 
 // Using macro definitions because these values never change and I want to
 // have these defaults known at compile time for initialisation.
@@ -264,8 +266,7 @@ public:
 
   // Monolithic CX Operation
   void set_goal_direction(double theta);
-  double unimodal_monolithic_CX(std::vector<bb_util::Cue>& cue_list,
-                                double speed);
+  double input(std::vector<bb_util::Cue>& cue_list, double speed);
 
   //
   // Status functions
@@ -281,7 +282,7 @@ public:
      Returns the cue as encoded by each TL layer. The last element
      will be the CL1 encoding.
   */
-  void get_cue_encoding(std::vector<bb_util::Cue> &encodings);
+  bb_util::encoding_status get_cue_encoding(std::vector<bb_util::Vec2D> &encodings);
 };
 
 //
@@ -412,8 +413,8 @@ void MMCX::tl2_output(std::vector<bb_util::Cue>& cue_list,
     TL_CL1_display_mag[i] = cue_list[i].getRelativeWeight();
 
     // Check layer dimensions line up with preference definition dimensions.
-    assert(output[i].rows() == this->tl2_prefs.rows() &&
-           output[i].cols() == this->tl2_prefs.cols());
+       assert(output[i].rows() == this->tl2_prefs.rows() &&
+              output[i].cols() == this->tl2_prefs.cols());
 
     //
     // Compute the activity for each TL2 layer
@@ -422,7 +423,7 @@ void MMCX::tl2_output(std::vector<bb_util::Cue>& cue_list,
     output[i] = output[i] - this->tl2_prefs;
 
     // Apply the cosine
-    for (int j = 0; i < output[i].rows(); ++i)
+    for (int j = 0; j < output[i].rows(); ++j)
       output[i](j, 0) = cos(output[i](j,0));
 
     // Standard sigmoid, needs done for each layer.
@@ -551,10 +552,7 @@ double MMCX::motor_output(Eigen::Ref<Eigen::MatrixXd> cpu1){
 //   LOG("goal direction set successfully");
 // }
 
-double MMCX::unimodal_monolithic_CX(
-                                    std::vector<bb_util::Cue>& cue_list,
-                                    double speed
-                                    ){
+double MMCX::input(std::vector<bb_util::Cue>& cue_list, double speed){
   double CXMotor = 0;
 
   this->tl2_output(cue_list, this->TL);
@@ -562,13 +560,16 @@ double MMCX::unimodal_monolithic_CX(
   this->tb1_output(this->CL1, this->TB1);
 
   // Preserve unsigmoided CPU4 for next timestep
+
   this->cpu4_update(speed, this->TB1, this->MEM);
+
   this->CPU4 = this->MEM;
 
 
   // Worth noting, after this call the CPU4 values all sit at about 0.99....
   // They are updated, just by minute amounts
   this->cpu4_output(this->CPU4);
+
 
   this->cpu1_output(this->TB1, this->CPU4, this->CPU1);
 
@@ -618,7 +619,7 @@ double MMCX::unimodal_monolithic_CX(
 //   activity.push_back(cpu1_vec);
 //}
 
-void MMCX::get_cue_encoding(std::vector<bb_util::Vec2D>& encodings){
+bb_util::encoding_status MMCX::get_cue_encoding(std::vector<bb_util::Vec2D>& encodings){
   //
   // Decode the cue vector held in each TL layer
   //
@@ -639,13 +640,16 @@ void MMCX::get_cue_encoding(std::vector<bb_util::Vec2D>& encodings){
     bb_util::Vec2D avg_for_layer = bb_util::Vec2D::init_polar(0,0);
 
     for (int i = 0; i < TL[cue].rows(); ++i) // Sum neural representations
-      avg_for_layer += bb_util::Vec2D::init_polar(TL[cue](i,0), tl_prefs[i]);
+      avg_for_layer += bb_util::Vec2D::init_polar(TL[cue](i,0), tl2_prefs[i]);
 
     // Compute vector average for layer
     avg_for_layer = avg_for_layer / TL[cue].rows();
 
     // Weight this final representation by the relative weighting.
-    avg_for_layer = avg_for_layer * TL_CL1_display_mag[cue];
+    // This should be avg_for_layer.get_r, I was scaling the whole thing rather
+    // than just the radiusarandr
+    
+    //    avg_for_layer = avg_for_layer * TL_CL1_display_mag[cue];
 
     // Add to list of representations
     per_layer_vector_rep.push_back(avg_for_layer);
@@ -658,31 +662,38 @@ void MMCX::get_cue_encoding(std::vector<bb_util::Vec2D>& encodings){
   bb_util::Vec2D true_avg = bb_util::Vec2D::init_polar(0,0);
 
   for (int i = 0; i < per_layer_vector_rep.size(); ++i)
-    true_avg += per_layer_vec_rep[i];
+    true_avg += per_layer_vector_rep[i];
 
   true_avg = true_avg / per_layer_vector_rep.size();
-
-  per_layer_vector_rep.push_back(true_avg);
 
   //
   // Retrieve CL layer
   //
 
-  // Note: I'm using tl_prefs to do the vector-avg decode. The
+  // Note: I'm using tl2_prefs to do the vector-avg decode. The
   // receptive fields for the CL neurons can (technically) change in
   // this model so it's fair to say this isn't correct; however, I
-  // don't think it causes a problem to use tl_prefs for this specific
+  // don't think it causes a problem to use tl2_prefs for this specific
   // purpose. The result for display should still be valid.
   bb_util::Vec2D cl_avg = bb_util::Vec2D::init_polar(0,0);
 
-  for (int i = 0; i < CL.rows(); ++i){
-    cl_avg += bb_util::Vec2D::init_polar(CL(i, 0), tl_prefs[i]);
+  for (int i = 0; i < CL1.rows(); ++i){
+    cl_avg += bb_util::Vec2D::init_polar(CL1(i, 0), tl2_prefs[i]);
   }
 
-  cl_avg = cl_avg / CL.rows();
+  cl_avg = cl_avg / CL1.rows();
 
-  per_layer_vector_rep.push_back(cl_avg);
+  std::vector<bb_util::vec2d_msg> vecs;
+  for (int i = 0; i < per_layer_vector_rep.size(); ++i){
+    vecs.push_back(bb_util::Vec2D::to_message(per_layer_vector_rep[i]));
+  }
 
+  bb_util::encoding_status encoding_list;
+  encoding_list.tls = vecs;
+  encoding_list.cl1 = bb_util::Vec2D::to_message(cl_avg);
+  encoding_list.true_cl1 = bb_util::Vec2D::to_message(true_avg);
+
+  return encoding_list;
 
   /*
     Implementation notes: All of this could be done at the graphical

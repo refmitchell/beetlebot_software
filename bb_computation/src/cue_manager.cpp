@@ -83,21 +83,27 @@ int main(int argc, char **argv){
 
   // Defined for ease, would be better to have this user-defined somewhere
   // else. E.g.a config file.
+  std::vector<std::string> cue_topics = {
+    //"dummy_cue_wind",
+    "wind_cue",
+    "dummy_cue_light"
+  };
+
   std::vector<std::string> cue_types = {
     "wind",
     "light"
   };
+
 
   //
   // Initialisation: Set up subscribers for each cue type
   // and set up the cue list so the callback has something
   // to find.
   //
-  for (int i = 0; i < cue_types.size(); i++){
+  for (int i = 0; i < cue_topics.size(); i++){
     // Temporary while testing with dummy cues, would be
     // better to have a less brittle solution.
-    std::string topic_name = "dummy_cue_";
-    topic_name += cue_types[i];
+    std::string topic_name = cue_topics[i];
     subs.push_back(n.subscribe(topic_name, 1000, cue_callback));
 
     bb_util::Cue cue = bb_util::Cue(cue_types[i], 0, 0, 0);

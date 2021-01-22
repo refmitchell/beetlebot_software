@@ -13,22 +13,22 @@
 #include <tf/transform_datatypes.h>
 #include "std_msgs/String.h"
 
-#include "bb_computation/icm.h"
-#include "bb_computation/cue_vector.h"
-#include "bb_computation/vm_command.h"
-#include "bb_computation/cx_model.hpp"
 #include "bb_computation/mmcx_model.hpp"
 
 #include "bb_util/velocity.h"
-#include "bb_util/vmcx_activity.h"
 #include "bb_util/cue_list.h"
 #include "bb_util/cue_msg.h"
+#include "bb_util/cue.hpp"
+#include "bb_util/vector.hpp"
+#include "bb_util/vec2d_msg.h"
+#include "bb_util/encoding_status.h"
+
 
 #define GOAL_ANGLE -2.0
 #define TRAVERSE_TIME 30
 
 // Init CX
-MMCX cx;
+MMCX mmcx = MMCX(2);
 
 // Broadcast CX status
 ros::Publisher pub;
@@ -55,7 +55,6 @@ inline double clean_velocity(double lin_vel, int factor=100){
 //
 // void cx_status_publish(std::vector<std::vector<double>> &status){
 //   bb_util::vmcx_activity msg;
-
 //   msg.tl2 = status[0];
 //   msg.cl1 = status[1];
 //   msg.tb1 = status[2];
@@ -64,7 +63,7 @@ inline double clean_velocity(double lin_vel, int factor=100){
 //   msg.cpu1 = status[5];
 //   msg.vm = status[6];
 //   msg.active = status[7];
-// 
+//
 //   pub.publish(msg);
 // }
 
@@ -72,8 +71,29 @@ inline double clean_velocity(double lin_vel, int factor=100){
 /**
  * Cue list update
  */
-void cue_list_callback(const bb_util::cue_list::ConstPtr& cue_list){
 
+void cue_list_callback(const bb_util::cue_list::ConstPtr& cue_list){
+  std::vector<bb_util::cue_msg> cues_from_msg = cue_list->cues;
+  std::vector<bb_util::Cue> cues;
+
+  for (int i = 0; i < cues_from_msg.size(); ++i){
+    cues.push_back(bb_util::Cue::toCue(cues_from_msg[i]));}
+
+  double CXMotor = mmcx.input(cues, 0);
+
+  // For now, only update the angular velocity.
+  bb_util::velocity vel_msg;
+  vel_msg.request.angular = (CXMotor < 0) ? 0.5 : -0.5;
+  vel_msg.request.linear = 0;
+  client.call(vel_msg);
+
+  // Retrieve cue encodings.
+  // encodings[n-1] is the CL
+  // encodings[n-2] is the "true" average of the TLs
+  // The rest are the TL encodings
+  std::vector<bb_util::Vec2D> encodings;
+  bb_util::encoding_status encoding_msg = mmcx.get_cue_encoding(encodings);
+  pub.publish(encoding_msg);
 }
 
 int main(int argc, char **argv){
@@ -88,11 +108,8 @@ int main(int argc, char **argv){
   // Request velocity changes from velocity service
   client = n.serviceClient<bb_util::velocity>("update_velocity");
 
-  // Set up VM Server
-  // vm_server = n.advertiseService("vm_management", manage_vm);
-
   // Set up publisher for CX
-  //pub = n.advertise<bb_util::vmcx_activity>("vmcx_status", 1);
+  pub = n.advertise<bb_util::encoding_status>("mmcx_encoding_list", 1);
 
   ROS_INFO("Running...");
 
