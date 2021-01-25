@@ -1,4 +1,9 @@
 #include "bb_detection/icm.h"
+
+#include "bb_util/bb_util"
+#include "bb_util/cue_msg.h"
+#include "bb_util/cue.hpp"
+
 #include "std_msgs/String.h" //DEBUG ONLY
 
 /**
@@ -26,7 +31,7 @@ IntensityCueManager::IntensityCueManager(ros::NodeHandle n,
 
   // Plumb up the ROS subscriber and publisher
   it = new image_transport::ImageTransport(n);
-  pub = n.advertise<bb_computation::cue_vector>(pub_topic, 1000);
+  pub = n.advertise<bb_util::cue_msg>(pub_topic, 1000);
   sub =
     it->subscribe(sub_topic, 1, IntensityCueManager::imageCallback, this);
 
@@ -67,7 +72,7 @@ void IntensityCueManager::brightestVectorCallback(
   cv::minMaxLoc(frame, &maxVal, &maxVal, &minLoc, &maxLoc);
 
   const cv::Mat& frame_ref = frame;
-  Cue cue(maxLoc, frame_ref);
+  bb_detection::Cue cue(maxLoc, frame_ref);
 
   if (this->video){
     ROS_INFO("Cue, (direction, magnitude): (%lf, %lf)",

@@ -1,4 +1,4 @@
-#include "bb_detection/cue.h"
+#include "bb_detection/cv_cue.h"
 
 /**
    @file cue.cpp
@@ -12,7 +12,7 @@
 //
 // Ctor
 //
-Cue::Cue(cv::Point location, const cv::Mat& frame_ref) {
+CueFromCV::CueFromCVFromCV(cv::Point location, const cv::Mat& frame_ref) {
   // Use const frame reference to determine the frame
   // centre without modifying the frame itself.
   double frame_centre_x = frame_ref.cols / 2;
@@ -28,7 +28,7 @@ Cue::Cue(cv::Point location, const cv::Mat& frame_ref) {
 //
 // Private method
 //
-void Cue::updateInternalRepresentation(){
+void CueFromCV::updateInternalRepresentation(){
   x = frame_x - centre_x;
   y = frame_y - centre_y;
   r = sqrt(x*x + y*y);
@@ -42,7 +42,7 @@ void Cue::updateInternalRepresentation(){
 //
 // Draw the cue vector on an openCV frame
 //
-cv::Mat& Cue::drawCueVectorOnFrame(cv::Mat &frame){
+cv::Mat& CueFromCV::drawCueFromCVVectorOnFrame(cv::Mat &frame){
   cv::Mat &colour = colour_frame;
   cv::cvtColor(frame, colour, cv::COLOR_GRAY2RGB);
   cv::Point origin(centre_x, centre_y);
@@ -55,7 +55,7 @@ cv::Mat& Cue::drawCueVectorOnFrame(cv::Mat &frame){
 // Update the coordinates of the cue.
 // Arguments are expected to be with respect to the image
 //
-void Cue::updateFrameCoordinates(double frame_x_coord, double frame_y_coord){
+void CueFromCV::updateFrameCoordinates(double frame_x_coord, double frame_y_coord){
   frame_x = frame_x_coord;
   frame_y = frame_y_coord;
 
@@ -67,7 +67,7 @@ void Cue::updateFrameCoordinates(double frame_x_coord, double frame_y_coord){
 // Update the coordinates of the cue.
 // Arguments are expected to be with respect to the image
 //
-void Cue::updateFrameCoordinates(cv::Point location){
+void CueFromCV::updateFrameCoordinates(cv::Point location){
   frame_x = location.x;
   frame_y = location.y;
 
@@ -79,13 +79,13 @@ void Cue::updateFrameCoordinates(cv::Point location){
 // Getters; only publically accessible features should be the strength and
 // the direction.
 //
-double Cue::strength(){ return r; }
-double Cue::direction(){ return theta; }
+double CueFromCV::strength(){ return r; }
+double CueFromCV::direction(){ return theta; }
 
 //
 // Translate the cue into a ROS message
 //
-bb_computation::cue_vector Cue::toMessage(){
+bb_computation::cue_vector CueFromCV::toMessage(){
   bb_computation::cue_vector msg;
   msg.magnitude = this->strength();
   msg.theta = this->direction();

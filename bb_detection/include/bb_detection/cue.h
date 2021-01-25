@@ -14,7 +14,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "bb_util/cue.h"
+#include "bb_util/cue.hpp"
 #include "bb_util/vector.hpp"
 
 /**

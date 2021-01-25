@@ -20,13 +20,17 @@
 #include <cmath>
 
 #include "bb_detection/argparse.h"
-#include "bb_detection/cue.h"
-#include "bb_detection/icm.h"
+#include "bb_detection/cv_cue.hpp"
 
 #include "bb_util/bb_util.h"
+#include "bb_util/cue.hpp"
 
 //Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");
+
+image_transport::ImageTransport *it; /**< ROS image transport layer*/
+image_transport::Subscriber sub; /**< Image subscription node. */
+ros::Publisher pub; /**< Publisher, publishing cue information. */
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   //Global, all bb_computation nodes should have these options.
@@ -69,6 +73,78 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+// BV Callback
+void brightestVectorCallback(const sensor_msgs::ImageConstPtr& msg){
+  cv::Mat frame;
+
+  try{
+    frame = cv_bridge::toCvCopy(msg, "mono8")->image;
+  } catch (cv_bridge::Exception &e){
+    ROS_ERROR("cv_bridge error: %s", e.what());
+    ROS_INFO("This node should be subscribed to a "
+             "topic producing grayscale (mono8) images");
+  }
+
+  double minVal=0, maxVal=0;
+  cv::Point minLoc, maxLoc;
+
+  //Find brightest point and mark  - Note if this isn't working well
+  //try enabling gaussian smoothing.
+  cv::minMaxLoc(frame, &maxVal, &maxVal, &minLoc, &maxLoc);
+
+  const cv::Mat& frame_ref = frame;
+  bb_detection::CueFromCV cv_cue(maxLoc, frame_ref);
+
+  if (parser.exists("video")){
+    ROS_INFO("Cue, (direction, magnitude): (%lf, %lf)",
+             cv_cue.direction(),
+             cv_cue.strength());
+
+    // Mark brightest point on the frame for printing
+    cv::Mat& colour_frame = cv_cue.drawCueVectorOnFrame(frame);
+    bb_util::vision::imshow("Brightest point", colour_frame);
+  }
+
+  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
+}
+
+// CV Callback
+void centroidVectorCallback(const sensor_msgs::ImageConstPtr& msg){
+  cv::Mat frame;
+  try{
+    frame = cv_bridge::toCvCopy(msg, "mono8")->image;
+  } catch (cv_bridge::Exception &e){
+    ROS_ERROR("cv_bridge error: %s", e.what());
+    ROS_INFO("This node should be subscribed to a "
+             "topic producing grayscale (mono8) images");
+  }
+
+  // I originally wanted to unwrap this and manually compute everything
+  // Ramsey uses cv::moments() to compute this but I'm unsure of the validity of
+  // this. I'll use it here to test it.
+  // He also applys a spectral trasform to the image that I'm unsure of
+  // spectrum = (np.round(((bgr[:,:,1] + bgr[:,:,2]) / bgr.sum(2).astype(float)) * 255.)).astype('uint8')
+  // Best I can tell this is taking an average of the blue and green channels
+  // and reducing this to a single "grey" channel.
+  cv::Moments frame_moments = cv::moments(frame);
+
+  cv::Point centre_of_mass(
+                           frame_moments.m10 / frame_moments.m00, // CoM x-coord
+                           frame_moments.m01 / frame_moments.m00  // CoM y-coord
+                           );
+
+  // Because I can't be bothered fighting with CMake
+  const cv::Mat& frame_ref = frame;
+  bb_detection::CueFromCV cv_cue(centre_of_mass, frame_ref);
+
+  if (parser.exists("video")){
+    cv::Mat &colour_frame = cv_cue.drawCueVectorOnFrame(frame);
+    bb_util::vision::imshow("Centroid Vector", colour_frame);
+  }
+
+  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
+}
+
 int main(int argc, char **argv){
   // Parser initialisation
   if (!initParser(parser, argc, argv)) return -1;
@@ -90,27 +166,40 @@ int main(int argc, char **argv){
   std::string node_name = parser.get<std::string>("name");
 
   // method
-  std::string cue = parser.get<std::string>("method");
+  std::string method = parser.get<std::string>("method");
 
   ROS_INFO("Node information: ");
   ROS_INFO("Node name: %s", node_name.c_str());
   ROS_INFO("Subscribing to: %s", sub_topic.c_str());
   ROS_INFO("Publishing to: %s", pub_topic.c_str());
-  ROS_INFO("Cue: %s", cue.c_str());
+  ROS_INFO("Cue: %s", method.c_str());
 
   // ROS init
   ros::init(argc, argv, node_name.c_str());
   ros::NodeHandle n;
 
-  IntensityCueManager icm(n,
-                          sub_topic,
-                          pub_topic,
-                          cue,
-                          parser.exists("video")
-                          );
+
+
+  void (*imageCallback) (const sensor_msgs::ImageConstPtr& msg);
+
+ // Determine which callback function this class instance should use.
+  if (method == "bv") {
+    imageCallback = &brightestVectorCallback;
+  } else if (method == "cv") {
+    imageCallback = &centroidVectorCallback;
+  } else {
+    ROS_ERROR("Unrecognised cue type %s", method.c_str());
+    ROS_INFO("Supported methods: bv, cv");
+    exit(-1);
+  }
+
+  // Plumb up the ROS subscriber and publisher
+  it = new image_transport::ImageTransport(n);
+  pub = n.advertise<bb_util::cue_msg>(pub_topic, 1000);
+  sub =
+    it->subscribe(sub_topic, 1, imageCallback);
 
   ros::spin();
-
 
   return 0;
 }

@@ -128,9 +128,9 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/dummy.cpp
-# )
+add_library(
+  cv_cue lib/cv_cue.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -142,6 +142,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 ##add_executable(dummy_cue src/dummy_cue.cpp)
 add_executable(wind_cue_detector src/wind_cue_detector.cpp)
+add_executable(intensity_cue_detector src/intensity_cue_detector.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,10 +158,22 @@ add_dependencies(
   ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS})
 
+add_dependencies(
+  intensity_cue_detector
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS})
+
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(
   wind_cue_detector
+  ${catkin_LIBRARIES}
+  )
+
+target_link_libraries(
+  intensity_cue_detector
+  cv_cue
   ${catkin_LIBRARIES}
   )
 
