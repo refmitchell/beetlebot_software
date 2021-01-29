@@ -122,7 +122,7 @@ void centroidVectorCallback(const sensor_msgs::ImageConstPtr& msg){
   // I originally wanted to unwrap this and manually compute everything
   // Ramsey uses cv::moments() to compute this but I'm unsure of the validity of
   // this. I'll use it here to test it.
-  // He also applys a spectral trasform to the image that I'm unsure of
+  // He also applies a spectral trasform to the image that I'm unsure of
   // spectrum = (np.round(((bgr[:,:,1] + bgr[:,:,2]) / bgr.sum(2).astype(float)) * 255.)).astype('uint8')
   // Best I can tell this is taking an average of the blue and green channels
   // and reducing this to a single "grey" channel.

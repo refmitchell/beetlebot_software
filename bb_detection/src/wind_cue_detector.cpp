@@ -62,7 +62,7 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
 void directionUpdateCallback(const std_msgs::Float64::ConstPtr& msg){
   // Convert direction to radians.
   double wind_direction = msg->data * bb_util::defs::PI / 180;
-  wind_cue.setAzimuth(wind_direction);
+  wind_cue.setAzimuth(-wind_direction); // inverted to match the light output
 }
 
 void speedUpdateCallback(const std_msgs::Float64::ConstPtr& msg){

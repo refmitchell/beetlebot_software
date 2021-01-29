@@ -49,6 +49,8 @@ namespace bb_detection{
     double centre_x; /**< Image centre X */
     double centre_y; /**< Image centre Y*/
 
+    double max_cue_vector_length; /**< The maximum length a cue vector could be.
+
     /** Ensure all cue coordinate information is internally consistent. */
     void updateInternalRepresentation();
 

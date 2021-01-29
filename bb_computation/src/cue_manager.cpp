@@ -86,7 +86,7 @@ int main(int argc, char **argv){
   std::vector<std::string> cue_topics = {
     //"dummy_cue_wind",
     "wind_cue",
-    "dummy_cue_light"
+    "light_cue"
   };
 
   std::vector<std::string> cue_types = {

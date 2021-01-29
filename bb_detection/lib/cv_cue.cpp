@@ -23,6 +23,10 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     centre_x = frame_centre_x;
     centre_y = frame_centre_y;
 
+    // Eucliden distance from the centre-left of the frame to the centre.
+    max_cue_vector_length =
+      sqrt(centre_x*centre_x);
+
     this->updateInternalRepresentation();
   }
 
@@ -89,21 +93,26 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     bb_util::Cue CueFromCV::toSystemCue(){
     std::string type = "light";
     double sensitivity = 1;
-    // Cue theta is expected to be in radians.
-    return bb_util::Cue(type,
-                        sensitivity,
-                        this->r,
-                        this->theta
-                        );
-  }
-  
-  bb_util::Cue CueFromCV::toSystemCue(double sensitivity){
-    std::string type = "light";
+    double reliability = this->r / max_cue_vector_length; // Scale between 0:1
+    reliability = reliability > 1.1 ? 0 : reliability;
 
     // Cue theta is expected to be in radians.
     return bb_util::Cue(type,
                         sensitivity,
-                        this->r,
+                        reliability,
+                        this->theta
+                        );
+  }
+
+  bb_util::Cue CueFromCV::toSystemCue(double sensitivity){
+    std::string type = "light";
+    double reliability = this->r / max_cue_vector_length; // Scale between 0:1
+    reliability = reliability > 1.1 ? 0 : reliability;
+    
+    // Cue theta is expected to be in radians.
+    return bb_util::Cue(type,
+                        sensitivity,
+                        reliability,
                         this->theta
                         );
   }

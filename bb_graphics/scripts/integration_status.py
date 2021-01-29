@@ -28,8 +28,8 @@ light_y = 0
 
 cl1_x = 0
 cl1_y = 0
-# true_cl_x = 0
-# true_cl_y = 0
+true_cl_x = 0
+true_cl_y = 0
 
 #
 # Line2Ds for blitting
@@ -44,7 +44,7 @@ true_cl_ln, = polar_plot_ax.plot([], [], 'orange')
 
 # # Required for blitting, iterable of all Artists which were updated
 # # on the animation callback.
-status_ln = [wind_ln, light_ln, cl1_ln]#, true_cl_ln]
+status_ln = [wind_ln, light_ln, cl1_ln, true_cl_ln]
 
 #
 # Update ydata based on incoming messages
@@ -56,22 +56,22 @@ def ros_callback(data):
     global light_y
     global cl1_x
     global cl1_y
-    # global true_cl_x
-    # global true_cl_y
+    global true_cl_x
+    global true_cl_y
 
     scale = 1
 
     wind_x = data.tls[0].theta * scale
-    wind_y = 0.5#data.tls[0].r * scale
+    wind_y = data.tls[0].r * scale
 
     light_x = data.tls[1].theta * scale
-    light_y = 0.5#  data.tls[1].r * scale
+    light_y = data.tls[1].r * scale
 
     cl1_x = data.cl1.theta * scale
     cl1_y = 0.8 #data.cl1.r * scale
 
-    # true_cl_x = data.true_cl1.x * scale
-    # true_cl_y = data.true_cl1.y * scale
+    true_cl_x = data.true_cl1.theta * scale
+    true_cl_y = 0.7#data.true_cl1.y * scale
 
     print("wind_x: " + str(wind_x))
     print("wind_y: " + str(wind_y))
@@ -99,13 +99,13 @@ def animation_callback(frames):
     global light_y
     global cl1_x
     global cl1_y
-    # global true_cl_x
-    # global true_cl_y
+    global true_cl_x
+    global true_cl_y
 
     status_ln[0].set_data(wind_x, wind_y)
     status_ln[1].set_data(light_x, light_y)
     status_ln[2].set_data(cl1_x, cl1_y)
-    # status_ln[3].set_data(true_cl_x, true_cl_y)
+    status_ln[3].set_data(true_cl_x, true_cl_y)
 
     return status_ln
 

@@ -88,9 +88,6 @@ void cue_list_callback(const bb_util::cue_list::ConstPtr& cue_list){
   client.call(vel_msg);
 
   // Retrieve cue encodings.
-  // encodings[n-1] is the CL
-  // encodings[n-2] is the "true" average of the TLs
-  // The rest are the TL encodings
   std::vector<bb_util::Vec2D> encodings;
   bb_util::encoding_status encoding_msg = mmcx.get_cue_encoding(encodings);
   pub.publish(encoding_msg);

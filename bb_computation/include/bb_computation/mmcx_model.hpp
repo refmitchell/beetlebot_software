@@ -647,9 +647,8 @@ bb_util::encoding_status MMCX::get_cue_encoding(std::vector<bb_util::Vec2D>& enc
 
     // Weight this final representation by the relative weighting.
     // This should be avg_for_layer.get_r, I was scaling the whole thing rather
-    // than just the radiusarandr
-    
-    //    avg_for_layer = avg_for_layer * TL_CL1_display_mag[cue];
+    // than just the radius
+    avg_for_layer.set_r(avg_for_layer.get_r() * TL_CL1_display_mag[cue]);
 
     // Add to list of representations
     per_layer_vector_rep.push_back(avg_for_layer);
