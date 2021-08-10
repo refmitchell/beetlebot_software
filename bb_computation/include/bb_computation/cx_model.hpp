@@ -155,8 +155,6 @@ protected:
                                 double bias,
                                 double noise);
 
-
-
   /**
      Dot product which checks matrix dimensions while allowing Eigen Matrix types
      to be used as the input format.

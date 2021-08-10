@@ -28,7 +28,15 @@ namespace bb_util {
     const std::string WIND = "wind";
     const std::string INTENSITY = "intensity";
 
+    // Strangely not provided by C++
     const double PI = 3.14159265359;
+  }
+
+  // Constant, globaly defined parameter names for parameter server access.
+  namespace params {
+    // Calibration parameters for sensors; frames of reference must be aligned.
+    const std::string wind_offset = "/calibration/wind_offset";
+    const std::string intensity_offset = "/calibration/intensity_offset";
   }
 
   // More permenant node name definitions for formal nodes
