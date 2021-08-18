@@ -1,0 +1,33 @@
+<launch>
+  <node
+      name="image_mask"
+      pkg="bb_improc"
+      type="image_mask_node"
+      />
+  <node
+      name="gaussian_blur"
+      pkg="bb_improc"
+      type="gaussian_blur_node"
+      />
+  <node
+      name="green_channel"
+      pkg="bb_improc"
+      type="green_channel_node"
+      />
+  <node
+      name="wind_detector"
+      pkg="bb_detection"
+      type="wind_cue_detector"
+      />
+  <node
+      name="intensity_detector"
+      pkg="bb_detection"
+      type="intensity_cue_detector"
+      args="-m bv -s green_frames -p bv_cue -n bv_green_node -v"
+      />
+  <node
+      name="cue_manager"
+      pkg="bb_computation"
+      type="cue_manager"
+      />
+</launch>

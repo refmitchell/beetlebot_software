@@ -47,7 +47,7 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
     .names({"-p", "--publish"})
     .description("Set the publication topic.")
-    .required(true);
+    .required(false);
 
   parser.add_argument()
     .names({"-n", "--name"})
@@ -157,7 +157,10 @@ int main(int argc, char **argv){
 
   // If parser option defined, use it, else default.
   // publish to
-  std::string pub_topic = parser.get<std::string>("publish");
+  std::string pub_topic =
+    parser.exists("publish") ?
+    parser.get<std::string>("publish") :
+    bb_util::defs::INTENSITY_CUE_TOPIC;
 
   // subscribe to
   std::string sub_topic = parser.get<std::string>("subscribe");

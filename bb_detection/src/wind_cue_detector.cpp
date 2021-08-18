@@ -98,7 +98,7 @@ int main(int argc, char **argv){
   std::string speed_sub_topic =
     parser.exists("subscribe_speed") ?
     parser.get<std::string>("subscribe_speed") :
-    "wind_speed" ;
+    bb_util::defs::WIND_CUE_TOPIC ;
 
   // name
   std::string node_name =

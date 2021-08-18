@@ -1,0 +1,13 @@
+<launch>
+  <node
+      name="wind_detector"
+      pkg="bb_detection"
+      type="wind_cue_detector"
+      />
+  <node
+      name="intensity_detector"
+      pkg="bb_detection"
+      type="intensity_cue_detector"
+      args="-m bv -s green_frames -p bv_cue -n bv_green_node"
+      />
+</launch>

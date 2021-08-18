@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(bb_detection)
+project(bb_launchers)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -7,17 +7,7 @@ project(bb_detection)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED
-  std_msgs
-  bb_util
-  cv_bridge
-  image_transport
-  OpenCV
-  roscpp
-  geometry_msgs
-  tf
-  message_generation
-  )
+find_package(catkin REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -110,7 +100,7 @@ find_package(catkin REQUIRED
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES dummy
+#  LIBRARIES bb_launchers
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -122,15 +112,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- include
- ${catkin_INCLUDE_DIRS}
- ${OpenCV_INCLUDE_DIRS}
+# include
+# ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-add_library(
-  cv_cue lib/cv_cue.cpp
-)
+# add_library(${PROJECT_NAME}
+#   src/${PROJECT_NAME}/bb_launchers.cpp
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -140,10 +129,7 @@ add_library(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-##add_executable(dummy_cue src/dummy_cue.cpp)
-add_executable(wind_cue_detector src/wind_cue_detector.cpp)
-add_executable(intensity_cue_detector src/intensity_cue_detector.cpp)
-add_executable(cue_calibration src/cue_calibration.cpp)
+# add_executable(${PROJECT_NAME}_node src/bb_launchers_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,51 +139,12 @@ add_executable(cue_calibration src/cue_calibration.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(
-  wind_cue_detector
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(
-  intensity_cue_detector
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(
-  cue_calibration
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-
-target_link_libraries(
-  wind_cue_detector
-  ${catkin_LIBRARIES}
-  )
-
-target_link_libraries(
-  intensity_cue_detector
-  cv_cue
-  ${catkin_LIBRARIES}
-  )
-
-
-target_link_libraries(
-  cue_calibration
-  ${catkin_LIBRARIES}
-  )
-
-# target_link_libraries(
-#   mono_prompt
-#   cue
-#   icm
+# target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
-#   ${OpenCV_LIBS}
-#   stdc++fs
-#   )
+# )
 
 #############
 ## Install ##
@@ -246,7 +193,7 @@ target_link_libraries(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_dummy.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_bb_launchers.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

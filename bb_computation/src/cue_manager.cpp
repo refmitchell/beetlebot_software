@@ -12,6 +12,7 @@
 
 #include <vector>
 
+#include "bb_util/bb_util.h"
 #include "bb_util/cue.hpp"
 #include "bb_util/cue_msg.h"
 #include "bb_util/cue_list.h"
@@ -85,8 +86,8 @@ int main(int argc, char **argv){
   // else. E.g.a config file.
   std::vector<std::string> cue_topics = {
     //"dummy_cue_wind",
-    "wind_cue",
-    "light_cue"
+    bb_util::defs::WIND_CUE_TOPIC,
+    bb_util::defs::INTENSITY_CUE_TOPIC
   };
 
   std::vector<std::string> cue_types = {
