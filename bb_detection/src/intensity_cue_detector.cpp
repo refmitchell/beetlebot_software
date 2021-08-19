@@ -11,6 +11,7 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
+#include <std_msgs/String.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -18,6 +19,8 @@
 
 #include <sstream>
 #include <cmath>
+#include <iostream>
+
 
 #include "bb_detection/argparse.h"
 #include "bb_detection/cv_cue.hpp"
@@ -31,6 +34,9 @@ argparse::ArgumentParser parser("Parser");
 image_transport::ImageTransport *it; /**< ROS image transport layer*/
 image_transport::Subscriber sub; /**< Image subscription node. */
 ros::Publisher pub; /**< Publisher, publishing cue information. */
+
+ros::NodeHandle *nhp;
+double calibration_offset = 0;
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   //Global, all bb_computation nodes should have these options.
@@ -71,6 +77,15 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   }
 
   return true;
+}
+
+// Calibration update callback
+void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
+  double current = calibration_offset;
+  nhp->param(bb_util::params::CALIBRATION_INTENSITY_OFFSET,
+             calibration_offset,
+             current);
+  ROS_INFO("CB: %lf", calibration_offset);
 }
 
 // BV Callback
@@ -180,8 +195,12 @@ int main(int argc, char **argv){
   // ROS init
   ros::init(argc, argv, node_name.c_str());
   ros::NodeHandle n;
+  nhp = &n; // Init global pointer for callback usage.
 
-
+  // Check for calibration data
+  n.param<double>(bb_util::params::CALIBRATION_INTENSITY_OFFSET,
+                  calibration_offset,
+                  -1);
 
   void (*imageCallback) (const sensor_msgs::ImageConstPtr& msg);
 
@@ -199,8 +218,12 @@ int main(int argc, char **argv){
   // Plumb up the ROS subscriber and publisher
   it = new image_transport::ImageTransport(n);
   pub = n.advertise<bb_util::cue_msg>(pub_topic, 1000);
-  sub =
-    it->subscribe(sub_topic, 1, imageCallback);
+  sub = it->subscribe(sub_topic, 1, imageCallback);
+
+  ros::Subscriber calibration_sub =
+    n.subscribe(bb_util::defs::CALIBRATION_NOTIFY_TOPIC,
+                1000,
+                calibrationNotifyCallback);
 
   ros::spin();
 

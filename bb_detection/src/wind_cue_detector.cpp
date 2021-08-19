@@ -8,6 +8,7 @@
 
 #include "ros/ros.h"
 #include "std_msgs/Float64.h"
+#include "std_msgs/String.h"
 
 #include <sstream>
 #include <cmath>
@@ -23,6 +24,9 @@ argparse::ArgumentParser parser("Parser");
 // The wind cue representation, global so that it can be
 // modified by a callback function and published.
 bb_util::Cue wind_cue = bb_util::Cue("wind", 1, 0, 0);
+ros::NodeHandle *nhp;
+
+double calibration_offset = 25;
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   //Global, all bb_computation nodes should have these options.
@@ -59,6 +63,14 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
+  // Sensor calibration has been updated, re-read from parameter server
+  double current = calibration_offset;
+  nhp->param(bb_util::params::CALIBRATION_WIND_OFFSET,
+             calibration_offset,
+             current);
+}
+
 void directionUpdateCallback(const std_msgs::Float64::ConstPtr& msg){
   // Convert direction to radians.
   double wind_direction = msg->data * bb_util::defs::PI / 180;
@@ -87,7 +99,7 @@ int main(int argc, char **argv){
   std::string pub_topic =
     parser.exists("publish") ?
     parser.get<std::string>("publish") :
-    "wind_cue";
+    bb_util::defs::WIND_CUE_TOPIC;
 
   // subscribe to
   std::string direction_sub_topic =
@@ -98,7 +110,7 @@ int main(int argc, char **argv){
   std::string speed_sub_topic =
     parser.exists("subscribe_speed") ?
     parser.get<std::string>("subscribe_speed") :
-    bb_util::defs::WIND_CUE_TOPIC ;
+    "wind_speed";
 
   // name
   std::string node_name =
@@ -115,6 +127,13 @@ int main(int argc, char **argv){
   // ROS init
   ros::init(argc, argv, node_name.c_str());
   ros::NodeHandle n;
+  nhp = &n; // Set pointer to the node handle for callback usage
+
+  // Read calibration info from the parameter server, set to zero if
+  // parameter not found.
+  n.param<double>(bb_util::params::CALIBRATION_WIND_OFFSET,
+                  calibration_offset,
+                  0);
 
   ros::Publisher cue_pub =
     n.advertise<bb_util::cue_msg>(pub_topic.c_str(), 1000);
@@ -124,6 +143,11 @@ int main(int argc, char **argv){
 
   ros::Subscriber direction_sub =
     n.subscribe(direction_sub_topic.c_str(), 1000, directionUpdateCallback);
+
+  ros::Subscriber calibration_sub =
+    n.subscribe(bb_util::defs::CALIBRATION_NOTIFY_TOPIC,
+                1000,
+                calibrationNotifyCallback);
 
   while(ros::ok()){
     ros::spinOnce();

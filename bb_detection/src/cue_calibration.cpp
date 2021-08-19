@@ -85,12 +85,12 @@ int main(int argc, char**argv){
   std::string wind_cue_sub_topic =
     parser.exists("wind_subscribe") ?
     parser.get<std::string>("wind_subscribe") :
-    "wind_cue";
+    bb_util::defs::WIND_CUE_TOPIC;
 
   std::string intensity_cue_sub_topic =
     parser.exists("intensity_subscribe") ?
     parser.get<std::string>("intensity_subscribe") :
-    "intensity_cue";
+    bb_util::defs::INTENSITY_CUE_TOPIC;
 
   std::string node_name = "calibration";
   ros::init(argc, argv, node_name.c_str());
@@ -111,12 +111,15 @@ int main(int argc, char**argv){
     n.setParam(bb_util::params::CALIBRATION_WIND_OFFSET, wind_offset);
     std_msgs::String msg;
     msg.data = "";
+
+    // Delay seems to be required for ros plumbing
+    ros::Duration(0.1).sleep();
+
     calibration_notify.publish(msg);
     ROS_INFO("New calibration data stored; press enter to run again. To\n"
              "exit, use CTRL-C. To store calibration data, remember to use\n"
              "$: rosparam dump > params.txt.\n");
     std::cin.get(); // Wait for either enter or interrupt
-
   }
 
   return 0;
