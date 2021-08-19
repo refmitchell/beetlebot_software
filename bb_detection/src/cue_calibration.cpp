@@ -102,9 +102,14 @@ int main(int argc, char**argv){
   ros::Subscriber intensity_cue_sub =
     n.subscribe(intensity_cue_sub_topic.c_str(), 1000, intensityUpdateCallback);
 
+  ros::Subscriber odom_sub =
+    n.subscribe("/odom", 1000, odomCallback);
+
   ros::Publisher calibration_notify =
     n.advertise<std_msgs::String>(bb_util::defs::CALIBRATION_NOTIFY_TOPIC,1000);
 
+  int count = 0;
+  int iter = 10;
   while(ros::ok()){
     ros::spinOnce();
     n.setParam(bb_util::params::CALIBRATION_INTENSITY_OFFSET, intensity_offset);
@@ -116,11 +121,14 @@ int main(int argc, char**argv){
     ros::Duration(0.1).sleep();
 
     calibration_notify.publish(msg);
-    ROS_INFO("New calibration data stored; press enter to run again. To\n"
-             "exit, use CTRL-C. To store calibration data, remember to use\n"
-             "$: rosparam dump > params.txt.\n");
-    std::cin.get(); // Wait for either enter or interrupt
+
+    count++;
+    if (count >= iter) break;
   }
+
+  ROS_INFO("New calibration data stored; remember to use rosparam dump to\n"
+           "save it for a future session.");
+
 
   return 0;
 }

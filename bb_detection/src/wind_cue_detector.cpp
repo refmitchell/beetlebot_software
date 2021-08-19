@@ -26,7 +26,7 @@ argparse::ArgumentParser parser("Parser");
 bb_util::Cue wind_cue = bb_util::Cue("wind", 1, 0, 0);
 ros::NodeHandle *nhp;
 
-double calibration_offset = 25;
+double calibration_offset = 0;
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   //Global, all bb_computation nodes should have these options.
@@ -69,18 +69,19 @@ void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
   nhp->param(bb_util::params::CALIBRATION_WIND_OFFSET,
              calibration_offset,
              current);
+  ROS_INFO("Cal");
 }
 
 void directionUpdateCallback(const std_msgs::Float64::ConstPtr& msg){
   // Convert direction to radians.
   double wind_direction = msg->data * bb_util::defs::PI / 180;
-  wind_cue.setAzimuth(-wind_direction); // inverted to match the light output
+  wind_cue.setAzimuth(-wind_direction - calibration_offset); // inverted to match the light output
 }
 
 void speedUpdateCallback(const std_msgs::Float64::ConstPtr& msg){
   // Cap wind speed at 100deg/sec (this needs tuned to the sensor in use)
-  double wind_speed = msg->data < 100 ? msg->data : 100;
-  wind_speed = wind_speed / 100; // Scale to be between 0 and 1
+  double wind_speed = msg->data < 110 ? msg->data : 110;
+  wind_speed = wind_speed / 110; // Scale to be between 0 and 1
   wind_cue.setReliability(wind_speed);
 }
 
@@ -152,6 +153,7 @@ int main(int argc, char **argv){
   while(ros::ok()){
     ros::spinOnce();
     cue_pub.publish(bb_util::Cue::toMsg(wind_cue));
+    ROS_INFO("\n%s", wind_cue.toString().c_str());
   }
 
   return 0;

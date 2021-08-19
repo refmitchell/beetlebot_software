@@ -29,6 +29,8 @@ add_message_files(
   encoding_status.msg
   )
 
+add_executable(yaw src/yaw.cpp)
+
 generate_messages(
   DEPENDENCIES
   std_msgs
@@ -59,7 +61,18 @@ add_dependencies(
   bb_util
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
-)
+  )
+
+add_dependencies(
+  yaw
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  )
+
+target_link_libraries(
+  yaw
+  ${catkin_LIBRARIES}
+  )
 
 # Libs for any nodes built here
 target_link_libraries(

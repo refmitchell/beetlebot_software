@@ -85,9 +85,10 @@ int main(int argc, char **argv){
   // Defined for ease, would be better to have this user-defined somewhere
   // else. E.g.a config file.
   std::vector<std::string> cue_topics = {
-    //"dummy_cue_wind",
-    bb_util::defs::WIND_CUE_TOPIC,
-    bb_util::defs::INTENSITY_CUE_TOPIC
+    "dummy_cue_wind",
+    "dummy_cue_light"
+    // bb_util::defs::WIND_CUE_TOPIC,
+    // bb_util::defs::INTENSITY_CUE_TOPIC
   };
 
   std::vector<std::string> cue_types = {

@@ -85,7 +85,6 @@ void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
   nhp->param(bb_util::params::CALIBRATION_INTENSITY_OFFSET,
              calibration_offset,
              current);
-  ROS_INFO("CB: %lf", calibration_offset);
 }
 
 // BV Callback
@@ -120,7 +119,12 @@ void brightestVectorCallback(const sensor_msgs::ImageConstPtr& msg){
     bb_util::vision::imshow("Brightest point", colour_frame);
   }
 
-  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
+  // Convert to system cue and offset the azimuth
+  bb_util::Cue sys_cue = cv_cue.toSystemCue();
+  sys_cue.setAzimuth(sys_cue.getTheta() - calibration_offset);
+
+  pub.publish(bb_util::Cue::toMsg(sys_cue));
+  //  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
 }
 
 // CV Callback
@@ -157,7 +161,12 @@ void centroidVectorCallback(const sensor_msgs::ImageConstPtr& msg){
     bb_util::vision::imshow("Centroid Vector", colour_frame);
   }
 
-  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
+  bb_util::Cue sys_cue = cv_cue.toSystemCue();
+  sys_cue.setAzimuth(sys_cue.getTheta() - calibration_offset);
+
+  pub.publish(bb_util::Cue::toMsg(sys_cue));
+
+  //  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
 }
 
 int main(int argc, char **argv){
