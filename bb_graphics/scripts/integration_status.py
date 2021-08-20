@@ -38,6 +38,8 @@ wind_ln, = polar_plot_ax.plot([], [], 'bo')
 light_ln, = polar_plot_ax.plot([], [], 'go')
 cl1_ln, = polar_plot_ax.plot([], [], 'ro')
 true_cl_ln, = polar_plot_ax.plot([], [], 'orange')
+polar_plot_ax.set_theta_zero_location("N")
+polar_plot_ax.set_theta_direction(-1)
 
 
 # fig.tight_layout()

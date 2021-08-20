@@ -24,8 +24,9 @@
 argparse::ArgumentParser parser("Parser");
 
 double global_yaw = 0;
-double wind_offset = 0;
 double intensity_offset = 0;
+double wind_offset = 0;
+std::map<std::string, double> readings;
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
@@ -65,19 +66,32 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
   double roll, pitch, yaw;
   tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
   global_yaw = yaw;
-  ROS_INFO("Yaw: %f", yaw);
 }
 
 void intensityUpdateCallback(const bb_util::cue_msg::ConstPtr& msg){
   bb_util::cue_msg cue_msg = *msg;
   bb_util::Cue cue = bb_util::Cue::toCue(cue_msg);
-  intensity_offset = global_yaw - cue.getTheta();
+
+  // If we do not have a reading for this cue, store one.
+  if(!readings.count(cue.getType())) readings[cue.getType()] = cue.getTheta();
+
+  // Apply offset based on first reading
+  intensity_offset = global_yaw + readings[cue.getType()];//cue.getTheta();
+  ROS_INFO("Yaw, reading, offset: %lf, %lf, %lf",
+           global_yaw,
+           readings[cue.getType()],
+           intensity_offset);
 }
 
 void windUpdateCallback(const bb_util::cue_msg::ConstPtr& msg){
   bb_util::cue_msg cue_msg = *msg;
   bb_util::Cue cue = bb_util::Cue::toCue(cue_msg);
-  wind_offset = global_yaw - cue.getTheta();
+
+  // If we do not have a reading for this cue, store one.
+  if(!readings.count(cue.getType())) readings[cue.getType()] = cue.getTheta();
+
+  // Apply offset based on first reading
+  wind_offset = global_yaw + readings[cue.getType()];//cue.getTheta();
 }
 
 int main(int argc, char**argv){
@@ -96,6 +110,8 @@ int main(int argc, char**argv){
   ros::init(argc, argv, node_name.c_str());
   ros::NodeHandle n;
 
+
+
   ros::Subscriber wind_direction_sub =
     n.subscribe(wind_cue_sub_topic.c_str(), 1000, windUpdateCallback);
 
@@ -108,22 +124,24 @@ int main(int argc, char**argv){
   ros::Publisher calibration_notify =
     n.advertise<std_msgs::String>(bb_util::defs::CALIBRATION_NOTIFY_TOPIC,1000);
 
-  int count = 0;
-  int iter = 10;
+
+  ros::Duration(0.5).sleep();
+
+  //Clear existing calibration offsets
+  n.setParam(bb_util::params::CALIBRATION_INTENSITY_OFFSET, 0);
+  n.setParam(bb_util::params::CALIBRATION_WIND_OFFSET, 0);
+  std_msgs::String notify_clear;
+  notify_clear.data = "";
+  calibration_notify.publish(notify_clear);
+
   while(ros::ok()){
     ros::spinOnce();
     n.setParam(bb_util::params::CALIBRATION_INTENSITY_OFFSET, intensity_offset);
     n.setParam(bb_util::params::CALIBRATION_WIND_OFFSET, wind_offset);
     std_msgs::String msg;
     msg.data = "";
-
-    // Delay seems to be required for ros plumbing
-    ros::Duration(0.1).sleep();
-
+    ros::Duration(0.2).sleep();
     calibration_notify.publish(msg);
-
-    count++;
-    if (count >= iter) break;
   }
 
   ROS_INFO("New calibration data stored; remember to use rosparam dump to\n"

@@ -90,8 +90,8 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
   //
   // Translate into the system standard cue representation
   //
-    bb_util::Cue CueFromCV::toSystemCue(){
-    std::string type = "light";
+  bb_util::Cue CueFromCV::toSystemCue(){
+    std::string type = "intensity";
     double sensitivity = 1;
     double reliability = this->r / max_cue_vector_length; // Scale between 0:1
     reliability = reliability > 1.1 ? 0 : reliability;

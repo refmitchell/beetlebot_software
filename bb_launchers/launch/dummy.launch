@@ -1,0 +1,45 @@
+<!--
+    Launches:
+    The yaw node
+    A dummy light cue
+    A dummy wind cue
+    The cue manager [make sure to modify this to use dummy cues]
+    Test mmcx subscriber
+    Graphical output for the integration status
+-->
+
+<launch>
+  <node
+      name="yaw"
+      pkg="bb_util"
+      type="yaw"
+      />
+  <node
+      name="dummy_light"
+      pkg="bb_dummy"
+      type="dummy_cue"
+      args="-t intensity -p intensity_cue -m 0.5 -a 10"
+      />
+  <node
+      name="dummy_wind"
+      pkg="bb_dummy"
+      type="dummy_cue"
+      args="-t wind -p wind_cue -m 0.5 -a 120"
+      />
+  <node
+      name="cue_manager"
+      pkg="bb_computation"
+      type="cue_manager"
+      />
+  <node
+      name="mmcx"
+      pkg="bb_computation"
+      type="test_mmcx_subscriber"
+      />
+  <!-- Will be useful to include going forward but annoying during testing -->
+  <!-- <node -->
+  <!--     name="integration_status" -->
+  <!--     pkg="bb_graphics" -->
+  <!--     type="integration_status.py" -->
+  <!--     /> -->
+</launch>
