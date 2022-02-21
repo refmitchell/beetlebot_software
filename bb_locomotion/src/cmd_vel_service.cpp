@@ -82,16 +82,7 @@ bool loc_node_callback(bb_util::locomotion_cmd::Request& req,
   case driving::RGT:
     command_velocity(0,0.08);
     res.response = "Angular velocity set to: 0.08.";
-  case control::LIN_LOCK_TOGGLE:
-    node_settings::linear_lock = !(node_settings::linear_lock);
-    res.response =
-      "Linear lock set to: " +
-      node_settings::bool2string(node_settings::linear_lock);
-  case control::ANG_LOCK_TOGGLE:
-    node_settings::angular_lock = !(node_settings::angular_lock);
-    res.response =
-      "Angular lock set to: " +
-      node_settings::bool2string(node_settings::angular_lock);
+
   default:
     command_velocity(0,0);
   }

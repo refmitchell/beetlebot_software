@@ -51,6 +51,12 @@ namespace bb_util {
     const std::string VM_MENOTAXIS = "vm_menotaxis";
   }
 
+  // Standard responses from nodes.
+  namespace responses{
+    const std::string BUSY = "busy";
+    const std::string COMPLETE = "complete";
+  }
+
   //Locomotion node command opcodes. Some of these are for movement,
   //others are functional.
   namespace loc_node_commands {
@@ -60,6 +66,8 @@ namespace bb_util {
       const int BWD = 2;
       const int RGT = 3;
       const int LFT = 4;
+      const int FULL_ROTATION = 5;
+      const int ZERO = 6;
     }
 
     namespace control {

@@ -182,6 +182,8 @@ protected:
       }
     }
 
+    MAT_LOG(W);
+    
     return W;
   }
 

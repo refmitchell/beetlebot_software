@@ -15,8 +15,10 @@ find_package(catkin REQUIRED
   OpenCV
   roscpp
   geometry_msgs
+  nav_msgs
   tf
   message_generation
+  rosbag
   )
 
 ## System dependencies are found with CMake's conventions
@@ -144,6 +146,7 @@ add_library(
 add_executable(wind_cue_detector src/wind_cue_detector.cpp)
 add_executable(intensity_cue_detector src/intensity_cue_detector.cpp)
 add_executable(cue_calibration src/cue_calibration.cpp)
+add_executable(pol_op_recorder src/pol_op_recording.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -171,8 +174,13 @@ add_dependencies(
   ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS})
 
-## Specify libraries to link a library or executable target against
+add_dependencies(
+  pol_op_recorder
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS})
 
+## Specify libraries to link a library or executable target against
 target_link_libraries(
   wind_cue_detector
   ${catkin_LIBRARIES}
@@ -187,6 +195,11 @@ target_link_libraries(
 
 target_link_libraries(
   cue_calibration
+  ${catkin_LIBRARIES}
+  )
+
+target_link_libraries(
+  pol_op_recorder
   ${catkin_LIBRARIES}
   )
 

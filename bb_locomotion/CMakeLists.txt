@@ -35,6 +35,7 @@ include_directories(
 
 add_executable(wakeup src/wakeup.cpp)
 add_executable(cmd_vel_service src/cmd_vel_service.cpp)
+add_executable(preset_movement_service src/presets.cpp)
 
 add_dependencies(wakeup ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(
@@ -43,7 +44,13 @@ add_dependencies(
   ${catkin_EXPORTED_TARGETS}
   ${bb_util_EXPORTED_TARGETS}
   )
-
+add_dependencies(
+  preset_movement_service
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  )
 
 target_link_libraries(wakeup ${catkin_LIBRARIES})
 target_link_libraries(cmd_vel_service ${catkin_LIBRARIES})
+target_link_libraries(preset_movement_service ${catkin_LIBRARIES})
