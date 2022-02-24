@@ -25,6 +25,7 @@
 #include <tf/transform_datatypes.h>
 #include <std_msgs/UInt32MultiArray.h>
 #include <std_msgs/Float64.h>
+#include <geometry_msgs/Twist.h>
 
 #include <sstream>
 #include <cmath>
@@ -39,14 +40,36 @@
 
 argparse::ArgumentParser parser("Parser");
 rosbag::Bag bag; // Rosbag for recording
+ros::Publisher cmd_publisher;
+
 std::vector<uint32_t> global_sensor_data; // Current sensor data
 double global_yaw; // Current yaw (from odom)
 float angular_distance = 0;
 bool yaw_data_received = false;
 bool pol_data_received = false;
-std::string pol_sub_topic = "pol_op_data";
+
+std::string pol_sub_topic = "pol_op_0";
 std::string odom_sub_topic = "yaw";
 std::string node_name = "pol_op_pd_test_recorder";
+
+double clip(double value){
+  return value >= 0 ? value : 0;
+}
+
+//Publish a velocity command.
+void command_velocity(float linear, float angular){
+ geometry_msgs::Twist msg;
+
+  msg.linear.x = linear;
+  msg.linear.y = 0.0;
+  msg.linear.z = 0.0;
+
+  msg.angular.x = 0.0;
+  msg.angular.y = 0.0;
+  msg.angular.z = angular;
+
+  cmd_publisher.publish(msg);
+}
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
@@ -72,13 +95,13 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
 void yawCallback(const std_msgs::Float64::ConstPtr& yaw_msg){
   // Conversion from Quaternion to RPY, lifted from ROS forums.
   global_yaw = yaw_msg->data; // Update local memory
-  bag.write(odom_sub_topic.c_str(), ros::Time::now(), yaw_msg);
+
   yaw_data_received = true;
 }
 
 void polCallback(const std_msgs::UInt32MultiArray::ConstPtr& pol_msg){
   global_sensor_data = pol_msg->data; // Update local memory
-  bag.write(pol_sub_topic.c_str(), ros::Time::now(), pol_msg);
+
   pol_data_received = true;
 }
 
@@ -102,9 +125,6 @@ int main(int argc, char **argv){
   // ROS init
   ros::init(argc, argv, node_name.c_str());
   ros::NodeHandle n;
-
-  // Want to update rosbag given data from either topic
-  // as we want to know how these change w.r.t. eachother.
   ros::Subscriber pol_sub =
     n.subscribe(pol_sub_topic,
                 1000,
@@ -113,79 +133,123 @@ int main(int argc, char **argv){
     n.subscribe(odom_sub_topic,
                 1000,
                 yawCallback);
+  cmd_publisher = n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
 
-  // Connect to the locomotion node.
-  ros::ServiceClient client =
-    n.serviceClient<bb_util::locomotion_cmd>("preset_movement");
-
-  // Spin until we start receiving data
+  // Wait for sensor data
   while(ros::ok() && !(yaw_data_received && pol_data_received)){
     ros::spinOnce();
     ROS_INFO("Awaiting pol/odom data. Start the sensor nodes.");
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
-
   ROS_INFO("Data available.");
   ROS_INFO("Moving to start position.");
 
-  bb_util::locomotion_cmd zero_cmd;
-  zero_cmd.request.opcode = bb_util::loc_node_commands::driving::ZERO;
-
-  if (!client.call(zero_cmd)){
-    ROS_ERROR("Failed to call preset_movement service. Make sure it's started.");
-    return 1;
-  }
-
-  // Start recording
-  ROS_INFO("Beginning recording.");
-  bag.open("pol_op_recording.bag", rosbag::bagmode::Write);
-
-  auto start_time = std::chrono::system_clock::now();
-  auto end_time = std::chrono::system_clock::now(); // rotation end
-  double last_measure = global_yaw;
-  double traverse = 0;
-  bool rotation_started = false;
-  bool rotation_complete = false;
-  while(ros::ok()){
-    ros::spinOnce(); // Get any new messages
-
-
-
-    // Rotation
-    auto current_time = std::chrono::system_clock::now();
-
-    std::chrono::duration<double, std::milli> diff = current_time - start_time;
-
-    // Management, this is awful...
-    // If initial wait is complete and the rotation isn't complete
-    if ((diff > bookend_time) && !rotation_complete){
-      if (!(rotation_started)){
-        // Start rotation if it hasn't started
-        bb_util::locomotion_cmd rgt;
-        rgt.request.opcode = bb_util::loc_node_commands::driving::RGT;
-        client.call(rgt);
-        rotation_started = true;
-      } else if (traverse >= 2*bb_util::defs::PI) {
-        // Check if rotation is complete and send stop signal
-        rotation_complete = true;
-        bb_util::locomotion_cmd all_stop;
-        all_stop.request.opcode = bb_util::loc_node_commands::driving::ALL_STOP;
-        client.call(all_stop);
-        end_time = std::chrono::system_clock::now();
-      } else { // Rotation has started and isn't complete, update traverse.
-        traverse = traverse + (global_yaw - last_measure);
-        last_measure = global_yaw;
-      }
-    } else {
-      diff = current_time - end_time;
-      if (diff > bookend_time){
-        bag.close(); // End recording
-        break; // Break out of the loop, end node.
-      }
+  // Move to zero on odometry
+  double goal_yaw = 0;
+  double error = global_yaw - goal_yaw;
+  ros::Rate rate(50);
+  while(ros::ok() && abs(error) > 0.011){
+    ros::spinOnce();
+    ROS_INFO("%lf", error);
+    command_velocity(0, -0.7*error);
+    error = global_yaw - goal_yaw;
+    if (abs(error) <= 0.011){
+      command_velocity(0, 0);
+      ROS_INFO("stop sent");
     }
+    rate.sleep();
   }
 
+  // Pre-rotation wait
+  bag.open("pol_op_recording.bag", rosbag::bagmode::Write);
+  auto start_time = std::chrono::system_clock::now();
+  auto current_time = std::chrono::system_clock::now();
+  std::chrono::duration<double> diff =  current_time - start_time;
+  double corrected_yaw =
+    global_yaw >= 0 ?
+    global_yaw :
+    2*bb_util::defs::PI + global_yaw;
+  ros::Rate ten_hz(10);
+
+  while (ros::ok() && diff < bookend_time){
+    ros::spinOnce();
+    corrected_yaw =
+      global_yaw >= 0 ?
+      global_yaw :
+      2*bb_util::defs::PI + global_yaw;
+
+    std_msgs::UInt32MultiArray pol_msg;
+    std_msgs::Float64 yaw_msg;
+    pol_msg.data = global_sensor_data;
+    yaw_msg.data = global_yaw;
+    bag.write(odom_sub_topic.c_str(), ros::Time::now(), yaw_msg);
+    bag.write(pol_sub_topic.c_str(), ros::Time::now(), pol_msg);
+    current_time = std::chrono::system_clock::now();
+    diff =  current_time - start_time;
+    ten_hz.sleep();
+  }
+
+  corrected_yaw =
+    global_yaw >= 0 ?
+    global_yaw :
+    2*bb_util::defs::PI + global_yaw;
+  double last_measure = corrected_yaw;
+  double traverse = 0;
 
 
+  while(ros::ok() && traverse <= 2*bb_util::defs::PI){
+    ros::spinOnce();
+    command_velocity(0, 0.2);
+    corrected_yaw =
+      global_yaw >= 0 ?
+      global_yaw :
+      2*bb_util::defs::PI + global_yaw;
+
+    traverse = traverse + clip(corrected_yaw - last_measure);
+    ROS_INFO("LM: %lf, CY: %lf, Traverse: %lf", last_measure, corrected_yaw, traverse);
+    last_measure = corrected_yaw;
+
+    std_msgs::UInt32MultiArray pol_msg;
+    std_msgs::Float64 yaw_msg;
+    pol_msg.data = global_sensor_data;
+    yaw_msg.data = global_yaw;
+    bag.write(odom_sub_topic.c_str(), ros::Time::now(), yaw_msg);
+    bag.write(pol_sub_topic.c_str(), ros::Time::now(), pol_msg);
+    if (traverse >= 2*bb_util::defs::PI){
+      command_velocity(0, 0);
+      ROS_INFO("stop sent");
+    }
+    ten_hz.sleep();
+  }
+
+  // Post rotation wait.
+  start_time = std::chrono::system_clock::now();
+  current_time = std::chrono::system_clock::now();
+  diff =  current_time - start_time;
+  corrected_yaw =
+    global_yaw >= 0 ?
+    global_yaw :
+    2*bb_util::defs::PI + global_yaw;
+  while (ros::ok() && diff < bookend_time){
+    ros::spinOnce();
+    corrected_yaw =
+      global_yaw >= 0 ?
+      global_yaw :
+      2*bb_util::defs::PI + global_yaw;
+
+    std_msgs::UInt32MultiArray pol_msg;
+    std_msgs::Float64 yaw_msg;
+    pol_msg.data = global_sensor_data;
+    yaw_msg.data = global_yaw;
+    bag.write(odom_sub_topic.c_str(), ros::Time::now(), yaw_msg);
+    bag.write(pol_sub_topic.c_str(), ros::Time::now(), pol_msg);
+    current_time = std::chrono::system_clock::now();
+    diff =  current_time - start_time;
+    ten_hz.sleep();
+  }
+
+  // Close bag and exit.
+  bag.close();
+  ROS_INFO("Exiting");
   return 0;
 }

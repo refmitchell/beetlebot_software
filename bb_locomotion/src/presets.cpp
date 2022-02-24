@@ -74,7 +74,7 @@ bool loc_node_callback(bb_util::locomotion_cmd::Request& req,
     res.success = true;
     res.response = bb_util::responses::COMPLETE;
   case bb_util::loc_node_commands::driving::RGT:
-    command_velocity(0,0.08);
+    command_velocity(0,0.2);
     res.success = true;
     res.response = bb_util::responses::COMPLETE;
   case bb_util::loc_node_commands::driving::FWD:
@@ -86,7 +86,7 @@ bool loc_node_callback(bb_util::locomotion_cmd::Request& req,
     res.success = true;
     res.response = bb_util::responses::COMPLETE;
   case bb_util::loc_node_commands::driving::LFT:
-    command_velocity(0,-0.08);
+    command_velocity(0,-0.2);
     res.success = true;
     res.response = bb_util::responses::COMPLETE;
   default:
