@@ -1,8 +1,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 
-#include "locomotion/velocity.h"
-
 #include "bb_util/bb_util.h"
 #include "bb_util/velocity.h"
 #include "bb_util/locomotion_cmd.h"

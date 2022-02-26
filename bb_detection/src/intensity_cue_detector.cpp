@@ -22,11 +22,12 @@
 #include <iostream>
 
 
-#include "bb_detection/argparse.h"
+
 #include "bb_detection/cv_cue.hpp"
 
 #include "bb_util/bb_util.h"
 #include "bb_util/cue.hpp"
+#include "bb_util/argparse.h"
 
 //Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");

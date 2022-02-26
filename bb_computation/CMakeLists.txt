@@ -132,11 +132,23 @@ add_library(
   cue
   lib/cue.cpp
   )
+add_dependencies(
+  cue
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+)
 
 add_library(
   icm
   lib/icm.cpp
   )
+add_dependencies(
+  icm
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

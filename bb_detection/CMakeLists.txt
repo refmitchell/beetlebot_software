@@ -134,6 +134,11 @@ add_library(
   cv_cue lib/cv_cue.cpp
 )
 
+add_dependencies(
+  cv_cue
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS})
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure

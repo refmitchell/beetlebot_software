@@ -10,10 +10,10 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 
-#include "locomotion/velocity.h"
+#include "bb_locomotion/velocity.h"
 
 void send_velocity_msg(float linear, float angular, ros::ServiceClient& client){
-  locomotion::velocity msg;
+  bb_locomotion::velocity msg;
   msg.request.linear = linear;
   msg.request.angular = angular;
   msg.request.priority = 0;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   ros::ServiceClient client =
-    n.serviceClient<locomotion::velocity>("update_velocity");
+    n.serviceClient<bb_locomotion::velocity>("update_velocity");
 
   wakeup(client);
 

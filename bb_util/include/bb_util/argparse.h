@@ -30,20 +30,27 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#if defined(__GNUC__) && __GNUC__ < 8
 #include <experimental/filesystem>
 namespace std {
 namespace filesystem = std::experimental::filesystem;
 }
-#elif defined(_MSC_VER) && _MSVC_LANG < 201703L
-#include <filesystem>
-namespace std {
-namespace filesystem = std::experimental::filesystem;
-}  // namespace std
-#else
-#include <filesystem>
-#endif
+
+// #if defined(__GNUC__) && __GNUC__ < 8
+// #include <experimental/filesystem>
+// #pragma message "Experimental"
+// namespace std {
+// namespace filesystem = std::experimental::filesystem;
+// }
+// #elif defined(_MSC_VER) && _MSVC_LANG < 201703L
+// #pragma message "Filesystem"
+// #include <filesystem>
+// namespace std {
+// namespace filesystem = std::experimental::filesystem;
+// }  // namespace std
+// #else
+// #pragma message "Filesystem"
+// #include <filesystem>
+// #endif
 
 namespace argparse {
 namespace detail {

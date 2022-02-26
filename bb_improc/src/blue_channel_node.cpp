@@ -18,9 +18,10 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "bb_improc/bb_improc.hpp"
-#include "bb_improc/argparse.h"
+
 
 #include "bb_util/bb_util.h"
+#include "bb_util/argparse.h"
 
 //Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");

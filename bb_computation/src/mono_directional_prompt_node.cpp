@@ -19,11 +19,12 @@
 #include <sstream>
 #include <cmath>
 
-#include "bb_computation/argparse.h"
+
 #include "bb_computation/cue.h"
 #include "bb_computation/icm.h"
 
 #include "bb_util/bb_util.h"
+#include "bb_util/argparse.h"
 
 //Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");
