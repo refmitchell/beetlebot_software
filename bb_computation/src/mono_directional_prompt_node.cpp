@@ -19,7 +19,6 @@
 #include <sstream>
 #include <cmath>
 
-
 #include "bb_computation/cue.h"
 #include "bb_computation/icm.h"
 

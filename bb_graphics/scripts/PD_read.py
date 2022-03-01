@@ -14,14 +14,35 @@ messages = bag.read_messages(topics=['pol_op_0', 'yaw'])
 
 yaws = []
 pols = []
+time = []
 
+counter = 0
+pol_op_data = [0,0,0,0]
+start_time = 0
 for topic, msg, t in messages:
     if topic == 'yaw':
         yaws.append(msg.data)
+#        print("Yaw_t: {}".format(int(t.to_nsec()/1000)))
     elif topic == 'pol_op_0':
+        print("data:old - {}:{}".format(msg.data, pol_op_data))
+        if list(msg.data) != pol_op_data:
+            time = int(t.to_nsec()/1000000)
+            duration = time  - start_time
+            start_time = time
+
+            print("duration = {}".format(duration))
+            print("count = {}".format(counter))
+            pol_op_data = list(msg.data)
+            counter = 0
+
         pols.append(msg.data)
+        # print("Pol_r: {}".format(msg.data))
+        # print("Pol_t: {}".format(int(t.to_nsec()/1000000)))
+        counter+=1
+        #print("Pol_t: {}".format(t.to_sec())
 
 bag.close()
+
 
 #
 # Construct df representation
@@ -45,8 +66,8 @@ for i in range(len(pds)): # Lazy
 # Stokes parameters - Optics of life version
 # Need to double check PD arrangement
 #
-Q = df["pd1"] - df["pd4"]
-U = df["pd2"] - df["pd3"]
+Q = df["pd3"] - df["pd4"]
+U = df["pd2"] - df["pd1"]
 avg = df["pd1"] + df["pd2"] + df["pd3"] + df["pd4"]
 avg = avg/4
 
@@ -56,7 +77,7 @@ angle = np.arctan2(U, Q) / 2
 df["Q"] = Q
 df["U"] = U
 df["p_linear"] = p_linear
-df["angle"] = np.arctan2((df["pd4"] + df["pd1"] - 2*df["pd3"]),(df["pd4"] - df["pd1"])) / 2#angle
+df["angle"] = angle # np.arctan2((df["pd4"] + df["pd1"] - 2*df["pd3"]),(df["pd4"] - df["pd1"])) / 2#angle
 
 plt.subplot(611)
 plt.plot(df["pd1"])
