@@ -23,7 +23,7 @@
 #include <rosbag/view.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/transform_datatypes.h>
-#include <std_msgs/UInt32MultiArray.h>
+#include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Twist.h>
 
@@ -42,7 +42,7 @@ argparse::ArgumentParser parser("Parser");
 rosbag::Bag bag; // Rosbag for recording
 ros::Publisher cmd_publisher;
 
-std::vector<uint32_t> global_sensor_data; // Current sensor data
+std::vector<int> global_sensor_data; // Current sensor data (sign-extended)
 double global_yaw; // Current yaw (from odom)
 float angular_distance = 0;
 bool yaw_data_received = false;
@@ -99,7 +99,7 @@ void yawCallback(const std_msgs::Float64::ConstPtr& yaw_msg){
   yaw_data_received = true;
 }
 
-void polCallback(const std_msgs::UInt32MultiArray::ConstPtr& pol_msg){
+void polCallback(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data = pol_msg->data; // Update local memory
 
   pol_data_received = true;
@@ -178,7 +178,7 @@ int main(int argc, char **argv){
       global_yaw :
       2*bb_util::defs::PI + global_yaw;
 
-    std_msgs::UInt32MultiArray pol_msg;
+    std_msgs::Int32MultiArray pol_msg;
     std_msgs::Float64 yaw_msg;
     pol_msg.data = global_sensor_data;
     yaw_msg.data = global_yaw;
@@ -209,7 +209,7 @@ int main(int argc, char **argv){
     ROS_INFO("LM: %lf, CY: %lf, Traverse: %lf", last_measure, corrected_yaw, traverse);
     last_measure = corrected_yaw;
 
-    std_msgs::UInt32MultiArray pol_msg;
+    std_msgs::Int32MultiArray pol_msg;
     std_msgs::Float64 yaw_msg;
     pol_msg.data = global_sensor_data;
     yaw_msg.data = global_yaw;
@@ -237,7 +237,7 @@ int main(int argc, char **argv){
       global_yaw :
       2*bb_util::defs::PI + global_yaw;
 
-    std_msgs::UInt32MultiArray pol_msg;
+    std_msgs::Int32MultiArray pol_msg;
     std_msgs::Float64 yaw_msg;
     pol_msg.data = global_sensor_data;
     yaw_msg.data = global_yaw;

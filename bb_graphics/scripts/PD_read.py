@@ -5,11 +5,31 @@ from std_msgs.msg import Float64, UInt32MultiArray
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
+
+parser = argparse.ArgumentParser(description="Plot polarisation data")
+parser.add_argument("-b", "--bagfile", type=str,
+                    help="ROS Bagfile to process")
+parser.add_argument("-f", "--filename", type=str,
+                    help="Figure filename")
+parser.add_argument("-t", "--title", type=str,
+                    help="Figure title")
+parser.add_argument("-s", "--show", action='store_true',
+                    help="Show the figure.")
+
+args = parser.parse_args()
+
+#
+# Set args with defaults
+#
+bagfile = "1.bag" if args.bagfile == None else args.bagfile
+filename = "fig.pdf" if args.filename == None else args.filename + ".pdf"
+title = "Photodiode readings (1-4, odom, angle)" if args.title == None else args.title
 
 #
 # Extract raw data
 #
-bag = rosbag.Bag('1.bag')
+bag = rosbag.Bag(bagfile)
 messages = bag.read_messages(topics=['pol_op_0', 'yaw'])
 
 yaws = []
@@ -22,24 +42,18 @@ start_time = 0
 for topic, msg, t in messages:
     if topic == 'yaw':
         yaws.append(msg.data)
-#        print("Yaw_t: {}".format(int(t.to_nsec()/1000)))
     elif topic == 'pol_op_0':
-        print("data:old - {}:{}".format(msg.data, pol_op_data))
+        # Timer check
         if list(msg.data) != pol_op_data:
             time = int(t.to_nsec()/1000000)
             duration = time  - start_time
             start_time = time
-
-            print("duration = {}".format(duration))
-            print("count = {}".format(counter))
             pol_op_data = list(msg.data)
             counter = 0
 
         pols.append(msg.data)
-        # print("Pol_r: {}".format(msg.data))
-        # print("Pol_t: {}".format(int(t.to_nsec()/1000000)))
         counter+=1
-        #print("Pol_t: {}".format(t.to_sec())
+
 
 bag.close()
 
@@ -79,22 +93,15 @@ df["U"] = U
 df["p_linear"] = p_linear
 df["angle"] = angle # np.arctan2((df["pd4"] + df["pd1"] - 2*df["pd3"]),(df["pd4"] - df["pd1"])) / 2#angle
 
-plt.subplot(611)
-plt.plot(df["pd1"])
-plt.subplot(612)
-plt.plot(df["pd2"])
-plt.subplot(613)
-plt.plot(df["pd3"])
-plt.subplot(614)
-plt.plot(df["pd4"])
-plt.subplot(615)
-plt.plot(df["yaw"])
-plt.subplot(616)
-plt.plot(df["angle"])
-plt.show()
-
-#plt.plot(angle)
-#plt.plot(df["angle"])
-#plt.plot(avg)
-
-print(df)
+fig, axs = plt.subplots(6,1, sharex=True)
+fig.set_size_inches(4,8)
+axs[0].plot(df["pd1"])
+axs[0].set_title(title)
+axs[1].plot(df["pd2"])
+axs[2].plot(df["pd3"])
+axs[3].plot(df["pd4"])
+axs[4].plot(df["yaw"])
+axs[5].plot(df["angle"])
+plt.savefig(filename, bbox_inches="tight")
+if args.show:
+    plt.show()
