@@ -75,7 +75,7 @@ for i in range(len(pds)): # Lazy
     l = i+1
     lbl = "pd{}".format(l)
     df[lbl] = pds[i]
-    df[lbl] = df[lbl] * 244.14e-9 # Jan's voltage conversion
+#    df[lbl] = df[lbl] * 244.14e-9 # Jan's voltage conversion
 #
 # Stokes parameters - Optics of life version
 # Need to double check PD arrangement
@@ -104,4 +104,5 @@ axs[4].plot(df["yaw"])
 axs[5].plot(df["angle"])
 plt.savefig(filename, bbox_inches="tight")
 if args.show:
+    print(df)
     plt.show()

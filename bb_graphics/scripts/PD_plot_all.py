@@ -26,7 +26,7 @@ title = "Photodiode readings (1-4, odom, angle)" if args.title == None else args
 #
 # Extract raw data
 #
-messages = bag.read_messages(topics=['pol_op_0', 'yaw'])
+
 
 yaws = dict()
 pols = dict()
@@ -39,6 +39,8 @@ start_time = 0
 
 for b in range(3):
     bagfile = "{}.bag".format(b + 1)
+    bag = rosbag.Bag(bagfile)
+    messages = bag.read_messages(topics=['pol_op_0', 'yaw'])
     yaws[bagfile] = []
     pols[bagfile] = []
     keys.append(bagfile)
@@ -83,30 +85,30 @@ for k in keys:
         df[lbl] = pds[i]
         df[lbl] = df[lbl] * 244.14e-9 # Jan's voltage conversion
 
-        #
-        # Stokes parameters - Optics of life version
-        # Need to double check PD arrangement
-        #
-        Q = df["pd3"] - df["pd4"]
-        U = df["pd2"] - df["pd1"]
-        avg = df["pd1"] + df["pd2"] + df["pd3"] + df["pd4"]
-        avg = avg/4
+    #
+    # Stokes parameters - Optics of life version
+    # Need to double check PD arrangement
+    #
+    Q = df["pd3"] - df["pd4"]
+    U = df["pd2"] - df["pd1"]
+    avg = df["pd1"] + df["pd2"] + df["pd3"] + df["pd4"]
+    avg = avg/4
 
-        p_linear = np.sqrt(Q*Q + U*U) / avg
-        angle = np.arctan2(U, Q) / 2
+    p_linear = np.sqrt(Q*Q + U*U) / avg
+    angle = np.arctan2(U, Q) / 2
 
-        df["Q"] = Q
-        df["U"] = U
-        df["p_linear"] = p_linear
-        df["angle"] = angle # np.arctan2((df["pd4"] + df["pd1"] - 2*df["pd3"]),(df["pd4"] - df["pd1"])) / 2#angle
+    df["Q"] = Q
+    df["U"] = U
+    df["p_linear"] = p_linear
+    df["angle"] = angle # np.arctan2((df["pd4"] + df["pd1"] - 2*df["pd3"]),(df["pd4"] - df["pd1"])) / 2#angle
 
-        axs[0].plot(df["pd1"], label=k)
-        axs[0].set_title(title)
-        axs[1].plot(df["pd2"])
-        axs[2].plot(df["pd3"])
-        axs[3].plot(df["pd4"])
-        axs[4].plot(df["yaw"])
-        axs[5].plot(df["angle"])
+    axs[0].plot(df["pd1"], label=k)
+    axs[0].set_title(title)
+    axs[1].plot(df["pd2"])
+    axs[2].plot(df["pd3"])
+    axs[3].plot(df["pd4"])
+    axs[4].plot(df["yaw"])
+    axs[5].plot(df["angle"])
 
 plt.legend()
 plt.savefig(filename, bbox_inches="tight")
