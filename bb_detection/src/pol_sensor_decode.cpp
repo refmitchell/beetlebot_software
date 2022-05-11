@@ -186,6 +186,9 @@ int main(int argc, char **argv){
     Eigen::Matrix<double, 3, 1> s = find_solar_vector(compute_E());
     std::vector<double> s_std_vec;
     for (int i = 0; i < 3; i++) s_std_vec.push_back(s(i, 0));
+    std::cout << "[ ";
+    for (double i : s_std_vec) std::cout << i << ' ';
+    std::cout << "]" << std::endl;
     std_msgs::Float64MultiArray s_msg;
     s_msg.data = s_std_vec;
     sol_vec_pub.publish(s_msg);

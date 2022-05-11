@@ -80,24 +80,24 @@ void command_velocity(float linear, float angular){
 void write_all_to_bag(rosbag::Bag& bag){
     std_msgs::Float64MultiArray pol_msg;
     std_msgs::Float64 yaw_msg;
-    std_msgs::Int32MultiArray po0_msg;
-    std_msgs::Int32MultiArray po1_msg;
-    std_msgs::Int32MultiArray po2_msg;
-    std_msgs::Int32MultiArray po3_msg;
+    // std_msgs::Int32MultiArray po0_msg;
+    // std_msgs::Int32MultiArray po1_msg;
+    // std_msgs::Int32MultiArray po2_msg;
+    // std_msgs::Int32MultiArray po3_msg;
 
     pol_msg.data = global_sensor_data;
     yaw_msg.data = global_yaw;
-    po0_msg.data = global_po0_data;
-    po1_msg.data = global_po1_data;
-    po2_msg.data = global_po2_data;
-    po3_msg.data = global_po3_data;
+    // po0_msg.data = global_po0_data;
+    // po1_msg.data = global_po1_data;
+    // po2_msg.data = global_po2_data;
+    // po3_msg.data = global_po3_data;
 
     bag.write(odom_sub_topic.c_str(), ros::Time::now(), yaw_msg);
     bag.write(pol_sub_topic.c_str(), ros::Time::now(), pol_msg);
-    bag.write(pol_op_sub_topics[0].c_str(), ros::Time::now(), po0_msg);
-    bag.write(pol_op_sub_topics[1].c_str(), ros::Time::now(), po1_msg);
-    bag.write(pol_op_sub_topics[2].c_str(), ros::Time::now(), po2_msg);
-    bag.write(pol_op_sub_topics[3].c_str(), ros::Time::now(), po3_msg);
+    // bag.write(pol_op_sub_topics[0].c_str(), ros::Time::now(), po0_msg);
+    // bag.write(pol_op_sub_topics[1].c_str(), ros::Time::now(), po1_msg);
+    // bag.write(pol_op_sub_topics[2].c_str(), ros::Time::now(), po2_msg);
+    // bag.write(pol_op_sub_topics[3].c_str(), ros::Time::now(), po3_msg);
 }
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
@@ -129,6 +129,7 @@ void polCallback(const std_msgs::Float64MultiArray::ConstPtr& pol_msg){
   global_sensor_data = pol_msg->data;
   pol_data_received = true;
 }
+
 void polOpCallback0(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_po0_data = pol_msg->data;
 }
@@ -170,22 +171,22 @@ int main(int argc, char **argv){
     n.subscribe(odom_sub_topic,
                 1000,
                 yawCallback);
-  ros::Subscriber po0_sub =
-    n.subscribe(pol_op_sub_topics[0],
-                1000,
-                polOpCallback0);
-  ros::Subscriber po1_sub =
-    n.subscribe(pol_op_sub_topics[1],
-                1000,
-                polOpCallback1);
-  ros::Subscriber po2_sub =
-    n.subscribe(pol_op_sub_topics[2],
-                1000,
-                polOpCallback2);
-  ros::Subscriber po3_sub =
-    n.subscribe(pol_op_sub_topics[3],
-                1000,
-                polOpCallback3);
+  // ros::Subscriber po0_sub =
+  //   n.subscribe(pol_op_sub_topics[0],
+  //               1000,
+  //               polOpCallback0);
+  // ros::Subscriber po1_sub =
+  //   n.subscribe(pol_op_sub_topics[1],
+  //               1000,
+  //               polOpCallback1);
+  // ros::Subscriber po2_sub =
+  //   n.subscribe(pol_op_sub_topics[2],
+  //               1000,
+  //               polOpCallback2);
+  // ros::Subscriber po3_sub =
+  //   n.subscribe(pol_op_sub_topics[3],
+  //               1000,
+  //               polOpCallback3);
   cmd_publisher = n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
 
   // Wait for sensor data

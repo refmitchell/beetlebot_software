@@ -6,9 +6,12 @@
 
 #include "bb_util/bb_util.h"
 
-void bb_util::vision::imshow(const std::string window_title, const cv::Mat& frame){
+void bb_util::vision::imshow(const std::string window_title,
+                             const cv::Mat& frame,
+                             const cv::Size size){
   cv::Mat resized;
-  cv::resize(frame, resized, cv::Size(640, 640));
+  cv::resize(frame, resized, size);
+  //cv::resize(frame, resized, cv::Size(640, 640));
   cv::imshow(window_title, resized);
   cv::waitKey(10);
 }

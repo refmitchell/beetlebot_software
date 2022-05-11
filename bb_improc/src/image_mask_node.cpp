@@ -76,8 +76,8 @@ void ImageProcessingLink::imageCallback(const sensor_msgs::ImageConstPtr& msg){
   // MAX_RADIUS is determined by the frame resolution captured on the robot.
   // At the moment that resolution is 96x96; this can be configured by changing
   // raw_capture.cpp in the capture package on the turtlebot.
-  int MAX_RADIUS = floor(raw_frame.cols/2);
-  
+  int MAX_RADIUS = floor(raw_frame.rows/2);
+
   int radius =
     parser.exists("viewport_radius") ?
     parser.get<int>("viewport_radius")
@@ -92,6 +92,7 @@ void ImageProcessingLink::imageCallback(const sensor_msgs::ImageConstPtr& msg){
     exit(-1);
   }
 
+
   // Crop frame to a square with edge length 2*r
   int edge_length = radius * 2;
 
@@ -101,6 +102,7 @@ void ImageProcessingLink::imageCallback(const sensor_msgs::ImageConstPtr& msg){
 
   cv::Rect roi(roi_x, roi_y, edge_length, edge_length);
   cv::Mat frame = raw_frame(roi);
+
 
   // Set centre for circular mask
   cv::Point centre;
@@ -117,13 +119,14 @@ void ImageProcessingLink::imageCallback(const sensor_msgs::ImageConstPtr& msg){
 
   // Image display
   if (parser.exists("video")){
-    bb_util::vision::imshow("Image Mask Output", frame);
+    bb_util::vision::imshow("Image Mask Output", frame, cv::Size(1000,1000));
   }
 
   // Translate into ROS format.
   sensor_msgs::ImagePtr repub =
     cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
   this->pub.publish(repub);
+
 }
 
 int main(int argc, char **argv){

@@ -154,6 +154,8 @@ add_executable(cue_calibration src/cue_calibration.cpp)
 add_executable(pol_op_recorder src/pol_op_recording.cpp)
 add_executable(pol_sensor_decode src/pol_sensor_decode.cpp)
 add_executable(pol_sensor_recorder src/pol_sensor_recorder.cpp)
+add_executable(multi_pol_op_recorder src/multi_pol_op_recorder.cpp)
+add_executable(offline_pol_sensor_recorder src/offline_pol_sensor_recorder.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -198,6 +200,19 @@ add_dependencies(
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(
+  multi_pol_op_recorder
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(
+  offline_pol_sensor_recorder
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS})
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
   wind_cue_detector
@@ -228,6 +243,16 @@ target_link_libraries(
 
 target_link_libraries(
   pol_sensor_recorder
+  ${catkin_LIBRARIES}
+  )
+
+target_link_libraries(
+  multi_pol_op_recorder
+  ${catkin_LIBRARIES}
+  )
+
+target_link_libraries(
+  offline_pol_sensor_recorder
   ${catkin_LIBRARIES}
   )
 

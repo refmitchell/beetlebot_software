@@ -8,7 +8,9 @@
 
 namespace bb_util {
   namespace vision {
-    void imshow(const std::string, const cv::Mat&);
+    void imshow(const std::string window_title,
+                const cv::Mat& frame,
+                const cv::Size size = cv::Size(640,640));
   }
 
   // Definitions which are shared amongst nodes. Constness should
