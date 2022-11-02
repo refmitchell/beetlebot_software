@@ -127,14 +127,15 @@ std::pair<double, double> bioInspiredDecode(){
   std::vector<double> pol_neuron_responses(N_POL_OPS);
 
   for (int i = 0; i < N_POL_OPS; i++){
-    int r_vert = activation(std::abs(pol_op_responses[i][2]));
-    int r_horiz = activation(std::abs(pol_op_responses[i][3]));
+    int s_vert = std::abs(pol_op_responses[i][2]);
+    int s_horiz = std::abs(pol_op_responses[i][3]);
+    ROS_INFO("(%d, %d)", s_vert, s_horiz);
+    double r_vert = activation(s_vert);
+    double r_horiz = activation(s_horiz);
     double r_op = r_horiz - r_vert;
     double r_po = r_horiz + r_vert;
 
-    if (r_po == 0){
-      r_po = NAN;
-    }
+    if (r_po == 0) r_po = NAN;
 
     pol_neuron_responses[i] = r_op / r_po;
   }
@@ -176,6 +177,7 @@ int main(int argc, char **argv){
 
   if (parser.exists("help")){
     parser.print_help();
+    return 0;
   }
 
 
