@@ -14,13 +14,15 @@
 
 #include <iostream>
 #include <random>
-#include <math.h>
+#include <cmath>
 #include <exception>
 #include <vector>
 #include <string>
 
 // Eigen linear algebra library: https://eigen.tuxfamily.org
 #include "bb_util/Eigen/Eigen"
+
+#include "bb_util/bb_util.h"
 
 // Using macro definitions because these values never change and I want to
 // have these defaults known at compile time for initialisation.
@@ -482,8 +484,19 @@ void CentralComplex::tl2_output(double theta, Eigen::Ref<Eigen::MatrixXd> output
   output.setConstant(theta);
   output = output - this->tl2_prefs;
 
+  if (std::isnan(theta)){
+    /* If sensor returned NaN for whatever reason, we do not want this to
+       propagate, setting output to bb_util::defs::PI/2 here will set each
+       element to 0 in the following for-loop (cos(pi/2) == 0). This means
+       no directional input to the rest of the network. If NaNs are allowed
+       to enter the network then they will persist due to the memory circuit.
+       (CPU4 gets input from the previous timestep).
+    */
+    output.setConstant(bb_util::defs::PI/2);
+  }
+
   for (int i = 0; i < output.rows(); i++){
-    output(i,0) = cos(output(i,0));
+    output(i,0) = std::cos(output(i,0));
   }
 
   this->sigmoid(output, this->tl2_slope, this->tl2_bias, this->noise);
