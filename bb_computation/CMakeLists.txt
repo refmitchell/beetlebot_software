@@ -165,6 +165,7 @@ add_executable(test_cx_subscriber src/test_cx_subscriber.cpp)
 add_executable(test_vmcx_subscriber src/test_vmcx_subscriber.cpp)
 add_executable(test_mmcx_subscriber src/test_mmcx_subscriber.cpp)
 add_executable(cue_manager src/cue_manager.cpp)
+add_executable(menotaxis_node src/menotaxis_node.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -216,11 +217,26 @@ add_dependencies(
   ${catkin_EXPORTED_TARGETS}
   )
 
+add_dependencies(
+  menotaxis_node
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  )
+
 target_link_libraries(
   icm
   cue
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
+  )
+
+target_link_libraries(
+  menotaxis_node
+  cue
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  stdc++fs
   )
 
 ## Specify libraries to link a library or executable target against

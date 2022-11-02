@@ -107,12 +107,14 @@ namespace bb_util{
     /*
       Adding assignment for ease
     */
-    bool operator= (Cue& rhs){
+    Cue operator= (Cue& rhs){
       type = rhs.getType();
       sensitivity = rhs.getSensitivity();
       reliability = rhs.getReliability();
       theta = rhs.getTheta();
       relative_weight = rhs.getRelativeWeight();
+      Cue cue(type, sensitivity, reliability, theta);
+      return cue;
     }
   };
 

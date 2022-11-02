@@ -16,6 +16,7 @@
 
 #include "bb_util/bb_util.h"
 #include "bb_util/cue.hpp"
+#include "bb_util/cue_msg.h"
 #include "bb_util/argparse.h"
 
 #define N_POL_OPS 8
@@ -44,6 +45,8 @@ std::string node_name = "pol_cue_detector";
 int n_sol_neurons = 8; //Default, configurable
 std::vector<double> pol_prefs;
 std::vector<double> sol_prefs;
+
+bb_util::Cue pol_cue = bb_util::Cue("pol", 1, 0, 0);
 
 double (*activation) (int input);
 
@@ -192,6 +195,8 @@ int main(int argc, char **argv){
     parser.get<int>("n_sol_neurons") :
     8;
 
+  std::string pub_topic = "pol_cue";
+
   // Compute sol neuron preferred angles
   double sol_interval = 2*bb_util::defs::PI / n_sol_neurons;
   sol_prefs = std::vector<double>(n_sol_neurons);
@@ -267,6 +272,9 @@ int main(int argc, char **argv){
                 1000,
                 polCallback7);
 
+  ros::Publisher cue_pub =
+    n.advertise<bb_util::cue_msg>(pub_topic.c_str(), 1000);
+
 
   for (int i = 0; i < N_POL_OPS; i++){
     // Fill with zeros until sensor readings are available.
@@ -280,7 +288,10 @@ int main(int argc, char **argv){
 
     double phi = output.first;
     double tau = output.second;
-    ROS_INFO("PHI %lf", phi);
+    pol_cue.setAzimuth(phi);
+    pol_cue.setReliability(tau);
+    cue_pub.publish(bb_util::Cue::toMsg(pol_cue));
+    ROS_INFO("\n%s", pol_cue.toString().c_str());
     ten_hz.sleep();
   }
 

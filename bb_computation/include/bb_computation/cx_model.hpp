@@ -182,7 +182,7 @@ protected:
       }
     }
 
-    MAT_LOG(W);
+    // MAT_LOG(W);
     
     return W;
   }
