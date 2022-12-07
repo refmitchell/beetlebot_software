@@ -162,7 +162,7 @@ std::pair<double, double> bioInspiredDecode(){
   double b = R.imag();
   double phi = std::atan2(-b, a);
   double tau = std::sqrt(a*a + b*b);
-
+  phi = -phi;
 
   return std::pair<double, double>(phi,tau);
 }

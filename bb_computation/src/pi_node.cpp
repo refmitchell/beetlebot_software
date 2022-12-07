@@ -1,25 +1,29 @@
 
 /*
- @file menotaxis_node.cpp
- @brief Perform menotaxis using a single cue and CX for steering.
-
- This node will subscribe to a specified bb_util::cue_msg and use it to
- provide directional input to the CX. Before taxis begins, a random direction
- is selected and passed to the central complex along with some speed input.
-
- This generates a 'home vector' pointing opposite to the random direction. During
- 'homing', no speed information is given to the CX so this home vector never
- shrinks. This is a little hacky but functionally provides menotaxis.
+ pi_node.cpp
+ Subscribe to a single cue topic which is fed into the CX to allow it to
+ control steering
 */
 
 #include <ros/ros.h>
+#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/Vector3.h>
+#include <tf/transform_datatypes.h>
+#include "std_msgs/String.h"
+
+#include "bb_computation/icm.h"
 #include "bb_computation/cx_model.hpp"
+#include "bb_computation/vmcx_model.hpp"
 
 #include "bb_util/velocity.h"
 #include "bb_util/cx_activity.h"
 #include "bb_util/argparse.h"
 #include "bb_util/cue.hpp"
 #include "bb_util/cue_msg.h"
+
+#define GOAL_ANGLE -2.0
+#define TRAVERSE_TIME 30
 
 // Init CX
 CentralComplex cx;
@@ -32,7 +36,12 @@ ros::ServiceClient client;
 
 argparse::ArgumentParser parser("parser");
 
-double goal_angle = 0;
+double velocity = 0;
+
+inline double clean_velocity(double lin_vel, int factor=100){
+  if (factor == 0) return 0;
+  return ((double) ((int) (lin_vel * factor))) / factor;
+}
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
@@ -77,41 +86,53 @@ void cx_status_publish(std::vector<std::vector<double>> &status){
 // Cue callback
 //
 void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
-  float current = cue_msg->theta;
+  ROS_INFO("Cue info: (R: %f, T: %f)",
+           cue_msg->reliability,
+           cue_msg->theta);
+  //
+  // Msg unpack
+  //
+  float current_angle = cue_msg->theta;
 
-  // Update CX angle but do not provide speed input (not homing).
-  double CXMotor = cx.unimodal_monolithic_CX(current, 0);
-
-  ROS_INFO("CXMotor: %lf", CXMotor);
+  // Get motor output from CX
+  double CXMotor = cx.unimodal_monolithic_CX(current_angle, velocity);
 
   // Get status
   std::vector<std::vector<double>> cx_status;
   cx.get_status(cx_status);
   cx_status_publish(cx_status);
 
+  ROS_INFO("CX_MOTOR: %lf", CXMotor);
   //
   // Velocity update
   //
   bb_util::velocity msg;
 
   // Do not move unless CXMotor sufficiently small
-  // msg.request.linear = 0;
-  // if (std::abs(CXMotor) < 1){
+  // msg.request.linear = 0.02;
+  // if (std::abs(CXMotor) < 0.002){
   msg.request.linear = 0.1;
-    // }
+  // }
 
+  double angular = 0.7;
   msg.request.angular = 0;
-  if (CXMotor != 0) { msg.request.angular = (CXMotor > 0) ? 0.7 : -0.7; }
+  if (CXMotor != 0) { msg.request.angular = (CXMotor > 0) ? angular : -angular; }
 
 
   client.call(msg);
+
+}
+
+void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
+  double linear_velocity = clean_velocity(odom_msg->twist.twist.linear.x);
+  velocity = linear_velocity;
 }
 
 int main(int argc, char **argv){
   if (!initParser(parser, argc, argv)) return -1;
-  if(parser.exists("help")){
+  if (parser.exists("help")){
     parser.print_help();
-    return 0;
+    return -1;
   }
 
   std::string sub_topic = parser.get<std::string>("subscribe");
@@ -120,20 +141,25 @@ int main(int argc, char **argv){
     parser.get<std::string>("publish") :
     "cx_status";
 
-  ros::init(argc, argv, "menotaxis");
+  ros::init(argc, argv, "PI");
   ros::NodeHandle n;
 
-  ros::Subscriber sub = n.subscribe(sub_topic.c_str(), 1000, cueCallback);
-  pub = n.advertise<bb_util::cx_activity>(cx_pub.c_str(), 1);
+  // ROS networking
+  // Get cue - Sub to visual cues
+  ros::Subscriber cue_sub = n.subscribe(sub_topic.c_str(), 1000, cueCallback);
+
+  // Sub to odometry for internal compass info
+  ros::Subscriber odom_sub = n.subscribe("odom", 1000, odomCallback);
+
+  // Request velocity changes from velocity service
   client = n.serviceClient<bb_util::velocity>("update_velocity");
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<> dis(0.0, 2*bb_util::defs::PI);
-  cx.unimodal_monolithic_CX(dis(gen), 10); // Inject displacement into CX
-  while(ros::ok()){
-    ros::spinOnce();
-  }
+  // Set up publisher for CX
+  pub = n.advertise<bb_util::cx_activity>("cx_status", 1);
+
+  ROS_INFO("Running...");
+
+  ros::spin();
 
   return 0;
 }

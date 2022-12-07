@@ -27,10 +27,7 @@
 #define GOAL_ANGLE -2.0
 #define TRAVERSE_TIME 30
 
-
-
 // Init CX
-//VMCX cx;
 CentralComplex cx;
 
 // Try to init VMCX;
