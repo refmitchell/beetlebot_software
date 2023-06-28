@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -77,5 +78,13 @@ namespace bb_util {
       const int ANG_LOCK_TOGGLE = -2;
     }
   }
+
+  namespace func {
+      std::vector<double> linspace(double start,
+                                   double end,
+                                   int division,
+                                   bool endpoint);
+    }
+
 }
 
