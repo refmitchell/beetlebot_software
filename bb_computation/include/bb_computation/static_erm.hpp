@@ -101,14 +101,6 @@ protected:
   float d_w1 = 0.5;
   float d_w2 = 0.5;
 
-  ///
-  /// Weight matrices (defined in [1]).
-  ///
-
-  // R -> E-PG initial configuration
-  std::vector<float> epg_preferences =
-    bb_util::func::linspace(0, 2*bb_util::defs::PI, this->n_epg);
-
 
   ///
   /// Rate parameters
@@ -125,10 +117,18 @@ protected:
   float pen_bias = 5;
 
 
-  Eigen::Ref<Eigen::MatrixXd> generate_mapping(int n_r,
-                                               std::vector<float> r_prefs,
-                                               int n_epg,
-                                               std::vector<float> epg_prefs){
+}
+
+  RingModel::RingModel(){
+
+    
+  }
+
+
+  Eigen::Ref<Eigen::MatrixXd> RingModel::generate_mapping(int n_r,
+                                                          std::vector<float> r_prefs,
+                                                          int n_epg,
+                                                          std::vector<float> epg_prefs){
     Eigen::MatrixXd w(n_epg, n_r);
     w.setZero();
 
@@ -158,9 +158,7 @@ protected:
       w(slice, i) /= w(slice,i).sum();
     }
 
-
     return w;
   }
-}
 
 #endif
