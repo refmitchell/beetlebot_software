@@ -166,8 +166,8 @@ int main(int argc, char **argv){
            angle,
            magnitude,
            sensitivity,
-           name.str().c_str(),
-           topic.str().c_str()
+           topicstring.c_str(),
+           namestring.c_str()
            );
 
   ros::Rate r(10);  // Publish the cue message at 10hz

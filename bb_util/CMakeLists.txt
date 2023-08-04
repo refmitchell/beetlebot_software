@@ -40,7 +40,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES bb_util
-  CATKIN_DEPENDS cv_bridge roscpp std_msgs
+  CATKIN_DEPENDS cv_bridge roscpp std_msgs message_runtime
   DEPENDS system_lib
 )
 

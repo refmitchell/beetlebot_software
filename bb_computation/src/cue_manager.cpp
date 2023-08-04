@@ -32,6 +32,8 @@ void cue_callback(const bb_util::cue_msg::ConstPtr& msg){
   double reliability_sum = 0;
   int goal_idx = -1;
 
+  ROS_INFO("callback");
+
   // Search for the correct element and sum the reliabilities
   // of each cue.
   for (int i = 0; i < cues.size(); i++){
@@ -101,7 +103,8 @@ int main(int argc, char **argv){
   // Initialisation: Set up subscribers for each cue type
   // and set up the cue list so the callback has something
   // to find.
-  //
+  //\
+
   for (int i = 0; i < cue_topics.size(); i++){
     // Temporary while testing with dummy cues, would be
     // better to have a less brittle solution.
@@ -121,6 +124,7 @@ int main(int argc, char **argv){
     ros::spinOnce();
 
     // Translate to bb_util::cue_list and publish.
+    ROS_INFO("%s", cue_list_to_string(cues).c_str());
     pub.publish(cue_list_to_msg_list(cues));
   }
 
