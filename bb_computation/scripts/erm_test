@@ -3,13 +3,15 @@
 import rospy
 
 from bb_util.msg import cue_msg
+from bb_util.msg import erm_status
+from bb_util.msg import ring_mapping
 
 from extended_ring_model import *
 from dict_key_definitions import *
 
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-from tf.transformations import euler_from_quaternion
+from rospy.numpy_msg import numpy_msg
 
 use_efference = True
 
@@ -42,6 +44,33 @@ def intensity_cue_callback(data):
     global th_intensity
     th_intensity = np.degrees(data.theta)
 
+def get_erm_status_as_msg():
+    msg = erm_status()
+    msg.r1 = erm.r1_rates
+    msg.r2 = erm.r2_rates
+    msg.epg = erm.epg_rates
+    msg.d7 = erm.d7_rates
+    msg.pen = erm.pen_rates
+    msg.peg = erm.peg_rates
+    # msg.r1_epg = list(erm.w_r1_epg)
+    # msg.r2_epg = list(erm.w_r2_epg)
+    return msg
+
+def get_erm_mappings_as_msg():
+    msg = ring_mapping()
+
+    # Explicitly cast weight matrices to floats everywhere
+    # then pack into the message. Saw someone with the exact
+    # same error for whom this was the solution.
+
+    msg.r1_epg = erm.w_r1_epg
+    msg.r2_epg = erm.w_r2_epg
+    msg.n_r1 = erm.n_r1
+    msg.n_r2 = erm.n_r2
+    msg.n_epg = erm.n_epg
+
+    return msg
+
 def node():
     rospy.init_node("erm_node")
     if use_efference:
@@ -53,8 +82,12 @@ def node():
     rospy.Subscriber("intensity_cue", cue_msg, intensity_cue_callback)
     # Rospy subscribers are implicitly started in their own threads
 
+    pub = rospy.Publisher("erm_status", numpy_msg(erm_status), queue_size=10)
+    map_pub = rospy.Publisher("erm_mappings", numpy_msg(ring_mapping), queue_size=10)
+
     while not rospy.is_shutdown():
         # Convert av to deg/s (default is Rads/s)
+        # NOTE THIS WILL NEED ADJUSTED
         av = angular_velocity * (180/np.pi)
 
         erm.update_state(th_intensity,
@@ -62,9 +95,13 @@ def node():
                          av,
                          w1=w_intensity,
                          w2=w_wind)
-        int_th = erm.decode()[decodekeys.epg]
-        print(int_th)
-#        print("{} : {} : {}".format(th_intensity, th_wind, angular_velocity))
+
+        msg = get_erm_status_as_msg()
+        map_msg = get_erm_mappings_as_msg()
+        pub.publish(msg)
+        map_pub.publish(map_msg)
+
+
 
 if __name__ == "__main__":
     node()

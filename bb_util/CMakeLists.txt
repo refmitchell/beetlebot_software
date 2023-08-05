@@ -27,6 +27,9 @@ add_message_files(
   polar_vector_list.msg
   vec2d_msg.msg
   encoding_status.msg
+  float64array.msg
+  erm_status.msg
+  ring_mapping.msg
   )
 
 add_executable(yaw src/yaw.cpp)
