@@ -176,7 +176,8 @@ class RingModel():
         self.pen_rates = np.zeros((self.n_pen,1))
 
     def update_state(self, a1, a2, sm, w1=0.5, w2=0.5,
-                     plasticity=False, initialisation=False):
+                     plasticity=False, initialisation=False,
+                     av_plasticity=False):
         """
         Compute the state of the network given some angular input to
         the R neurons. The effect is cumulative (intended to be run from
@@ -201,12 +202,16 @@ class RingModel():
 
         # If DI enabled and plasticity is enabled
         inhibit_rs = (plasticity & self.dynamic_r_inhibition)
+
+        
         self.r1_output(cue_one, r1_scale=0.5, weight=w1) # Angular input
         self.r2_output(cue_two, r2_scale=0.5, weight=w2)
         self.pen_output(sm) # Self-motion and previous E-PG integration
         self.epg_output(inhibit_rs=inhibit_rs,
                         initialisation=initialisation,
-                        w1=w1
+                        w1=w1,
+                        av_inhibition=av_plasticity,
+                        av=abs(sm)
         ) # Input from sm, R, and P-EG
         self.d7_output() # Update ring attractor
         self.peg_output() # Output E-PG and D7 to P-EG
@@ -214,6 +219,10 @@ class RingModel():
         if plasticity:
             self.update_weights()
 
+        if av_plasticity and not plasticity: # options should be mutually exclusive
+            # Change learning rate
+            self.learning_rate = (0.1/24) * np.clip(abs(sm), 0, 24)
+            self.update_weights()
     #
     # Neuron outputs
     #
@@ -312,7 +321,9 @@ class RingModel():
     def epg_output(self,
                    inhibit_rs=False,
                    initialisation=False,
-                   w1=0.5):
+                   w1=0.5,
+                   av_inhibition=False,
+                   av=0):
         """
         E-PGs are the compass layer. They receive inputs from the R neurons,
         P-ENs and P-EGs. Note that the parameters 'initialisation' and 'w1' are
@@ -337,6 +348,11 @@ class RingModel():
         # Dynamic R inhibition - reduce R input if plasticity is enabled
         if inhibit_rs:
             r_inputs = self.r_inhibition*r_inputs
+
+        if av_inhibition and not inhibit_rs:
+            av_r_inhibition = np.clip((0.2/24)*abs(av), 0, 0.2)
+            r_inputs = av_r_inhibition*r_inputs
+
 
         total_input = r_inputs + peg_inputs + pen_inputs
 

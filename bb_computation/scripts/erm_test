@@ -115,7 +115,8 @@ def node():
                          th_wind,
                          av,
                          w1=w_intensity,
-                         w2=w_wind
+                         w2=w_wind,
+                         av_plasticity=True
         )
         print(erm.epg_rates)
         msg = get_erm_status_as_msg()
