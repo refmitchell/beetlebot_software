@@ -16,7 +16,8 @@ from rospy.numpy_msg import numpy_msg
 use_efference = True
 
 erm = RingModel()
-erm.initialise()
+c1_end, c2_end = erm.initialise()
+print(erm.epg_rates)
 
 # Globals
 angular_velocity = 0
@@ -38,11 +39,13 @@ def efference_av_callback(data):
 
 def wind_cue_callback(data):
     global th_wind
-    th_wind = np.degreess(data.theta)
+    th_wind = np.degrees(data.theta)
+
 
 def intensity_cue_callback(data):
     global th_intensity
     th_intensity = np.degrees(data.theta)
+
 
 def get_erm_status_as_msg():
     msg = erm_status()
@@ -52,24 +55,40 @@ def get_erm_status_as_msg():
     msg.d7 = erm.d7_rates
     msg.pen = erm.pen_rates
     msg.peg = erm.peg_rates
-    # msg.r1_epg = list(erm.w_r1_epg)
-    # msg.r2_epg = list(erm.w_r2_epg)
-    return msg
 
-def get_erm_mappings_as_msg():
-    msg = ring_mapping()
+    n_r1 = erm.n_r1
+    n_r2 = erm.n_r2
+    n_epg = erm.n_epg
+    len_r1 = n_r1*n_epg
+    len_r2 = n_r2*n_epg
 
-    # Explicitly cast weight matrices to floats everywhere
-    # then pack into the message. Saw someone with the exact
-    # same error for whom this was the solution.
-
-    msg.r1_epg = erm.w_r1_epg
-    msg.r2_epg = erm.w_r2_epg
+    msg.r1_epg = list(np.reshape(erm.w_r1_epg, (len_r1,)))
+    msg.r2_epg = list(np.reshape(erm.w_r2_epg, (len_r2,)))
     msg.n_r1 = erm.n_r1
     msg.n_r2 = erm.n_r2
     msg.n_epg = erm.n_epg
-
     return msg
+
+# def get_erm_mappings_as_msg():
+#     msg = ring_mapping()
+
+#     # Explicitly cast weight matrices to floats everywhere
+#     # then pack into the message. Saw someone with the exact
+#     # same error for whom this was the solution.
+
+#     n_r1 = erm.n_r1
+#     n_r2 = erm.n_r2
+#     n_epg = erm.n_epg
+#     len_r1 = n_r1*n_epg
+#     len_r2 = n_r2*n_epg
+
+#     msg.r1_epg = list(np.reshape(erm.w_r1_epg, (len_r1,)))
+#     msg.r2_epg = list(np.reshape(erm.w_r2_epg, (len_r2,)))
+#     msg.n_r1 = erm.n_r1
+#     msg.n_r2 = erm.n_r2
+#     msg.n_epg = erm.n_epg
+
+#     return msg
 
 def node():
     rospy.init_node("erm_node")
@@ -83,24 +102,25 @@ def node():
     # Rospy subscribers are implicitly started in their own threads
 
     pub = rospy.Publisher("erm_status", numpy_msg(erm_status), queue_size=10)
-    map_pub = rospy.Publisher("erm_mappings", numpy_msg(ring_mapping), queue_size=10)
+
+    loop_hz = 10
+    rosrate = rospy.Rate(loop_hz)
 
     while not rospy.is_shutdown():
-        # Convert av to deg/s (default is Rads/s)
-        # NOTE THIS WILL NEED ADJUSTED
-        av = angular_velocity * (180/np.pi)
-
+        # Convert Rad/s to Deg/s then scale for loop rate.
+        av = -(np.degrees(angular_velocity)) / loop_hz
+        print(th_intensity)
+        print(erm.epg_rates)
         erm.update_state(th_intensity,
                          th_wind,
                          av,
                          w1=w_intensity,
-                         w2=w_wind)
-
+                         w2=w_wind
+        )
+        print(erm.epg_rates)
         msg = get_erm_status_as_msg()
-        map_msg = get_erm_mappings_as_msg()
         pub.publish(msg)
-        map_pub.publish(map_msg)
-
+        rosrate.sleep()
 
 
 if __name__ == "__main__":

@@ -281,7 +281,9 @@ class RingModel():
         else: # Static
             sm_input[:] = 0.5
 
+
         pen_input = d7_input + epg_input + sm_input
+        #print(sm_input.reshape((16,)))
 
         if self.show_inputs:
             r = pen_input.reshape((16,))
@@ -466,6 +468,8 @@ class RingModel():
                               plasticity=False,
                               initialisation=True
             )
+
+        return c1, c2 # Return cue positions at the end of initialisation
 
 
     def __decode_layer(self, prefs, rates):
