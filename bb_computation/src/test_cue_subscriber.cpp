@@ -26,7 +26,7 @@ ros::ServiceClient client;
 
 void cvCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   ROS_INFO("Cue info: (R: %f, T: %f)",
-           cue_msg->reliability,
+           cue_msg->contrast,
            cue_msg->theta);
 
   float current = cue_msg->theta;

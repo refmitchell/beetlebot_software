@@ -15,7 +15,7 @@ namespace bb_util{
   private:
     std::string type =  "";
     double sensitivity = 1;
-    double reliability = 0;
+    double contrast = 0;
     double relative_weight = 0;
     double theta = 0;
 
@@ -24,15 +24,15 @@ namespace bb_util{
     // weight is known, this is computed later.
     Cue(std::string type,
         double sensitivity,
-        double reliability,
+        double contrast,
         double azimuth):
       type(type),
       sensitivity(sensitivity),
-      reliability(reliability),
+      contrast(contrast),
       theta(azimuth) {}
 
     // Getters
-    double getReliability(){ return this->reliability; }
+    double getContrast(){ return this->contrast; }
     std::string getType(){ return this->type; }
     double getRelativeWeight(){ return this->relative_weight; }
     double getTheta(){ return this->theta; }
@@ -41,9 +41,9 @@ namespace bb_util{
     // Setters
     void setRelativeWeight(double rw){ relative_weight = rw; }
 
-    void setReliability(double r){
+    void setContrast(double r){
       // If the attempted set is invalid, don't update the value.
-      this->reliability = (r >= 0 && r <= 1) ? r : this->reliability;
+      this->contrast = (r >= 0 && r <= 1) ? r : this->contrast;
     }
 
     void setAzimuth(double t){
@@ -57,7 +57,7 @@ namespace bb_util{
     static Cue toCue(bb_util::cue_msg cue_msg){
       Cue result(cue_msg.type,
                  cue_msg.sensitivity,
-                 cue_msg.reliability,
+                 cue_msg.contrast,
                  cue_msg.theta
                  );
 
@@ -70,7 +70,7 @@ namespace bb_util{
       std::stringstream ss;
       ss << "Type: " << this->type << "\n"
          << "Sens: " << this->sensitivity << "\n"
-         << "Rlby: " << this->reliability << "\n"
+         << "Rlby: " << this->contrast << "\n"
          << "Thta: " << this->theta << "\n";
       return ss.str();
     }
@@ -80,7 +80,7 @@ namespace bb_util{
 
       msg.type = cue.getType();
       msg.sensitivity = cue.getSensitivity();
-      msg.reliability = cue.getReliability();
+      msg.contrast = cue.getContrast();
       msg.theta = cue.getTheta();
       msg.relative_weight = cue.getRelativeWeight();
 
@@ -110,10 +110,10 @@ namespace bb_util{
     Cue operator= (Cue& rhs){
       type = rhs.getType();
       sensitivity = rhs.getSensitivity();
-      reliability = rhs.getReliability();
+      contrast = rhs.getContrast();
       theta = rhs.getTheta();
       relative_weight = rhs.getRelativeWeight();
-      Cue cue(type, sensitivity, reliability, theta);
+      Cue cue(type, sensitivity, contrast, theta);
       return cue;
     }
   };

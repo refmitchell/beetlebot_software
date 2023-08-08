@@ -29,20 +29,20 @@ std::vector<bb_util::Cue> cues;
 void cue_callback(const bb_util::cue_msg::ConstPtr& msg){
   bb_util::cue_msg cue_msg = *msg;
   bb_util::Cue cue = bb_util::Cue::toCue(cue_msg);
-  double reliability_sum = 0;
+  double contrast_sum = 0;
   int goal_idx = -1;
 
   ROS_INFO("callback");
 
-  // Search for the correct element and sum the reliabilities
+  // Search for the correct element and sum the contrasts
   // of each cue.
   for (int i = 0; i < cues.size(); i++){
     if (goal_idx == -1 && cues[i] == cue) goal_idx = i;
-    reliability_sum = reliability_sum + cues[i].getReliability();
+    contrast_sum = contrast_sum + cues[i].getContrast();
   }
 
   // Normalise the reliabilities to get the weight.
-  cue.setRelativeWeight(cue.getReliability() / reliability_sum);
+  cue.setRelativeWeight(cue.getContrast() / contrast_sum);
   cues[goal_idx] = cue; // Update the cue in the list
 }
 
@@ -69,10 +69,10 @@ std::string cue_list_to_string(std::vector<bb_util::Cue> cue_list){
 
   for (int i = 0; i < cue_list.size(); ++i){
     std::string type = cue_list[i].getType();
-    double reliability = cue_list[i].getReliability();
+    double contrast = cue_list[i].getContrast();
     double theta = cue_list[i].getTheta();
 
-    ss << type << ": " << theta << ", " << reliability << std::endl;
+    ss << type << ": " << theta << ", " << contrast << std::endl;
   }
 
   ss << "=END=========================================" << std::endl;

@@ -87,7 +87,7 @@ void cx_status_publish(std::vector<std::vector<double>> &status){
 //
 void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   ROS_INFO("Cue info: (R: %f, T: %f)",
-           cue_msg->reliability,
+           cue_msg->contrast,
            cue_msg->theta);
   //
   // Msg unpack

@@ -1,2 +1,2 @@
-float32 reliability
+float32 contrast
 float32 theta

@@ -291,7 +291,7 @@ int main(int argc, char **argv){
     double phi = output.first;
     double tau = output.second;
     pol_cue.setAzimuth(phi);
-    pol_cue.setReliability(tau);
+    pol_cue.setContrast(tau);
     cue_pub.publish(bb_util::Cue::toMsg(pol_cue));
     ROS_INFO("\n%s", pol_cue.toString().c_str());
     ten_hz.sleep();

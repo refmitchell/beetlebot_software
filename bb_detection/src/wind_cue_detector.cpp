@@ -82,7 +82,7 @@ void speedUpdateCallback(const std_msgs::Float64::ConstPtr& msg){
   // Cap wind speed at 100deg/sec (this needs tuned to the sensor in use)
   double wind_speed = msg->data < 110 ? msg->data : 110;
   wind_speed = wind_speed / 110; // Scale to be between 0 and 1
-  wind_cue.setReliability(wind_speed);
+  wind_cue.setContrast(wind_speed);
 }
 
 int main(int argc, char **argv){

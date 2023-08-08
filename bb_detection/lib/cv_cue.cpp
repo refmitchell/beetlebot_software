@@ -93,26 +93,26 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
   bb_util::Cue CueFromCV::toSystemCue(){
     std::string type = "intensity";
     double sensitivity = 1;
-    double reliability = this->r / max_cue_vector_length; // Scale between 0:1
-    reliability = reliability > 1.1 ? 0 : reliability;
+    double contrast = this->r / max_cue_vector_length; // Scale between 0:1
+    contrast = contrast > 1.1 ? 0 : contrast;
 
     // Cue theta is expected to be in radians.
     return bb_util::Cue(type,
                         sensitivity,
-                        reliability,
+                        contrast,
                         this->theta
                         );
   }
 
   bb_util::Cue CueFromCV::toSystemCue(double sensitivity){
     std::string type = "light";
-    double reliability = this->r / max_cue_vector_length; // Scale between 0:1
-    reliability = reliability > 1.1 ? 0 : reliability;
+    double contrast = this->r / max_cue_vector_length; // Scale between 0:1
+    contrast = contrast > 1.1 ? 0 : contrast;
     
     // Cue theta is expected to be in radians.
     return bb_util::Cue(type,
                         sensitivity,
-                        reliability,
+                        contrast,
                         this->theta
                         );
   }

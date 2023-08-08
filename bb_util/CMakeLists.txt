@@ -56,7 +56,7 @@ include_directories(
 
 add_library(
   bb_util
-  src/libdbutil.cpp
+  src/lib_bb_util.cpp
 )
 
 # bb_util dependencies
