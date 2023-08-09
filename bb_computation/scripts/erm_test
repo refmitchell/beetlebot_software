@@ -39,12 +39,16 @@ def efference_av_callback(data):
 
 def wind_cue_callback(data):
     global th_wind
+    global w_wind
     th_wind = np.degrees(data.theta)
+    w_wind = 0.5 if data.contrast > 0 else 0
 
 
 def intensity_cue_callback(data):
     global th_intensity
+    global w_intensiy
     th_intensity = np.degrees(data.theta)
+    w_intensity = 0.5 if data.contrast > 0.1 else 0
 
 
 def get_erm_status_as_msg():
@@ -91,6 +95,8 @@ def get_erm_status_as_msg():
 #     return msg
 
 def node():
+    global w_wind
+    global w_intensity
     rospy.init_node("erm_node")
     if use_efference:
         rospy.Subscriber("cmd_vel", Twist,  efference_av_callback)
@@ -109,16 +115,18 @@ def node():
     while not rospy.is_shutdown():
         # Convert Rad/s to Deg/s then scale for loop rate.
         av = -(np.degrees(angular_velocity)) / loop_hz
-        print(th_intensity)
-        print(erm.epg_rates)
+
+
+        w_intensity = w_intensity / (w_intensity + w_wind)
+        w_wind = 1 - w_intensity
         erm.update_state(th_intensity,
                          th_wind,
                          av,
-                         w1=w_intensity,
-                         w2=w_wind,
+                         w1=w_intensity/(w_intensity + w_wind),
+                         w2=w_wind/(w_intensity+w_wind),
                          av_plasticity=True
         )
-        print(erm.epg_rates)
+
         msg = get_erm_status_as_msg()
         pub.publish(msg)
         rosrate.sleep()
