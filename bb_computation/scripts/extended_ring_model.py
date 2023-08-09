@@ -221,7 +221,8 @@ class RingModel():
 
         if av_plasticity and not plasticity: # options should be mutually exclusive
             # Change learning rate
-            self.learning_rate = (0.1/24) * np.clip(abs(sm), 0, 24)
+#            self.learning_rate = (0.1/24) * np.clip(abs(sm), 0, 24)
+            self.learning_rate = (0.2/24) * np.clip(abs(sm), 0, 24)
             self.update_weights()
     #
     # Neuron outputs
