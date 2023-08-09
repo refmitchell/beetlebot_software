@@ -203,7 +203,6 @@ class RingModel():
         # If DI enabled and plasticity is enabled
         inhibit_rs = (plasticity & self.dynamic_r_inhibition)
 
-        
         self.r1_output(cue_one, r1_scale=0.5, weight=w1) # Angular input
         self.r2_output(cue_two, r2_scale=0.5, weight=w2)
         self.pen_output(sm) # Self-motion and previous E-PG integration
