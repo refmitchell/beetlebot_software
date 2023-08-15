@@ -1,0 +1,43 @@
+/**
+\mainpage 
+
+This package provides a link from the codebase to the motors.
+
+List of nodes:
+- cmd_vel_service
+
+\note In the older system design of the beetlebot, this package was more
+extensive and was supposed to include present movement sequences for things
+like dung beetle dances or targeted rotations. These were never properly
+finished and have been removed.
+
+\section desc Node descriptions
+\subsection cmd_vel_service cmd_vel_service
+This node acts as a ROS server which interfaces with the cmd_velocity
+topic on the turtlebot. The main reason for its existence is so that we
+can provide an explicit coupling/uncoupling of the output from computational
+models with physical movement of the robot. This is important for the
+Central Complex homing model.
+
+\subsubsection Usage
+\verbatim
+$ rosrun bb_locomotion cmd_vel_service
+\endverbatim
+
+\subsubesection topic ROS topics
+Publishes to:
+- \b `/cmd_vel` [geometry_msgs/Twist] The command velocity messages for the beetlebot.
+
+\subsubsection services ROS services
+- \b `update_velocity` [bb_util/velocity] Waits for velocity commands.
+
+\note The response is never used and the concept of motor command priorities is
+absent from the current codebase. This node could now be re-implemented as a
+subscriber instead of a server. Historically, responses could have informed a node
+that its command had been ignored due to higher priority movement commands but
+this was never implemented.
+
+\subsubsection parameters ROS parameters
+This node does not interact with the parameter server.
+
+**/

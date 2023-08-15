@@ -1,0 +1,85 @@
+/**
+\mainpage
+This package provides launch files for different beetlebot configurations.
+It provides no nodes, messages, services, etc. Just launchers.
+
+The provided launchers are unlikely to be useful for anything other than
+the specific use case for which they were designed, however, they do at least
+provide an example from which to work.
+
+The documentation will list the nodes started and any external launch files
+but you should see the launch files themselves for specific configuration of
+the nodes.
+
+\section desc Available launchers
+\subsection ci_dummy ci_dummy
+\subsubsection Usage
+\verbatim
+$ roslaunch bb_launchers ci_dummy.launch
+\endverbatim
+This launch file will start the following nodes:
+- bb_util yaw
+- bb_dummy dummy_cue
+- bb_dummy dummy_cue
+- bb_computation erm_test
+- bb_graphics erm_visualisation
+
+Yaw is used to update two dummy cues (one of which is convigured to
+act as wind, the other intensity). The erm_test node subscribes to the
+dummy wind and intensity cues and feeds them into a modified version
+of the extended ring model from Mitchell et al. (2023).
+
+The launcher will also launch turtlebot3_fake from the turtlebot
+simulation package.
+
+\subsection ci_robot ci_robot
+\subsubsection Usage
+\verbatim
+$ roslaunch bb_launchers ci_robot.launch
+\endverbatim
+
+This launch file will start the following nodes:
+- bb_improc image_mask_node
+- bb_improc gaussian_blur_node
+- bb_improc green_channel
+- bb_detection intensity_cue_detector
+- bb_detection wind_cue_detector
+- bb_computation erm_test
+- bb_graphics erm_visualisation
+
+In brief this starts a visual processing chain which will mask and blur
+the raw camera image and then extract only the green channel (to crudely
+mimic insect vision). The intensity cue detector will then use this
+green blurred image as its reference for a brightest point cue. The wind
+cue detector will construct a wind cue from the available sensor readings
+(from bb_sensors i2c_mux). These cues are then fed to a modified version
+of the extended ring model from Mitchell et al. (2023).
+
+This launcher relies on having the beetlebot hardware up and running.
+Assuming you have the required code on-board, the easiest way to start
+the required nodes is to run
+
+\verbatim
+$ roslaunch bb_sensors beetlebot.launch
+\endverbatim
+
+\b on \b the \b Raspberry \b Pi.
+
+\note This is essentially the same as ci_dummy above but uses real sensor
+input.
+
+\subsection cv_chain cv_chain
+\subsubsection Usage
+\verbatim
+$ roslaunch bb_launchers cv_chain.launch
+\endverbatim
+This launch file will start the following nodes:
+- bb_improc image_mask
+- bb_improc gaussian_blur
+- bb_improc green_channel
+- bb_detection intensity_detector
+
+This is a convenience launcher which will start the image processing chain and
+centroid vector cue detector.
+
+*/

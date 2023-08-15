@@ -1,5 +1,0 @@
-float32 linear
-float32 angular
-int32 priority
----
-bool success
