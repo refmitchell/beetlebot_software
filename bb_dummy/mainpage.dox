@@ -1,8 +1,103 @@
 /**
-\mainpage bb_dummy package index
-
-\section main Package Description
+\mainpage 
 
 This package provides any dummy inputs required to test the
 software models in bb_computation.
+
+List of nodes:
+- dummy_cue
+
+\section desc Node descriptions
+
+\subsection dummy_cue dummy_cue
+This node generates dummy cue messages which are tied to the IMU on the turtlebot.
+\subsubsection Usage
+
+\verbatim
+$ rosrun bb_dummy dummy_cue -m magnitude -a angle_in_degrees
+\endverbatim
+
+Angular cues are treated as vectors so the dummy cue \b must have at least an angle
+(in degrees, relative to the zero position on the IMU) and a magnitude.
+
+\note 'IMU' angles are given by bb_util/yaw (see package documentation for bb_util) and
+so that node must be running in order for cue updates to function correctly. In addition,
+the zero position of the IMU is set when the turtlebot3 core is launched meaning that
+the zero position is only consistent if you make sure you always initialise the robot facing
+the same way.
+
+\note Dummy cues are in perfect step with the IMU. Configurable noise could be added quite
+easily by including a von Mises random generator and command line option.
+
+\subsubsection topic ROS topics
+Subscribes to:
+- \b `/yaw`: [std_msgs/Float64] The current yaw angle of the robot (see documentation for bb_util).
+
+Publishes to:
+- \b `/dummy_cue` : [bb_util/cue_msg] This is the default publication topic but can be overridden.
+  see below.
+
+\note If the turtlebot core is running (either real or simulated), you can get establish
+the required `yaw` topic by running.
+\verbatim
+$ rosrun bb_util yaw
+\endverbatim
+
+
+\subsubsection parameters ROS parameters
+This node interacts with the cue calibration system. To bring angular cues into
+the same frame of reference, cue offsets are stored on the parameter server.
+In order to do this, a single [std_msgs/String] message must be sent on the
+`calibration_notify` topic.
+
+This node can set the following parameters:
+- `/calibration/wind_offset` (as bb_util::params::CALIBRATION_WIND_OFFFSET)
+- `/calibration/intensity_offset` (as bb_util::params::CALIBRATION_INTENSITY_OFFSET)
+
+This node does not read any parameters.
+
+\note Calibration will only be set on the parameter server if the cue type is `wind_cue`
+or `intensity_cue`. If the cue is of a different type then no parameters will be set
+\b but the calibration will be applied to all outgoing messages.
+
+\warning The calibration is not
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+\subsubsection Additional information
+
+Additional configuration options can be found using the `-h` option:
+
+\verbatim
+$ rosrun bb_dummy dummy_cue -h
+
+Usage: dummy_cue [options...]
+Options:
+    -t, --type             Set the dummy cue type 
+    -s, --sensitivity      Set the agent's sensitivity to this cue.
+    -m, --magnitude        Set the "strength" of the dummy cue. (Required)
+    -a, --angle            Set the angle for this cue (in degrees). (Required)
+    -p, --pub              Override the publication topic.
+    --noupdate             Set flag to disable updates w.r.t. odometry.
+    -h, --help             Shows this page       
+\endverbatim
+
+`-t my_type` will set the node name to `dummy_cue_my_type`; note that each dummy node
+must have a unique name (one could modify the code to make these nodes anonymous as
+the name isn't all that important).
+
+`-p my_pub` will completely override the publication topic
+
+`--noupdate` will make the cue maintain a fixed offset from the robot. This can occasionally
+be useful in testing.
+
+\note The `--sensitivity` option refers to an older project concept whereby an cue
+influence was dictated by a combination of the cue's reliability and the animal's
+sensitivity to the cue. This (and many other) models of cue influence were abandoned
+during the development of the central complex multimodal cue integration model
+(https://doi.org/10.1098/rspb.2023.0767).
+
+\note The sensitivity property could probably be removed or repurposed.
+
 **/

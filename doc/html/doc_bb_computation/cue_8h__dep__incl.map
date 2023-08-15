@@ -1,6 +1,0 @@
-<map id="cue.h" name="cue.h">
-<area shape="rect" id="node2" href="$icm_8h.html" title="Provides the IntensityCueManager class. " alt="" coords="88,80,143,107"/>
-<area shape="rect" id="node4" href="$mono__directional__prompt__node_8cpp.html" title="Compute single image&#45;wide cue from cropped image. " alt="" coords="97,155,264,196"/>
-<area shape="rect" id="node5" href="$cue_8cpp.html" title="Provides an implementation of the Cue display class. " alt="" coords="219,80,287,107"/>
-<area shape="rect" id="node3" href="$icm_8cpp.html" title="Implements the IntensityCueManager class. " alt="" coords="5,162,73,189"/>
-</map>

@@ -1,12 +1,12 @@
 /**
-   @file dummy_cue.cpp
-   @brief Provdes dummy input signals which can be used by the robot.
-   @author Robert Mitchell
+   \file dummy_cue.cpp
+   \brief Provdes dummy input signals which can be used by the robot.
+   \author Robert Mitchell
 
    Designed for testing purposes. Cues can be synthesised with a
    magnitude, direction, and "sensitivity". This node is designed
-   to be simple and general, we can have any number of them running
-   on the network at any time (so long as they are uniquely named).
+   to be simple and general. They are anonymised such that any number
+   can run (so long as they publish to different topics).
  */
 
 
@@ -30,9 +30,10 @@ ros::NodeHandle *nhp;
 
 /**
    Initialises the argument parser defined in bb_util/argparse.h
-   @param parser The argparse::ArgumentParser object.
-   @param argc Passthrough argc from the command line.
-   @param argv Passthrough argv from the command line.
+   \param parser The argparse::ArgumentParser object.
+   \param argc Passthrough argc from the command line.
+   \param argv Passthrough argv from the command line.
+   \return true on success
 */
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
@@ -77,12 +78,23 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+/**
+   Calibration callback. If a message is received on the calibration 
+   topic ('calibration_notify'), then the calibration offsets will be
+   updated. \b If the message type is `wind` or `intensity` then the
+   offsets will be stored in the parameter server. Otherwise they
+   will just be applied locally.
+
+   \param msg The incoming ROS message
+
+   \note The actual message content is ignored.
+*/
 void calibrationNotifyCallback(const std_msgs::String& msg){
   // Sensor calibration has been updated, re-read from parameter server
   std::string rosparam_id;
-  if (*type_p == "wind") {
+  if (*type_p == "wind_cue") {
     rosparam_id = bb_util::params::CALIBRATION_WIND_OFFSET;
-  } else if (*type_p == "intensity") {
+  } else if (*type_p == "intensity_cue") {
     rosparam_id = bb_util::params::CALIBRATION_INTENSITY_OFFSET;
   } else {
     // Fail but let the node keep running
@@ -96,10 +108,28 @@ void calibrationNotifyCallback(const std_msgs::String& msg){
              current);
 }
 
+/**
+   Yaw message callback. Expects a message which expresses the yaw of the agent
+   in radians.
+   \param msg The ROS message.
+   \note There is a node which provides exactly this function for the turtlebot.
+   If the turtlebot core is running then, 
+   \verbatim
+   $ rosrun bb_util yaw
+   \endverbatim
+   Will generate the required messages.
+*/
 void yawCallback(const std_msgs::Float64& msg){
   current_yaw = msg.data;
 }
 
+/**
+   Main loop
+   \param argc Number of arguments
+   \param argv The array of argument values.
+   \note These parameters are passed through to the 3rd party argument 
+   parser provided by bb_util/argparse.h.
+*/
 int main(int argc, char **argv){
   // Initialise the parser
   if (!initParser(parser, argc, argv)) return -1;
@@ -115,7 +145,7 @@ int main(int argc, char **argv){
   std::string type =
     parser.exists("type") ?
     parser.get<std::string>("type") :
-    "cue";
+    "dummy_cue";
 
   type_p = &type;
 
@@ -139,8 +169,8 @@ int main(int argc, char **argv){
   std::stringstream name;
   std::stringstream topic;
 
-  name << "dummy_cue_node_" << type;
-  topic  << "dummy_cue_" << type;
+  name << "dummy_node";
+  topic << type;
 
   std::string namestring = name.str();
   std::string topicstring =
@@ -151,7 +181,7 @@ int main(int argc, char **argv){
   //
   // ROS initialisation and admin
   //
-  ros::init(argc, argv, name.str());
+  ros::init(argc, argv, name.str(), ros::init_options::AnonymousName);
   ros::NodeHandle n;
   nhp = &n;
   ros::Publisher pub = n.advertise<bb_util::cue_msg>(topicstring, 1000);
@@ -162,17 +192,27 @@ int main(int argc, char **argv){
                 calibrationNotifyCallback);
 
   ROS_INFO("\nDummy cue specification:"
-           "Angle: %lf\nMagnitude: %lf\nSensitivity: %lf\nTopic: %s\nName: %s\n",
+           "Angle: %lf\nMagnitude: %lf\nSensitivity: %lf\nTopic: %s\n",
            angle,
            magnitude,
            sensitivity,
-           topicstring.c_str(),
-           namestring.c_str()
+           topicstring.c_str()
            );
 
   ros::Rate r(10);  // Publish the cue message at 10hz
 
-
+  //
+  // If you want to read pre-existing calibration information from an
+  // active parameter server, then uncomment this code and recompile
+  // the node.
+  //
+  // if (type == "wind_cue" || type == "intensity_cue"){
+  //   auto param_id = type == "wind_cue" ?
+  //     bb_util::params::CALIBRATION_WIND_OFFSET :
+  //     bb_util::params::CALIBRATION_INTENSITY_OFFSET;
+  //   calibration_offset = nhp->getParam(param_id,calibration_offset);
+  // }
+ 
   while(ros::ok()){
     ros::spinOnce();
     // Update position w.r.t. robot odom
