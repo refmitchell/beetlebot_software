@@ -1,0 +1,188 @@
+/**
+\mainpage
+
+This package provides a simple modular image processing chain for
+insect-inspired vision.
+
+List of nodes:
+- \b image_mask_node
+- \b gaussian_blur_node
+- \b green_channel_node
+- \b blue_channel_node
+
+The package centres around the ImageProcessingLink class provided
+by bb_improc.hpp. Each node implements a link and these can be
+strung together as required. For example, we could have:
+
+\verbatim
+/frames --> image_mask_node -- /masked_frames --> gaussian_blur_node -- /blurred_frames --> green_channel_node --> /green_frames
+\endverbatim
+
+or
+
+\verbatim
+/frames --> green_channel_node --> /green_frames
+\endverbatim
+
+The nodes are designed to operate with a consistent interface which
+allows you to configure the subscription and publication topics at
+startup. All nodes have default settings which are designed to be
+run as in the first example above.
+
+\section desc Node descriptions
+\subsection image_mask_node image_mask_node
+Applies a circular mask to the raw image captured on the robot.
+
+\subsubsection Usage
+\verbatim
+$ rosrun bb_improc image_mask_node
+\endverbatim
+
+\subsubsection options Options
+\verbatim
+$ rosrun bb_improc image_mask_node -h
+Usage: image_mask_node [options...]
+Options:
+    -v, --video            Enable video output for this node.
+    -s, --subscribe        Override the subscription topic.
+    -p, --publish          Override the publication topic.
+    -n, --name             Override the node name.
+    -r, --viewport_radius  Set the radius of the circular viewport at the centre of the frame (set <= 0 to disable masking).
+    -h, --help             Shows this page  
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribers and Publishers are configurable at runtime, these
+are just defaults.
+
+Subscribes to:
+- \b `/frames` [sensor_msgs/Image] Expects an RGB image
+
+Publishes to:
+- \b `/masked_frames`[sensor_msgs/Image] Publishes an RGB image
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+
+
+\subsection gaussian_blur_node gaussian_blur_node
+Applies Gaussian blurring to an image.
+
+\subsubsection Usage
+\verbatim
+$ rosrun bb_improc gausian_blur_node
+\endverbatim
+
+\subsubsection options Options
+\verbatim
+$ rosrun bb_improc gaussian_blur_node -h
+Usage: gaussian_blur_node [options...]
+Options:
+    -v, --video            Enable video output for this node.
+    -s, --subscribe        Override the subscription topic.
+    -p, --publish          Override the publication topic.
+    -n, --name             Override the node name.
+    -h, --help             Shows this page      
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribers and Publishers are configurable at runtime, these
+are just defaults.
+
+Subscribes to:
+- \b `/masked_frames` [sensor_msgs/Image] Expects an RGB image
+
+Publishes to:
+- \b `/blurred_frames`[sensor_msgs/Image] Publishes an RGB image
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+
+
+\subsection green_channel_node green_channel_node
+Extracts the green channel from an RGB image (to mimic insect sensitivity to
+green light).
+
+\subsubsection Usage
+\verbatim
+$ rosrun bb_improc green_channel_node
+\endverbatim
+
+\subsubsection options Options
+\verbatim
+$ rosrun bb_improc green_channel_node -h
+Usage: green_channel_node [options...]
+Options:
+    -v, --video            Enable video output for this node.
+    -s, --subscribe        Override the subscription topic.
+    -p, --publish          Override the publication topic.
+    -n, --name             Override the node name.
+    -h, --help             Shows this page      
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribers and Publishers are configurable at runtime, these
+are just defaults.
+
+Subscribes to:
+- \b `/blurred_frames` [sensor_msgs/Image] Expects an RGB image
+
+Publishes to:
+- \b `/green_frames`[sensor_msgs/Image] Publishes a single channel image
+  which is just the green channel of the input.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+
+
+
+\subsection blue_channel_node blue_channel_node
+Extracts the blue channel from an RGB image.
+
+\subsubsection Usage
+\verbatim
+$ rosrun bb_improc blue_channel_node
+\endverbatim
+
+\subsubsection options Options
+\verbatim
+$ rosrun bb_improc blue_channel_node -h
+Usage: blue_channel_node [options...]
+Options:
+    -v, --video            Enable video output for this node.
+    -s, --subscribe        Override the subscription topic.
+    -p, --publish          Override the publication topic.
+    -n, --name             Override the node name.
+    -h, --help             Shows this page      
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribers and Publishers are configurable at runtime, these
+are just defaults.
+
+Subscribes to:
+- \b `/blurred_frames` [sensor_msgs/Image] Expects an RGB image
+
+Publishes to:
+- \b `/blue_frames`[sensor_msgs/Image] Publishes a single channel image
+  which is just the blue channel of the input.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+*/

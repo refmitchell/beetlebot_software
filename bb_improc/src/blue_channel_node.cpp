@@ -1,10 +1,7 @@
-#define DEBUG 1
-
 /**
-@file blue_channel_node.cpp
-@brief Extracts and publishes the blue channel from an rgb image.
+   \file blue_channel_node.cpp
+   \brief Extracts and publishes the blue channel from an rgb image.
 */
-
 
 #include <cmath>
 
@@ -18,12 +15,9 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "bb_improc/bb_improc.hpp"
-
-
 #include "bb_util/bb_util.h"
 #include "bb_util/argparse.h"
 
-//Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){

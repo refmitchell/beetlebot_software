@@ -1,7 +1,8 @@
 /**
-   @file gaussian_blur_node.cpp
-   @brief Applies a gaussian blur to an rgb image.
+   \file gaussian_blur_node.cpp
+   \brief Applies a gaussian blur to an rgb image.
 */
+
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -16,7 +17,6 @@
 #include "bb_util/argparse.h"
 #include "bb_util/bb_util.h"
 
-//Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){

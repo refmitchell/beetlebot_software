@@ -1,8 +1,6 @@
-#define DEBUG 1
-
 /**
-@file green_channel_node.cpp
-@brief Extracts and publishes the green channel from an rgb image.
+   \file green_channel_node.cpp
+   \brief Extracts and publishes the green channel from an rgb image.
 */
 
 #include <cmath>
@@ -21,7 +19,6 @@
 #include "bb_util/argparse.h"
 #include "bb_util/bb_util.h"
 
-//Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");
 
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){

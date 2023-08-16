@@ -1,8 +1,6 @@
-#define DEBUG 1
-
 /**
-   @file image_mask_node.cpp
-   @brief Applies a circular mask to an RGB image.
+   \file image_mask_node.cpp
+   \brief Applies a circular mask to an RGB image.
 
    This is really meant to be first in the pipeline. Image capture is part
    of the robot-based software; the mask is applied to provide a circular
@@ -55,7 +53,7 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
 
   parser.add_argument()
     .names({"-r", "--viewport_radius"})
-    .description("Set the radius of the circular viewport at the centre of the frame.")
+    .description("Set the radius of the circular viewport at the centre of the frame (set <= 0 to disable masking).")
     .required(false);
   parser.enable_help();
 
@@ -83,6 +81,9 @@ void ImageProcessingLink::imageCallback(const sensor_msgs::ImageConstPtr& msg){
     parser.get<int>("viewport_radius")
     : MAX_RADIUS;
 
+  // If radius is <= 0 set flag to disable masking.
+  bool no_mask = radius <= 0;
+
   // Check radius does not exceed max
   if (radius > MAX_RADIUS) {
     ROS_FATAL(
@@ -92,31 +93,35 @@ void ImageProcessingLink::imageCallback(const sensor_msgs::ImageConstPtr& msg){
     exit(-1);
   }
 
+  cv::Mat frame = raw_frame;
 
-  // Crop frame to a square with edge length 2*r
-  int edge_length = radius * 2;
+  if (!no_mask){
+    // Crop frame to a square with edge length 2*r
+    int edge_length = radius * 2;
 
-  // Bounding box top left x and y coordinates
-  int roi_x = (raw_frame.cols / 2) - radius;
-  int roi_y = (raw_frame.rows / 2) - radius;
+    // Bounding box top left x and y coordinates
+    int roi_x = (raw_frame.cols / 2) - radius;
+    int roi_y = (raw_frame.rows / 2) - radius;
 
-  cv::Rect roi(roi_x, roi_y, edge_length, edge_length);
-  cv::Mat frame = raw_frame(roi);
+    cv::Rect roi(roi_x, roi_y, edge_length, edge_length);
+    //cv::Mat frame = raw_frame(roi);
+    frame = raw_frame(roi);
 
+    // Set centre for circular mask
+    cv::Point centre;
+    centre.x = floor(frame.cols / 2);
+    centre.y = floor(frame.rows / 2);
 
-  // Set centre for circular mask
-  cv::Point centre;
-  centre.x = floor(frame.cols / 2);
-  centre.y = floor(frame.rows / 2);
+    // Define circular mask.
+    cv::Mat mask;
+    mask = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
+    circle(mask, centre, radius, cv::Scalar(255,255,255), -1);
 
-  // Define circular mask.
-  cv::Mat mask;
-  mask = cv::Mat::zeros(frame.rows, frame.cols, frame.type());
-  circle(mask, centre, radius, cv::Scalar(255,255,255), -1);
-
-  // Apply the binary mask.
-  cv::bitwise_and(frame, mask, frame);
-
+    // If the radius was positive
+    cv::bitwise_and(frame, mask, frame);
+  }
+  
+    
   // Image display
   if (parser.exists("video")){
     bb_util::vision::imshow("Image Mask Output", frame, cv::Size(1000,1000));
