@@ -1,5 +1,18 @@
 /**
+   \file multi_pol_op_recorder.cpp
+   \brief A recording routine for performing polarisation recordings.
+   
+   This node will record information from the polarisation sensor, the
+   camera, and odometry while performing a 360 degree rotation.
 
+   This will produce a rosbag file with the raw photodiode recordings
+   and associated yaw information in the directory in which the
+   rosrun command was run. 
+
+   \note If the yaw is not zeroed, the routine will zero the yaw
+   prior to starting the recording. This is done using a simple
+   proportional controller which can get stuck. The recording
+   does not begin until the robot is zeroed.
 */
 
 #include <ros/ros.h>
@@ -63,10 +76,20 @@ std::string cam_sub_topic = "frames";
 std::string full_odom_sub_topic = "odom";
 std::string node_name = "pol_op_pd_test_recorder";
 
+/** 
+    Clip negative values to zero
+    \param value The value to clip
+    \return 0 if value < 0, otherwise the value.
+*/
 double clip(double value){
   return value >= 0 ? value : 0;
 }
 
+/**
+   Record all photodiode readings, camera, and odometry information 
+   to a rosbag.
+   \param bag The rosbag file.
+*/
 void write_all_to_bag(rosbag::Bag& bag){
     std_msgs::Int32MultiArray pol_msg;
     std_msgs::Int32MultiArray pol_msg1;
@@ -107,6 +130,11 @@ void write_all_to_bag(rosbag::Bag& bag){
 }
 
 //Publish a velocity command.
+/**
+   Construct and publish a command velocity command. 
+   \param linear The goal linear velocity
+   \param angular The goal angular velocity
+*/
 void command_velocity(float linear, float angular){
  geometry_msgs::Twist msg;
 
@@ -121,6 +149,13 @@ void command_velocity(float linear, float angular){
   cmd_publisher.publish(msg);
 }
 
+/**
+   Initialise the argument parser
+   \param parser The argument parser
+   \param argc The argument count
+   \param argv The array of argument values from the command line
+   \return true on success
+*/
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
     .names({"-t", "--time"})
@@ -142,10 +177,19 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+
+/**
+   The camera callback.
+   \param msg The image message.
+*/
 void imageCallback(const sensor_msgs::ImageConstPtr& msg){
   sm_frame = *msg;
 }
 
+/**
+   Yaw topic callback.
+   \param msg The yaw message (note, from bb_util yaw, not odometry)
+*/
 void yawCallback(const std_msgs::Float64::ConstPtr& yaw_msg){
   // Conversion from Quaternion to RPY, lifted from ROS forums.
   global_yaw = yaw_msg->data; // Update local memory
@@ -153,47 +197,82 @@ void yawCallback(const std_msgs::Float64::ConstPtr& yaw_msg){
   yaw_data_received = true;
 }
 
+/**
+   Odometry callback
+   \param Odometry message from /odom
+*/
 void odometryCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
   global_odom_msg = *odom_msg;
 }
 
+/**
+   Polarisation opponent callback for unit 0.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data = pol_msg->data; // Update local memory
-
   pol_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for unit 1.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback1(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data1 = pol_msg->data; // Update local memory
   pol_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for unit 2.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback2(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data2 = pol_msg->data; // Update local memory
   pol_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for unit 3.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback3(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data3 = pol_msg->data; // Update local memory
   pol_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for unit 4.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback4(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data4 = pol_msg->data; // Update local memory
 
   pol_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for unit 5.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback5(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data5 = pol_msg->data; // Update local memory
   pol_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for unit 6.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback6(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data6 = pol_msg->data; // Update local memory
   pol_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for unit 7.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback7(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data7 = pol_msg->data; // Update local memory
   pol_data_received = true;

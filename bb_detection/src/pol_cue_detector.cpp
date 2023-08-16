@@ -1,10 +1,14 @@
 /**
-   @file pol_cue_detector.cpp
-   @brief Decode pol-op readings, format into a cue then publish.
+   \file pol_cue_detector.cpp
+   \brief Decode pol-op readings, format into a cue then publish.
 
-   This node will primarily use the bio-inspired decoding method
-   provided by Gkanias et al. (2019) but is planned to include
-   the 'eigenvector method' provided by Han et al. (2017) too.
+   On-line decode of the prototype polarisation sensor from
+   Gkanias et al. (2023) using the decoding routine from
+   Gkanias et al. (2019).
+
+   \warning The working status of this node is unknown but it should
+   be functioning properly. It would last have been used in the
+   field in November 2022 and I remember it working.
 */
 
 #include <ros/ros.h>
@@ -53,12 +57,15 @@ double (*activation) (int input);
 inline double radians(double degrees){return degrees*bb_util::defs::PI / 180;}
 inline double degrees(double radians){return 180*radians/bb_util::defs::PI;}
 
-bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
-  parser.add_argument()
-    .names({"-m", "--method"})
-    .description("The method used to decode the skycompass data")
-    .required(false);
 
+/**
+   Initialise the argument parser.
+   \param parser The parser
+   \param argc The argument count from the command line
+   \param argv The parameter value array from the command line
+   \return true on success
+*/
+bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
     .names({"-a", "--activation"})
     .description("[If using the bio inspired sensor decode] "
@@ -82,46 +89,92 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+/** 
+    Polarisation opponent callbacks for unit 0 
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback0(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[0] = pol_msg->data; // Update local memory
 }
 
+/** 
+    Polarisation opponent callbacks for unit 1
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback1(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[1] = pol_msg->data; // Update local memory
 }
 
+/** 
+    Polarisation opponent callbacks for unit 2
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback2(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[2] = pol_msg->data; // Update local memory
 }
 
+/** 
+    Polarisation opponent callbacks for unit 3
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback3(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[3] = pol_msg->data; // Update local memory
 }
 
+/** 
+    Polarisation opponent callbacks for unit 4
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback4(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[4] = pol_msg->data; // Update local memory
 }
 
+/** 
+    Polarisation opponent callbacks for unit 5
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback5(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[5] = pol_msg->data; // Update local memory
 }
 
+/** 
+    Polarisation opponent callbacks for unit 6
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback6(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[6] = pol_msg->data; // Update local memory
 }
 
+/** 
+    Polarisation opponent callbacks for unit 7
+    \param pol_msg The photodiode readings from the unit.
+*/
 void polCallback7(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   pol_op_responses[7] = pol_msg->data; // Update local memory
 }
 
+/**
+   Log activation function for the pol neurons.
+   \param x The input to the neuron
+   \return ln(x)
+*/
 double log_activation(int x){
   return std::log((double) x);
 }
 
+/**
+   Square root activation function for the pol neurons.
+   \param x The input to the neuron
+   \return The square root of x.
+*/
 double sqrt_activation(int x){
   return std::sqrt(x);
 }
 
+/**
+   Decode the photodiode information using the method from Gkanias et al. (2019)
+   \return The angle (phi) and certainty (tau) of the sensor reading (see Gkanias et al. (2019)).
+*/
 std::pair<double, double> bioInspiredDecode(){
   // Extract the relevant photodiodes and take their absolute response
   std::vector<double> pol_neuron_responses(N_POL_OPS);
@@ -167,11 +220,6 @@ std::pair<double, double> bioInspiredDecode(){
   return std::pair<double, double>(phi,tau);
 }
 
-std::pair<double, double> eigenvectorDecode(){
-  ROS_INFO("Eigenvector decoding not yet implemented, exiting.");
-  exit(0);
-}
-
 int main(int argc, char **argv){
   if (!initParser(parser, argc, argv)) return -1;
 
@@ -180,11 +228,7 @@ int main(int argc, char **argv){
     return 0;
   }
 
-
-  std::string method =
-    parser.exists("method") ?
-    parser.get<std::string>("method") :
-    "bio";
+  std::string method = "bio";
 
   std::string activation_function =
     parser.exists("activation") ?
@@ -214,15 +258,19 @@ int main(int argc, char **argv){
 
   std::pair<double, double> (*decodeSensor) ();
 
-
   // Determine which callback function to use
   if (method == "bio") {
     decodeSensor = &bioInspiredDecode;
   } else if (method == "eigen") {
-    decodeSensor = &eigenvectorDecode;
+    /*
+      Stub, I had originally planned to implement multiple decoding methods
+      which used the available data but had trouble getting the eigenvector
+      method (Han et al., 2017) to work correctly. In any case, this technique 
+      can still be used to assign the correct callback function to the pointer
+      if alternative decoding methods are to be trialled.
+     */
   } else {
     ROS_ERROR("Unrecognised decoding method %s", method.c_str());
-    ROS_INFO("Supported methods: bio [default], eigen");
     exit(-1);
   }
 

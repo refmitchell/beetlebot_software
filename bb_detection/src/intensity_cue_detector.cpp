@@ -1,6 +1,6 @@
 /**
-   @file mono_directional_prompt_node.cpp
-   @brief Compute single image-wide cue from cropped image.
+   \file intensity_cue_detector.cpp
+   \brief Compute single image-wide cue from cropped image.
 
    Available cues are currently brightest vector and centroid vector.
    Current relationship with IntensityCueManager and Cue classes is overly
@@ -21,15 +21,12 @@
 #include <cmath>
 #include <iostream>
 
-
-
 #include "bb_detection/cv_cue.hpp"
 
 #include "bb_util/bb_util.h"
 #include "bb_util/cue.hpp"
 #include "bb_util/argparse.h"
 
-//Global, bad but should be safe in this case
 argparse::ArgumentParser parser("Parser");
 
 image_transport::ImageTransport *it; /**< ROS image transport layer*/
@@ -39,6 +36,13 @@ ros::Publisher pub; /**< Publisher, publishing cue information. */
 ros::NodeHandle *nhp;
 double calibration_offset = 0;
 
+/**
+   Initialise the parser
+   \param parser The argument parser
+   \param argc The argument count
+   \param argv The array of argument values from the command line
+   \return true on success
+*/
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   //Global, all bb_computation nodes should have these options.
   parser.add_argument()
@@ -80,7 +84,12 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
-// Calibration update callback
+/**
+   Calibration update callback.
+   If calibration update notification is received, this callback will
+   check the parameter server for the new calibration information.
+   \param msg The calibration message (content is ignored).
+*/
 void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
   double current = calibration_offset;
   nhp->param(bb_util::params::CALIBRATION_INTENSITY_OFFSET,
@@ -88,7 +97,12 @@ void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
              current);
 }
 
-// BV Callback
+/**
+   Callback which detects the brightest point in a received image then
+   draws a vector from the centre of the frame to the brightest point.
+   A Cue is characterised using this vector.
+   \param msg The Image message
+*/
 void brightestVectorCallback(const sensor_msgs::ImageConstPtr& msg){
   cv::Mat frame;
 
@@ -128,7 +142,12 @@ void brightestVectorCallback(const sensor_msgs::ImageConstPtr& msg){
   //  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
 }
 
-// CV Callback
+/**
+   Callback which detects the centre of mass of a received image then
+   draws a vector from the centre of the frame to the brightest point.
+   A Cue is characterised using this vector.
+   \param msg The Image message
+*/
 void centroidVectorCallback(const sensor_msgs::ImageConstPtr& msg){
   cv::Mat frame;
   try{
@@ -139,21 +158,12 @@ void centroidVectorCallback(const sensor_msgs::ImageConstPtr& msg){
              "topic producing grayscale (mono8) images");
   }
 
-  // I originally wanted to unwrap this and manually compute everything
-  // Ramsey uses cv::moments() to compute this but I'm unsure of the validity of
-  // this. I'll use it here to test it.
-  // He also applies a spectral trasform to the image that I'm unsure of
-  // spectrum = (np.round(((bgr[:,:,1] + bgr[:,:,2]) / bgr.sum(2).astype(float)) * 255.)).astype('uint8')
-  // Best I can tell this is taking an average of the blue and green channels
-  // and reducing this to a single "grey" channel.
   cv::Moments frame_moments = cv::moments(frame);
-
   cv::Point centre_of_mass(
                            frame_moments.m10 / frame_moments.m00, // CoM x-coord
                            frame_moments.m01 / frame_moments.m00  // CoM y-coord
                            );
 
-  // Because I can't be bothered fighting with CMake
   const cv::Mat& frame_ref = frame;
   bb_detection::CueFromCV cv_cue(centre_of_mass, frame_ref);
 
@@ -166,8 +176,6 @@ void centroidVectorCallback(const sensor_msgs::ImageConstPtr& msg){
   sys_cue.setAzimuth(sys_cue.getTheta() - calibration_offset);
 
   pub.publish(bb_util::Cue::toMsg(sys_cue));
-
-  //  pub.publish(bb_util::Cue::toMsg(cv_cue.toSystemCue()));
 }
 
 int main(int argc, char **argv){

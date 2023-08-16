@@ -1,6 +1,6 @@
 /**
-   @file wind_cue_detector.cpp
-   @brief Compute a Cue from the available wind sensor information.
+   \file wind_cue_detector.cpp
+   \brief Compute a Cue from the available wind sensor information.
 
    Subscribes to the wind_direction and wind_speed topics (from bb_sensors)
    and formats this information into a bb_util::Cue for the cue manager.
@@ -28,6 +28,13 @@ ros::NodeHandle *nhp;
 
 double calibration_offset = 0;
 
+/**
+   Initialise the argument parser
+   \param parser The argument parser
+   \param argc The argument count
+   \param argv The array of argument values from the command line
+   \return true on success
+*/
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   //Global, all bb_computation nodes should have these options.
   parser.add_argument()
@@ -63,6 +70,12 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+/**
+   Calibration update callback.
+   If calibration update notification is received, this callback will
+   check the parameter server for the new calibration information.
+   \param msg The calibration message (content is ignored).
+*/
 void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
   // Sensor calibration has been updated, re-read from parameter server
   double current = calibration_offset;
@@ -72,14 +85,21 @@ void calibrationNotifyCallback(const std_msgs::String::ConstPtr& msg){
   ROS_INFO("Cal");
 }
 
+/**
+   Callback for directional information.
+   \param msg The wind direction message
+*/
 void directionUpdateCallback(const std_msgs::Float64::ConstPtr& msg){
   // Convert direction to radians.
   double wind_direction = msg->data * bb_util::defs::PI / 180;
   wind_cue.setAzimuth(wind_direction - calibration_offset); // inverted to match the light output
 }
 
+/**
+   Callback for speed information.
+   \param msg The wind speed message
+*/
 void speedUpdateCallback(const std_msgs::Float64::ConstPtr& msg){
-  // Cap wind speed at 100deg/sec (this needs tuned to the sensor in use)
   double wind_speed = msg->data < 110 ? msg->data : 110;
   wind_speed = wind_speed / 110; // Scale to be between 0 and 1
   wind_cue.setContrast(wind_speed);

@@ -1,12 +1,22 @@
 /**
-   @file cue_calibration.cpp
-   @brief Calibrate detection nodes relative to magnetometer
+   \file cue_calibration.cpp
+   \brief Calibrate detection nodes relative to the IMU
 
-   Used to calibrate the different supported cues (move them all into the same
-   frame of reference as the magnetometer). Functionally this aligns the
-   receptive fields of the TL neurons downstream. Unlike most nodes this is
+   Used to calibrate the different supported cues. Functionally this aligns 
+   the receptive fields of the TL neurons downstream. Unlike most nodes this is
    designed to run for one cycle then terminate; figure out the calibration
    parmeters, store them in the parameter server, then exit.
+
+   \note This system was implemented prior to the neural model from Mitchell
+   et al. (2023). The plastic connections between the R and E-PG neurons in that
+   model effectively fill this role.
+
+   \note
+   If you want to add any cues to this calibration system then you need to add a
+   callback and subscriber for the cue.
+
+   \warning The calibration system was implemented quickly and not tested thoroughly.
+   While it should work, there may be problems. 
  */
 
 #include <ros/ros.h>
@@ -28,18 +38,24 @@ double intensity_offset = 0;
 double wind_offset = 0;
 std::map<std::string, double> readings;
 
+/**
+   Initialise the argument parser.  
+   \param parser The argument parser
+   \param argc Argument count
+   \param argv Argument values passed on the command line
+   \return true on success
+ */
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
-    .names({"-i", "--intensity_subscribe"})
+    .names({"-i", "--int_sub"})
     .description("Set the subscription topic for the light intensity cue."
                  "Should be whatever topic the intensity cue detector is "
                  "publishing to."
                  )
-    .required(true); // Always has to be specified by the intensity detection
-                     // node.
+    .required(false);
 
   parser.add_argument()
-    .names({"-w", "--wind_subscribe"})
+    .names({"-w", "--wind_sub"})
     .description("Set the wind cue subscription topic.")
     .required(false);
 
@@ -56,10 +72,12 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+/**
+   Callback for IMU information. Extracts the yaw from the turtlebot
+   odometry message.
+   \param odom_msg The odometry message
+*/
 void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
-  // odom.pose.orientation.z // Heading - quaternion comes into play
-
-  // Conversion from Quaternion to RPY, lifted from ROS forums.
   tf::Quaternion quat;
   tf::quaternionMsgToTF(odom_msg->pose.pose.orientation, quat);
 
@@ -68,6 +86,10 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
   global_yaw = yaw;
 }
 
+/**
+   Callback for intensity cue information
+   \param msg The bb_util::cue_msg
+*/
 void intensityUpdateCallback(const bb_util::cue_msg::ConstPtr& msg){
   bb_util::cue_msg cue_msg = *msg;
   bb_util::Cue cue = bb_util::Cue::toCue(cue_msg);
@@ -83,6 +105,11 @@ void intensityUpdateCallback(const bb_util::cue_msg::ConstPtr& msg){
            intensity_offset);
 }
 
+
+/**
+   Callback for wind information
+   \param msg The bb_util::cue_msg
+*/
 void windUpdateCallback(const bb_util::cue_msg::ConstPtr& msg){
   bb_util::cue_msg cue_msg = *msg;
   bb_util::Cue cue = bb_util::Cue::toCue(cue_msg);
@@ -95,22 +122,29 @@ void windUpdateCallback(const bb_util::cue_msg::ConstPtr& msg){
 }
 
 int main(int argc, char**argv){
+  // Parser initialisation
+  if (!initParser(parser, argc, argv)) return -1;
+
+  // Parser decode
+  if (parser.exists("help")){
+    parser.print_help();
+    return 0;
+  }
+  
   // Determine the detection nodes for the various cues
   std::string wind_cue_sub_topic =
-    parser.exists("wind_subscribe") ?
-    parser.get<std::string>("wind_subscribe") :
+    parser.exists("wind_sub") ?
+    parser.get<std::string>("wind_sub") :
     bb_util::defs::WIND_CUE_TOPIC;
 
   std::string intensity_cue_sub_topic =
-    parser.exists("intensity_subscribe") ?
-    parser.get<std::string>("intensity_subscribe") :
+    parser.exists("int_sub") ?
+    parser.get<std::string>("int_sub") :
     bb_util::defs::INTENSITY_CUE_TOPIC;
 
   std::string node_name = "calibration";
   ros::init(argc, argv, node_name.c_str());
   ros::NodeHandle n;
-
-
 
   ros::Subscriber wind_direction_sub =
     n.subscribe(wind_cue_sub_topic.c_str(), 1000, windUpdateCallback);
@@ -134,19 +168,21 @@ int main(int argc, char**argv){
   notify_clear.data = "";
   calibration_notify.publish(notify_clear);
 
+  ROS_INFO("Once calibration information has been set, the node will continue"
+           " to update it every five seconds. Once cues are calibrated, this node"
+           " can be stopped using CTRL-C. Calibration offsets are stored on the"
+           " parameter server for as long as roscore is running.");
+  
   while(ros::ok()){
     ros::spinOnce();
     n.setParam(bb_util::params::CALIBRATION_INTENSITY_OFFSET, intensity_offset);
     n.setParam(bb_util::params::CALIBRATION_WIND_OFFSET, wind_offset);
     std_msgs::String msg;
     msg.data = "";
-    ros::Duration(0.2).sleep();
     calibration_notify.publish(msg);
+    ROS_INFO("IO: %lf | WO: %lf", intensity_offset, wind_offset);
+    ros::Duration(5).sleep();
   }
-
-  ROS_INFO("New calibration data stored; remember to use rosparam dump to\n"
-           "save it for a future session.");
-
 
   return 0;
 }

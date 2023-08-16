@@ -1,19 +1,17 @@
 #include "bb_detection/cv_cue.hpp"
 
 /**
-   @file cue.cpp
-   @brief Provides an implementation of the Cue display class.
+   \file cue.cpp
+   \brief Provides an implementation of the Cue display class.
 */
 
-  //
-  // Cue class implementation
-  //
-
-  //
-  // Ctor
-  //
 namespace bb_detection{
-CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
+  /**
+     \brief Constructor
+     \param location The location of the cue within the frame.
+     \param frame_ref A reference for the image frame onto which to draw the cue vector.
+   */
+  CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     // Use const frame reference to determine the frame
     // centre without modifying the frame itself.
     double frame_centre_x = frame_ref.cols / 2;
@@ -30,9 +28,10 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     this->updateInternalRepresentation();
   }
 
-  //
-  // Private method
-  //
+  /* Private */
+  /**
+     Ensure the internal cue representation stays consistent
+   */
   void CueFromCV::updateInternalRepresentation(){
     x = frame_x - centre_x;
     y = frame_y - centre_y;
@@ -40,13 +39,13 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     theta = atan2(y, x);
   }
 
-  //
-  // Public methods
-  //
+  /* Public */
 
-  //
-  // Draw the cue vector on an openCV frame
-  //
+  /**
+     Draw the cue vector on an openCV frame
+     \param frame The frame reference onto which to draw the cue vector
+     \return A colour image with the vector drawn in red.
+  */
   cv::Mat& CueFromCV::drawCueVectorOnFrame(cv::Mat &frame){
     cv::Mat &colour = colour_frame;
     cv::cvtColor(frame, colour, cv::COLOR_GRAY2RGB);
@@ -56,10 +55,12 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     return colour;
   }
 
-  //
-  // Update the coordinates of the cue.
-  // Arguments are expected to be with respect to the image
-  //
+  /**
+   Update the coordinates of the cue.
+
+   \param x The x coordinate from the left of the frame
+   \param y The y coordinate from the top of the frame
+  */
   void CueFromCV::updateFrameCoordinates(double frame_x_coord, double frame_y_coord){
     frame_x = frame_x_coord;
     frame_y = frame_y_coord;
@@ -68,10 +69,10 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     this->updateInternalRepresentation();
   }
 
-  //
-  // Update the coordinates of the cue.
-  // Arguments are expected to be with respect to the image
-  //
+  /**
+     Update the coordinates of the cue using a cv::Point.
+     \param location A cv::Point with the x and y coordinates of the cue.
+  */
   void CueFromCV::updateFrameCoordinates(cv::Point location){
     frame_x = location.x;
     frame_y = location.y;
@@ -80,16 +81,21 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
     this->updateInternalRepresentation();
   }
 
-  //
-  // Getters; only publically accessible features should be the strength and
-  // the direction.
-  //
+  /** Get the magnitude of the cue vector. */
   double CueFromCV::strength(){ return r; }
+  /** 
+      Get the direction of the cue vector. 
+      \warning The angular convention here is not known. From the code
+      it appears to be the standard anti-clockwise from the x-axis but
+      if this is important to your application, you should double check.
+  */
   double CueFromCV::direction(){ return theta; }
 
-  //
-  // Translate into the system standard cue representation
-  //
+
+  /**
+     Translate this OpenCV cue into a bb_util::Cue
+     \return An equivalent bb_util::Cue
+   */
   bb_util::Cue CueFromCV::toSystemCue(){
     std::string type = "intensity";
     double sensitivity = 1;
@@ -104,8 +110,14 @@ CueFromCV::CueFromCV(cv::Point location, const cv::Mat& frame_ref) {
                         );
   }
 
+  /** 
+      Translate this OpenCV cue into a bb_util::Cue but define
+      the sensitivity.
+      \param sensitivity The sensitivity to this cue
+      \return An equivalent bb_util::Cue
+   */
   bb_util::Cue CueFromCV::toSystemCue(double sensitivity){
-    std::string type = "light";
+    std::string type = "intensity";
     double contrast = this->r / max_cue_vector_length; // Scale between 0:1
     contrast = contrast > 1.1 ? 0 : contrast;
     

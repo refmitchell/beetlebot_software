@@ -1,12 +1,7 @@
 /**
-   @file pol_op_recording.cpp
-   @brief Specialised node which breaks the modular conventions of the codebase.
-
-   This node runs a preset sequence of movements governed by user
-   timing for the purpose of testing different photodiodes for the
-   polarisation opponent units. I've tried to separate out the locomotion
-   code to bb_locomotion but it's not so neat.
-
+   \file pol_op_recording.cpp
+   \brief Record from a single zenith-facing pol op unit.
+   
    Sequence of events:
    - Wait for data from pol_op and odometry to become available
    - Send request to bb_locomotion to 'zero' the robot, wait for completion.
@@ -52,11 +47,21 @@ std::string pol_sub_topic = "pol_op_0";
 std::string odom_sub_topic = "yaw";
 std::string node_name = "pol_op_pd_test_recorder";
 
+/**
+   Clip values less than 0 to be 0.
+   \param value The value to be clipped
+   \return 0 if value less than 0, otherwise the original value.
+*/
 double clip(double value){
   return value >= 0 ? value : 0;
 }
 
-//Publish a velocity command.
+
+/**
+   Construct and publish a command velocity command. 
+   \param linear The goal linear velocity
+   \param angular The goal angular velocity
+*/
 void command_velocity(float linear, float angular){
  geometry_msgs::Twist msg;
 
@@ -71,6 +76,14 @@ void command_velocity(float linear, float angular){
   cmd_publisher.publish(msg);
 }
 
+
+/**
+   Initialise the argument parser
+   \param parser The argument parser
+   \param argc The argument count
+   \param argv The array of argument values from the command line
+   \return true on success
+*/
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
     .names({"-t", "--time"})
@@ -92,6 +105,10 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
+/**
+   Yaw topic callback.
+   \param msg The yaw message (note, from bb_util yaw, not odometry)
+*/
 void yawCallback(const std_msgs::Float64::ConstPtr& yaw_msg){
   // Conversion from Quaternion to RPY, lifted from ROS forums.
   global_yaw = yaw_msg->data; // Update local memory
@@ -99,6 +116,10 @@ void yawCallback(const std_msgs::Float64::ConstPtr& yaw_msg){
   yaw_data_received = true;
 }
 
+/**
+   Polarisation opponent callback for readings from the unit.
+   \param msg The photodiode readings from the unit.
+*/
 void polCallback(const std_msgs::Int32MultiArray::ConstPtr& pol_msg){
   global_sensor_data = pol_msg->data; // Update local memory
 

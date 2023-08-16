@@ -1,8 +1,8 @@
 #pragma once
 
 /**
-   @file cv_cue.h
-   @brief Provides a CueFromCV display class.
+   \file cv_cue.h
+   \brief Provides a CueFromCV display class.
 
    Provides a wrapper class which provides the functionality which
    allows cue detection from an openCV frame context, display, and
@@ -18,15 +18,12 @@
 #include "bb_util/cue.hpp"
 #include "bb_util/vector.hpp"
 
-/**
-   Wraps display functionality in a class for convenience.
 
-   @todo Update the name of this class to be more reflective of its purpose.
-   Would suggest "CueFromCVDisplay", it may be more prudent to remove this
-   entirely and add more comprehensive visualisation utilities.
-*/
 
 namespace bb_detection{
+  /**
+   \brief Wraps display functionality in a class for convenience.
+  */
   class CueFromCV {
   private:
     // This is just used to display the frame in colour
@@ -59,27 +56,27 @@ namespace bb_detection{
 
     /**
        Constructor
-       @param location cv::Point denoting the position of the cue
-       @param frame_ref cv::Mat used to determine display Mat properties
+       \param location cv::Point denoting the position of the cue
+       \param frame_ref cv::Mat used to determine display Mat properties
     */
     CueFromCV(cv::Point location, const cv::Mat& frame_ref);
 
     /**
        Draw the cue vector on an openCV frame.
-       @param frame The cv::frame on which the cue will be drawn.
+       \param frame The cv::frame on which the cue will be drawn.
     */
     cv::Mat& drawCueVectorOnFrame(cv::Mat &frame);
 
     /**
        Update the cue coordinates with respect to the frame.
-       @param frame_x_coord The new x coordinate.
-       @param frame_y_coord The new y coordinate.
+       \param frame_x_coord The new x coordinate.
+       \param frame_y_coord The new y coordinate.
     */
     void updateFrameCoordinates(double frame_x_coord, double frame_y_coord);
 
     /**
        Update the cue coordinates with respect to the frame.
-       @param location cv::Point defining the new x/y position of the cue.
+       \param location cv::Point defining the new x/y position of the cue.
     */
     void updateFrameCoordinates(cv::Point location);
 
