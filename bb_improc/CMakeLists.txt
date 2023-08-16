@@ -52,10 +52,9 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-   FILES
-   centroid_vector.msg
-)
+# add_message_files(
+#    FILES
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -140,9 +139,7 @@ ${bb_util_INCLUDE_DIRS}
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/raspicam_test_node.cpp)
-add_executable(raw_pub_node src/raw_pub_node.cpp)
 add_executable(image_mask_node src/image_mask_node.cpp)
-add_executable(subscriber_test_node src/image_subscriber_template.cpp)
 add_executable(gaussian_blur_node src/gaussian_blur_node.cpp)
 add_executable(blue_channel_node src/blue_channel_node.cpp)
 add_executable(green_channel_node src/green_channel_node.cpp)
@@ -156,27 +153,14 @@ add_executable(green_channel_node src/green_channel_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(raw_pub_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 add_dependencies(image_mask_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
-add_dependencies(subscriber_test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
 add_dependencies(gaussian_blur_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
 add_dependencies(blue_channel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
 add_dependencies(green_channel_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${bb_utils_EXPORTED_TARGETS})
 
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(raw_pub_node
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-)
-
 target_link_libraries(image_mask_node
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-  stdc++fs
-)
-
-target_link_libraries(subscriber_test_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   stdc++fs

@@ -1,2 +1,0 @@
-float32 contrast
-float32 theta

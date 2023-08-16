@@ -1,4 +1,0 @@
-- builder: doxygen
-  output_dir: doc_bb_improc
-  file_patterns: '*.c *.cpp *.h *.hpp *.dox'
-  exclude_patterns: '*.java argparse.h *test*'
