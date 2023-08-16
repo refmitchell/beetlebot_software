@@ -1,0 +1,14 @@
+/** 
+\mainpage
+
+This package provides access to utilities which need to be
+consistently defined across the codebase, both 3rd party and
+custom.
+
+Primarily this means ROS message formats, but global concepts
+(such as Cues) are also represented here.
+
+See the file list for more information.
+
+This package provides no nodes.
+*/

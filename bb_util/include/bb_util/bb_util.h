@@ -1,3 +1,20 @@
+/**
+   \file bb_util.h
+   \brief Provides basic global declarations and definitions for the beetlebot.
+
+   Some of the definitions here are still in use so this file is very much required.
+
+   \note Historically there were many definitions (e.g. things like
+   movement commands) which it was deemed useful to have defined
+   glboally. Most of these were never used or fully developed (which
+   is a shame) but the build process is still such that anything
+   defined here (or in the associated src/lib_bb_util.cpp) will be
+   available to all other packages in beetlebot_software.
+   Essentially, while I didn't get to flesh this out, it's still a
+   useful space to have in the codebase. Basic structure and some
+   unused examples have therefore been preserved.
+*/
+
 #pragma once
 
 #include <iostream>
@@ -6,76 +23,50 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+/**
+   \brief Utility namespace which is subdivided by function.
+*/
 namespace bb_util {
+  /** \brief Contains any global functions pertaining to vision. */
   namespace vision {
     void imshow(const std::string window_title,
                 const cv::Mat& frame,
                 const cv::Size size = cv::Size(640,640));
   }
 
-  // Definitions which are shared amongst nodes. Constness should
-  // be applied as appropriate.
+  /** 
+      \brief Definitions which are shared across different nodes. 
+
+      \note Originally this was meant to ensure that nodes had names
+      whose validity were checkable at compile time (at least for
+      silly things like spelling errors). Most of these have gone
+      unused (or the code which used them has been removed). They've
+      been left partly for posterity and also so that there is an
+      example to work from.
+  */
   namespace defs {
-    // Velocity update service should always advertise the
-    // same name.
+    // Topic/service name definitions
+    // These could be factored out into a 'topics' namespace
     const std::string UPDATE_VEL_SRV = "update_velocity";
-    const std::string LOC_CMD_SRV = "loc_node_command";
-
-    // Topic for broadcasting the vector memory status (all layers)
     const std::string VEC_MEM_STATUS = "vmcx_status";
+    const std::string CALIBRATION_NOTIFY_TOPIC = "calibration_notify";
+    const std::string INTENSITY_CUE_TOPIC = "intensity_cue";
+    const std::string WIND_CUE_TOPIC = "wind_cue";    
 
-    // Available cue types, should reduce to strings, we only
-    // want to ensure they're sensible when set, after that they
-    // won't be modified.
+    // Available cue types
     const std::string WIND = "wind";
     const std::string INTENSITY = "intensity";
 
-    // Strangely not provided by C++
+    // Not provided by C++ 
     const double PI = 3.14159265359;
-
-    const std::string CALIBRATION_NOTIFY_TOPIC = "calibration_notify";
-
-    // Cue topics
-    const std::string INTENSITY_CUE_TOPIC = "intensity_cue";
-    const std::string WIND_CUE_TOPIC = "wind_cue";
   }
 
-  // Constant, globaly defined parameter names for parameter server access.
+  /** \brief Names for interacting with the parameter server. */
   namespace params {
     // Calibration parameters for sensors; frames of reference must be aligned.
     const std::string CALIBRATION_WIND_OFFSET = "/calibration/wind_offset";
     const std::string CALIBRATION_INTENSITY_OFFSET =
       "/calibration/intensity_offset";
-  }
-
-  // More permenant node name definitions for formal nodes
-  namespace nodes{
-    const std::string VM_MENOTAXIS = "vm_menotaxis";
-  }
-
-  // Standard responses from nodes.
-  namespace responses{
-    const std::string BUSY = "busy";
-    const std::string COMPLETE = "complete";
-  }
-
-  //Locomotion node command opcodes. Some of these are for movement,
-  //others are functional.
-  namespace loc_node_commands {
-    namespace driving {
-      const int ALL_STOP = 0;
-      const int FWD = 1;
-      const int BWD = 2;
-      const int RGT = 3;
-      const int LFT = 4;
-      const int FULL_ROTATION = 5;
-      const int ZERO = 6;
-    }
-
-    namespace control {
-      const int LIN_LOCK_TOGGLE = -1;
-      const int ANG_LOCK_TOGGLE = -2;
-    }
   }
 }
 

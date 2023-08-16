@@ -1,0 +1,2 @@
+- builder: doxygen
+  excludes: include/bb_util/Eigen

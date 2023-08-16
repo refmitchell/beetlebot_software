@@ -1,11 +1,15 @@
 #pragma once
 
 /**
-   @file cue.h
-   @brief Provides a Cue display class.
+   \file cue.h
+   \brief Provides a Cue display class.
 
    Provides a wrapper class which allows a cue vector to be
    overlayed on an OpenCV matrix for testing/display purposes.
+
+   \todo Update the name of this class to be more reflective of its purpose.
+         Would suggest "CueDisplay", it may be more prudent to remove this
+         entirely and add more comprehensive visualisation utilities.
  */
 
 #include <ros/ros.h>
@@ -17,12 +21,11 @@
 #include "bb_computation/cue_vector.h"
 
 /**
-   Wraps display functionality in a class for convenience.
+   \brief Provides a wrapper class which allows a cue vector to be
+   overlayed on an OpenCV matrix for testing/display purposes.
 
-   @todo Update the name of this class to be more reflective of its purpose.
-         Would suggest "CueDisplay", it may be more prudent to remove this
-         entirely and add more comprehensive visualisation utilities.
- */
+   \warning This class is very poorly named and clashes with 
+*/
 class Cue {
 private:
   // This is just used to display the frame in colour
@@ -53,27 +56,27 @@ public:
 
   /**
      Constructor
-     @param location cv::Point denoting the position of the cue
-     @param frame_ref cv::Mat used to determine display Mat properties
+     \param location cv::Point denoting the position of the cue
+     \param frame_ref cv::Mat used to determine display Mat properties
    */
   Cue(cv::Point location, const cv::Mat& frame_ref);
 
   /**
       Draw the cue vector on an openCV frame.
-      @param frame The cv::frame on which the cue will be drawn.
+      \param frame The cv::frame on which the cue will be drawn.
    */
   cv::Mat& drawCueVectorOnFrame(cv::Mat &frame);
 
   /**
      Update the cue coordinates with respect to the frame.
-     @param frame_x_coord The new x coordinate.
-     @param frame_y_coord The new y coordinate.
+     \param frame_x_coord The new x coordinate.
+     \param frame_y_coord The new y coordinate.
   */
   void updateFrameCoordinates(double frame_x_coord, double frame_y_coord);
 
   /**
      Update the cue coordinates with respect to the frame.
-     @param location cv::Point defining the new x/y position of the cue.
+     \param location cv::Point defining the new x/y position of the cue.
    */
   void updateFrameCoordinates(cv::Point location);
 

@@ -1,0 +1,48 @@
+/** 
+\mainpage
+
+This package provides access to utilities which need to be
+consistently defined across the codebase, both 3rd party and
+custom.
+
+Included 3rd party libraries are:
+- argparse.h by Jesse Laning (https://github.com/jamolnng/argparse) [GNU GPLv3]
+- Eigen (https://eigen.tuxfamily.org/index.php?title=Main_Page) [MPL2]
+
+\note While the Eigen source code is included here, it is not documented.
+Please go to their website for Eigen documentation. Eigen files will not
+appear in the bb_util documentation file list.
+
+This package provides one node:
+- \b yaw
+
+\section desc Node descriptions
+
+This node receives odometry information from the turtlebot and unpacks
+the standard odometry message into its roll, pitch, and yaw components.
+The yaw is then published on its own topic. This saves on code duplication
+in navigation settings which use the IMU information.
+
+\note To generate the required orientation information, a simulated turtlebot
+(i.e. turtlebot3_fake) can be used.
+
+\subsection yaw yaw
+\subsubsection Usage
+\verbatim
+$ rosrun bb_util yaw
+\endverbatim
+
+\subsubsection ROS Topics
+Subscribes to:
+- \b `/odom` [nav_msgs/Odometry] The robot's current pose (x,y,z,r,p,y) as a quaternion.
+
+Publishes to:
+- \b `/yaw` [std_msgs/Float64] The yaw of the robot in radians.
+
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+*/

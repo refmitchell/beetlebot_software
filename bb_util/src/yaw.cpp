@@ -1,10 +1,6 @@
 /**
-   @file yaw.cpp
-   @brief Utility node to extract and print yaw information
-
-   Primarily used for calibration purposes but may be used to simply
-   broadcast yaw on its own topic to save unpicking the quaternion at
-   least twice.
+   \file yaw.cpp
+   \brief Utility node to extract and print yaw information
  */
 
 #include <ros/ros.h>

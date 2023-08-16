@@ -1,4 +1,17 @@
 /**
+   \file argparse.h
+   \brief 3rd party header only argument parser used throughout the codebase.
+
+   This code was originally authored by Jesse Laning (with a very minor modification
+   for compilation).
+
+   The current github for this project is available here:
+   https://github.com/jamolnng/argparse
+
+   The license (GNU GPLv3) is available in the source file.
+*/
+
+/*
  * argparse.h is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License v3 as published by
  * the Free Software Foundation.
