@@ -38,12 +38,12 @@ double calibration_offset = 0;
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   //Global, all bb_computation nodes should have these options.
   parser.add_argument()
-    .names({"-sd", "--subscribe_direction"})
+    .names({"-sd", "--sub_direction"})
     .description("Set the subscription topic for wind direction.")
     .required(false);
 
     parser.add_argument()
-    .names({"-ss", "--subscribe_speed"})
+    .names({"-ss", "--sub_speed"})
     .description("Set the subscription topic for wind speed.")
     .required(false);
 
@@ -124,13 +124,13 @@ int main(int argc, char **argv){
 
   // subscribe to
   std::string direction_sub_topic =
-    parser.exists("subscribe_direction") ?
-    parser.get<std::string>("subscribe_direction") :
+    parser.exists("sub_direction") ?
+    parser.get<std::string>("sub_direction") :
     "wind_direction" ;
 
   std::string speed_sub_topic =
-    parser.exists("subscribe_speed") ?
-    parser.get<std::string>("subscribe_speed") :
+    parser.exists("sub_speed") ?
+    parser.get<std::string>("sub_speed") :
     "wind_speed";
 
   // name

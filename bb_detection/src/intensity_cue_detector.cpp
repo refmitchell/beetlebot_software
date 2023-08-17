@@ -44,7 +44,6 @@ double calibration_offset = 0;
    \return true on success
 */
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
-  //Global, all bb_computation nodes should have these options.
   parser.add_argument()
     .names({"-v", "--video"})
     .description("Enable video output for this node.")
@@ -63,13 +62,13 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
     .names({"-n", "--name"})
     .description("Set the node name.")
-    .required(true);
+    .required(false);
 
   // Node-specific
   parser.add_argument()
     .names({"-m", "--method"})
-    .description("Define a method for determining a directional prompt.")
-    .required(true);
+    .description("Define a method for determining a directional prompt (default is bv).")
+    .required(false);
 
   parser.enable_help();
 
@@ -199,10 +198,16 @@ int main(int argc, char **argv){
   std::string sub_topic = parser.get<std::string>("subscribe");
 
   // name
-  std::string node_name = parser.get<std::string>("name");
+  std::string node_name =
+    parser.exists("name") ?
+    parser.get<std::string>("name") :
+    "intensity_cue_detector";
 
-  // method
-  std::string method = parser.get<std::string>("method");
+  // method - defaults to brightest vector
+  std::string method =
+    parser.exists("method") ?
+    parser.get<std::string>("method") :
+    "bv";
 
   ROS_INFO("Node information: ");
   ROS_INFO("Node name: %s", node_name.c_str());

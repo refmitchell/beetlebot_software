@@ -1,16 +1,11 @@
 /**
    \file pol_op_recording.cpp
    \brief Record from a single zenith-facing pol op unit.
-   
-   Sequence of events:
-   - Wait for data from pol_op and odometry to become available
-   - Send request to bb_locomotion to 'zero' the robot, wait for completion.
-   - Start recording sensor and odom data using rosbag
-   - Wait T seconds (T is user specified in seconds)
-   - Send rotation request to bb_locomotion
-   - Send stop request once the robot has traversed 360deg
-   - Record for T seconds after completeion
-   - Stop recording and exit.
+
+   Rotate the robot on the spot and record the polarisation opponent
+   response in the zenith alongside the yaw information.
+
+   \warning The working status of this code is unknown.
 */
 
 #include <ros/ros.h>

@@ -1,8 +1,278 @@
 /**
-\mainpage bb_dummy package index
+\mainpage
 
 \section main Package Description
 
-This package provides any dummy inputs required to test the
-software models in bb_computation.
+This package provides detection modules which turn raw or pre-processed sensor
+information into Cues (bb_util::Cue).
+
+List of nodes:
+- intensity_cue_detector
+- wind_cue_detector
+- pol_cue_detector
+- cue_calibration
+- \a multi_pol_op_recorder
+- \a pol_op_recording
+
+Those in \a italics are not detector nodes and are probably not best placed in
+this package. However, at the time it seemed the best place to put them. Italicised
+nodes run recording routines for testing polarisation opponent units or the full
+sensor (composed of multiple units).
+
+\section desc Node descriptions
+\subsection intensity intensity_cue_detector
+This node listens for image data from the camera and then either uses
+the image centre of mass or brightest point in the image to formulate
+a bb_util::Cue
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_detection intensity_cue_detector -s frame_topic
+\endverbatim
+
+Where `frame_topic` is the topic to which this node should subscribe for image data.
+\note This should be a single-channel image.
+
+Additional options are given by the `-h` argument:
+\verbatim
+$ rosrun bb_detection intensity_cue_detector -h
+Usage: intensity_cue_detector [options...]
+Options:
+    -v, --video            Enable video output for this node.
+    -s, --subscribe        Set the subscription topic. (Required)
+    -p, --publish          Set the publication topic.
+    -n, --name             Set the node name.     
+    -m, --method           Define a method for determining a directional prompt (default is bv).
+    -h, --help             Shows this page       
+\endverbatim
+
+For `--method`, permitted options are bv and cv.
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \a User \a defined [sensor_msgs/Image] An single-channel image which is interpretable by OpenCV
+  as mono8
+- \b `/calibration_notify` [std_msgs/String] The message content is ignored, this serves as a
+  'ping' to update the cue calibration information
+
+Publishes to:
+- \b `intensity_cue` [bb_util/cue_msg] The bb_util::cue_msg representing the detected cue (can be overridden).
+
+\subsubsection parameters ROS Parameters
+- Reads:
+  - \b /calibration/intensity_offset (expects a value which can be interpreted as a double).
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+
+
+\subsection wind wind_cue_detector
+This node listens for wind data and formats it into a bb_util::Cue.
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_detection wind_cue_detector
+\endverbatim
+
+Additional options are given by the `-h` argument:
+\verbatim
+$ rosrun bb_detection wind_cue_detector -h
+Usage: wind_cue_detector [options...]
+Options:
+    -sd, --sub_direction   Set the subscription topic for wind direction.
+    -ss, --sub_speed       Set the subscription topic for wind speed.
+    -p, --publish          Set the publication topic.
+    -n, --name             Set the node name.     
+    -h, --help             Shows this page        
+
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/wind_speed` [std_msgs/Float64]
+- \b `/wind_direction` [std_msgs/Float64]
+
+Publishesto:
+- \b `/wind_cue` [bb_util/cue_msg]
+
+\subsubsection parameters ROS Parameters
+- Reads:
+  - \b /calibration/wind_offset (expects a value which can be interpreted as a double).
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+
+
+\subsection pol pol_cue_detector
+This node listens for photodiode data from the polarisation sensor,
+decodes it using the method from Gkanias et al. (2019) and then
+publishes it as a bb_util::Cue.
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_detection pol_cue_detector
+\endverbatim
+
+Additional options are given by the `-h` argument:
+\verbatim
+$ rosrun bb_detection pol_cue_detector -h
+Usage: pol_cue_detector [options...]
+Options:
+    -a, --activation       [If using the bio inspired sensor decode] The activation function used for the POL neurons.
+    -n_sol, --n_sol_neurons[If using the bio inspired sensor decode] The number of SOL neurons in use (default = 8).
+    -h, --help             Shows this page 
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/pol_op_0` [std_msgs/Int32MultiArray] The photodiode data from unit 0.
+- \b `/pol_op_1` [std_msgs/Int32MultiArray] The photodiode data from unit 1.
+- \b `/pol_op_2` [std_msgs/Int32MultiArray] The photodiode data from unit 2.
+- \b `/pol_op_3` [std_msgs/Int32MultiArray] The photodiode data from unit 3.
+- \b `/pol_op_4` [std_msgs/Int32MultiArray] The photodiode data from unit 4.
+- \b `/pol_op_5` [std_msgs/Int32MultiArray] The photodiode data from unit 5.
+- \b `/pol_op_6` [std_msgs/Int32MultiArray] The photodiode data from unit 6.
+- \b `/pol_op_7` [std_msgs/Int32MultiArray] The photodiode data from unit 7.
+
+Publishes to:
+- \b `/pol_cue`
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+
+\note This node does not interact with the calibration system but
+this could be a good addition.
+
+\subsubsection services ROS Services
+This node does not interact with any ROS Services.
+
+
+
+
+\subsection calibration cue_calibration
+This node calibrates any cue nodes which are running.
+
+The calibration node listens on compatible cue topics (at present, wind and intensity) and
+records their offset w.r.t. the robot IMU on the parameter server. After recording the
+offsets, the node will send an empty message on `/calibration_notify` which pings
+all compatible nodes to update their offsets.
+
+Functionally this synchronises all available cues (brings them into the same frame of
+reference).
+
+\subsubsection usage Usage
+Start any compatible nodes and then run
+\verbatim
+$ rosrun bb_detection cue_calibration
+\endverbatim
+
+Additional options are given by the `-h` argument:
+\verbatim
+$ rosrun bb_detection cue_calibration -h
+Usage: cue_calibration [options...]
+Options:
+    -i, --int_sub          Set the subscription topic for the light intensity cue.Should be whatever topic the intensity cue detector is publishing to.
+    -w, --wind_sub         Set the wind cue subscription topic.
+    -h, --help             Shows this page   
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/intensity_cue` [bb_util/cue_msg]
+- \b `/wind_cue` [bb_util/cue_msg]
+
+Publishes to:
+- \b `/calibration_notify` [std_msgs/String]
+
+\subsubsection parameters ROS Parameters
+- Reads:
+  - \b `/calibration/wind_offset` (expects a value which can be interpreted as a double).
+  - \b `/calibration/intensity_offset` (expects a value which can be interpreted as a double).
+- Sets:
+  - \b `/calibration/wind_offset`
+  - \b `/calibration/intensity_offset`
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+
+\subsection multi_rec multi_pol_op_recorder
+
+This node does not function as a cue detector but rather records
+polarisation sensor data for offline analysis.
+
+This node rotates the robot on the spot and records polarisation data
+alongside odometry and camera data.
+
+Recorded data will be output in `pol_op_recording.bag`.
+
+\note The node will always attempt to start the rotation from the IMU
+zero position. If the robot is not at zero then it will correct before
+starting any recording.
+
+\warning Running this node will cause the robot to move, do not run this
+unless the robot is suitably placed.
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_detection multi_pol_op_recorder -t T
+\endverbatim
+
+Where T is a time delay added to the start and end of the robot rotation.
+If `-t` is not specified then the robot rotation will start immediately.
+
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/pol_op_0` [std_msgs/Int32MultiArray] The photodiode data from unit 0.
+- \b `/pol_op_1` [std_msgs/Int32MultiArray] The photodiode data from unit 1.
+- \b `/pol_op_2` [std_msgs/Int32MultiArray] The photodiode data from unit 2.
+- \b `/pol_op_3` [std_msgs/Int32MultiArray] The photodiode data from unit 3.
+- \b `/pol_op_4` [std_msgs/Int32MultiArray] The photodiode data from unit 4.
+- \b `/pol_op_5` [std_msgs/Int32MultiArray] The photodiode data from unit 5.
+- \b `/pol_op_6` [std_msgs/Int32MultiArray] The photodiode data from unit 6.
+- \b `/pol_op_7` [std_msgs/Int32MultiArray] The photodiode data from unit 7.
+- \b `/odom` [nav_msgs/Odometry] Full odometry information from the turtlebot.
+- \b `/yaw` [std_msgs/Float64] The decoded yaw output by bb_util yaw (for control).
+- \b `/frames` [sensor_msgs/Image] The camera data.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+
+\subsubsection services ROS Services
+This node does not interact with any ROS Services.
+
+
+
+\subsection po_recording pol_op_recording
+This node acts in the same way as multi_pol_op_recorder but records from
+a single pol_op unit. This was used primarily to test the response of a
+zenith-facing polarisation opponent unit.
+
+Recorded data will be output in `pol_op_recording.bag`.
+
+\warning Running this node will cause the robot to move, do not run this
+unless the robot is suitably placed.
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_detection pol_op_recording -t T
+\endverbatim
+
+Where T is a time delay added to the start and end of the robot rotation.
+If `-t` is not specified then the robot rotation will start immediately.
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/pol_op_0` [std_msgs/Int32MultiArray] The photodiode data from unit 0.
+- \b `/yaw` [std_msgs/Float64] The decoded yaw output by bb_util yaw (for control).
+
+\subsubsection parameters ROS Parameters
+This node does not interact with the parameter server.
+
+\subsubsection services ROS Services
+This node does not interact with any ROS Services.
+
 **/
