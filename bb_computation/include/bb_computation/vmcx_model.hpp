@@ -234,9 +234,9 @@ void VMCX::get_status(std::vector<std::vector<double>> &activity){
                                 active_mat.rows() * active_mat.cols()
                                 );
 
-  for (int i = 0; i < active_vm.size(); i++){
-    ROS_INFO("%f\n", active_vm[i]);
-  }
+  // for (int i = 0; i < active_vm.size(); i++){
+  //   ROS_INFO("%f\n", active_vm[i]);
+  // }
 
   activity.push_back(tl2_vec);
   activity.push_back(cl1_vec);

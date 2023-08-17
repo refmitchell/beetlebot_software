@@ -53,17 +53,15 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-   FILES
-   cue_vector.msg
-
-)
+# add_message_files(
+#    FILES
+# )
 
 ##Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  vm_command.srv
-)
+# add_service_files(
+#   FILES
+#   vm_command.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -128,27 +126,8 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(
-  cue
-  lib/cue.cpp
-  )
-add_dependencies(
-  cue
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-)
-
-add_library(
-  icm
-  lib/icm.cpp
-  )
-add_dependencies(
-  icm
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-)
+# add_library(
+#   )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -159,14 +138,13 @@ add_dependencies(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
-add_executable(mono_directional_prompt_node src/mono_directional_prompt_node.cpp)
-add_executable(test_cue_subscriber src/test_cue_subscriber.cpp)
-add_executable(test_cx_subscriber src/test_cx_subscriber.cpp)
 add_executable(test_vmcx_subscriber src/test_vmcx_subscriber.cpp)
-add_executable(test_mmcx_subscriber src/test_mmcx_subscriber.cpp)
-add_executable(cue_manager src/cue_manager.cpp)
+#add_executable(test_mmcx_subscriber src/test_mmcx_subscriber.cpp)
+#add_executable(cue_manager src/cue_manager.cpp)
+add_executable(test_cue_subscriber src/test_cue_subscriber.cpp)
 add_executable(menotaxis_node src/menotaxis_node.cpp)
 add_executable(pi_node src/pi_node.cpp)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -175,14 +153,6 @@ add_executable(pi_node src/pi_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-
-add_dependencies(
-  mono_directional_prompt_node
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-)
-
 add_dependencies(
   test_cue_subscriber
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -191,11 +161,19 @@ add_dependencies(
   )
 
 add_dependencies(
-  test_cx_subscriber
+  menotaxis_node
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${bb_util_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
   )
+
+add_dependencies(
+  pi_node
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  )
+
 
 add_dependencies(
   test_vmcx_subscriber
@@ -204,89 +182,23 @@ add_dependencies(
   ${catkin_EXPORTED_TARGETS}
   )
 
-add_dependencies(
-  test_mmcx_subscriber
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-  )
+# add_dependencies(
+#   test_mmcx_subscriber
+#   ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#   ${bb_util_EXPORTED_TARGETS}
+#   ${catkin_EXPORTED_TARGETS}
+#   )
 
-add_dependencies(
-  cue_manager
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-  )
-
-add_dependencies(
-  menotaxis_node
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-  )
-
-add_dependencies(
-  pi_node
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${bb_util_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-  )
-
-target_link_libraries(
-  icm
-  cue
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-  )
-
-target_link_libraries(
-  menotaxis_node
-  cue
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-  stdc++fs
-  )
-
-target_link_libraries(
-  pi_node
-  cue
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-  stdc++fs
-  )
+# add_dependencies(
+#   cue_manager
+#   ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#   ${bb_util_EXPORTED_TARGETS}
+#   ${catkin_EXPORTED_TARGETS}
+#   )
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
-  mono_directional_prompt_node
-  cue
-  icm
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-  stdc++fs
-  )
-
-target_link_libraries(
   test_cue_subscriber
-  ${catkin_LIBRARIES}
-  )
-
-target_link_libraries(
-  test_cx_subscriber
-  ${catkin_LIBRARIES}
-  )
-
-target_link_libraries(
-  test_vmcx_subscriber
-  ${catkin_LIBRARIES}
-  )
-
-target_link_libraries(
-  test_mmcx_subscriber
-  ${catkin_LIBRARIES}
-  )
-
-target_link_libraries(
-  cue_manager
   ${catkin_LIBRARIES}
   )
 
@@ -299,6 +211,21 @@ target_link_libraries(
   pi_node
   ${catkin_LIBRARIES}
   )
+
+target_link_libraries(
+  test_vmcx_subscriber
+  ${catkin_LIBRARIES}
+  )
+
+# target_link_libraries(
+#   test_mmcx_subscriber
+#   ${catkin_LIBRARIES}
+#   )
+
+# target_link_libraries(
+#   cue_manager
+#   ${catkin_LIBRARIES}
+#   )
 
 #############
 ## Install ##
