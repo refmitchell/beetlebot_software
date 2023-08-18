@@ -27,7 +27,6 @@
 #include <tf/transform_datatypes.h>
 #include "std_msgs/String.h"
 
-#include "bb_computation/icm.h"
 #include "bb_computation/cx_model.hpp"
 #include "bb_computation/vmcx_model.hpp"
 

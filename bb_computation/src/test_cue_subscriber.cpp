@@ -21,9 +21,6 @@
 #include <ros/ros.h>
 #include "std_msgs/String.h"
 
-#include "bb_computation/icm.h"
-#include "bb_computation/cue_vector.h"
-
 #include "bb_util/cue.hpp"
 #include "bb_util/cue_msg.h"
 #include "bb_util/velocity.h"

@@ -2,14 +2,25 @@
 #define CX_CORE
 
 /**
-   @file cx_model.hpp
-   @brief Provides a definition (and implementation) for the CentralComplex class.
-   @author Robert Mitchell
+   \file cx_model.hpp
+   \brief Provides a definition (and implementation) for the CentralComplex class.
+   \author Robert Mitchell
 
    Provides a definition for the CentralComplex class. This version of the model
-   was ported directly from the AntBot and time as been spent verifying that it
-   is functionally identical to that presented by Stone et al. The one exception
-   is the lack of TN neurons, this class instead takes a "speed" input.
+   was ported directly from the AntBot. This class implements the Central Complex
+   model for path integration given by Stone et al. (2017). The version from which
+   this was ported was originally written by Luca Scimeca. 
+
+   \warning The code CPU4 update used here is slightly different to that given 
+   by Stone et al. (2017) but it is functionally identical to a version given 
+   in their codebase. The difference stems from the fact that we do not model
+   the TN neurons and instead just pass a 'speed' input to the model. This difference
+   was present on the AntBot too.
+
+   \b References
+
+   Stone et al. (2017) - An anatomically constrained model for path integration in
+   the bee brain.
  */
 
 #include <iostream>
@@ -24,22 +35,13 @@
 
 #include "bb_util/bb_util.h"
 
-// Using macro definitions because these values never change and I want to
-// have these defaults known at compile time for initialisation.
 
-/** @defgroup CX_PARAMS Central Complex Parameters
-    @brief Layer paramters for the CX, these are required at compile time.
-    @{
- */
-
-
-#define CX_N_TL2 16
-#define CX_N_CL1 16
-#define CX_N_TB1 8
-#define CX_N_CPU4 16
-#define CX_N_CPU1 16
-
-/**@}*/
+// Convenient to have these known at compile time
+#define CX_N_TL2 16  /**< The number of TL2 neurons in the model. */
+#define CX_N_CL1 16  /**< The number of CL1 neurons in the model. */
+#define CX_N_TB1 8   /**< The number of TB1 neurons in the model. */
+#define CX_N_CPU4 16 /**< The number of CPU4 neurons in the model. */
+#define CX_N_CPU1 16 /**< The number of CPU1 neurons in the model. */
 
 /** Matrix printing macro. */
 #define MAT_LOG(x) std::cout << std::endl << x << std::endl;
@@ -47,12 +49,8 @@
 /** General printing macro. */
 #define LOG(x) std::cout << "cx: " << x << std::endl;
 
-// The central complex model as defined by Stone et al.
-// Ported from the AntBot; Luca's code
-// R. Mitchell
-
 /**
-   @brief Class definition of the Central Complex.
+   \brief Class definition of the Central Complex.
    The central complex path integration model as defined by Stone et al.
    Ported from the AntBot implementation provided by Luca Scimeca. This
    version of the model does not implement TN neurons for speed measurement.
@@ -60,9 +58,7 @@
 class CentralComplex {
 protected:
   /**
-      @defgroup NET_PARAM Network parameters
-      @brief The parameters used to define the network dynamics.
-      @{
+      The parameters used to define the network dynamics.
   */
   int n_tl2 = CX_N_TL2; //!< The number of TL2 neurons in use.
   int n_cl1 = CX_N_CL1; //!< The number of CL1 neurons in use.
@@ -74,69 +70,69 @@ protected:
   // Class parameters
   double noise = 0.0; //<! Noise injected on the output of each layer.
 
-  double tl2_slope = 6.8;
-  double tl2_bias = 3.0;
+  double tl2_slope = 6.8; //!< TL2 activation slope
+  double tl2_bias = 3.0; //!< TL2 activation bias
   Eigen::Matrix<double, CX_N_TL2, 1> tl2_prefs; //!< The TL2 receptive fields.
 
-  double cl1_slope = 3.0;
-  double cl1_bias = -0.5;
+  double cl1_slope = 3.0; //!< CL1 activation slope
+  double cl1_bias = -0.5; //!< CL1 activation bias
 
-  double tb1_slope = 5.0;
-  double tb1_bias = 0;
+  double tb1_slope = 5.0; //!< TB1 activation slope
+  double tb1_bias = 0; //!< TB1 activation bias
 
-  double cpu4_slope = 5.0;
-  double cpu4_bias = 2.5;
+  double cpu4_slope = 5.0; //!< CPU4 activation slope
+  double cpu4_bias = 2.5; //!< CPU4 activation bias
 
+  /** CPU4 memory gain */
   double cpu4_mem_gain = 0.0005;  //0.005, default
+
+  /** CPU4 memory loss*/
   double cpu4_mem_loss = 0.00026; //0.0026, default
 
-  double cpu1_slope = 6.0;
-  double cpu1_bias = 2.0;
-  /**@}*/
+  double cpu1_slope = 6.0; //!< CPU1 activation slope
+  double cpu1_bias = 2.0; //!< CPU1 activation bias
 
-  /**
-     @defgroup ANATOMY Anatomical matrices
-     @brief The adjacency (weight) matrices used to define the network layout.
-     @{
+  /*
+     Anatomical weight matrices.
    */
-  Eigen::Matrix<double, CX_N_TB1, CX_N_CL1> W_CL1_TB1;
-  Eigen::Matrix<double, CX_N_TB1, CX_N_TB1> W_TB1_TB1;
-  Eigen::Matrix<double, CX_N_CPU1, CX_N_TB1> W_TB1_CPU1;
-  Eigen::Matrix<double, CX_N_CPU4, CX_N_TB1> W_TB1_CPU4;
-  Eigen::Matrix<double, CX_N_CPU1, CX_N_CPU4> W_CPU4_CPU1;
-  Eigen::Matrix<double, 1, CX_N_CPU1> W_CPU1_motor;
-  /**}*/
+  Eigen::Matrix<double, CX_N_TB1, CX_N_CL1> W_CL1_TB1; //!< CL1 -> TB1 connections
+  Eigen::Matrix<double, CX_N_TB1, CX_N_TB1> W_TB1_TB1; //!< TB1 -> TB1 connections
+  Eigen::Matrix<double, CX_N_CPU1, CX_N_TB1> W_TB1_CPU1; //!< TB1 -> CPU1 connections
+  Eigen::Matrix<double, CX_N_CPU4, CX_N_TB1> W_TB1_CPU4; //!< TB1 -> CPU4 connections
+  Eigen::Matrix<double, CX_N_CPU1, CX_N_CPU4> W_CPU4_CPU1; //!< CPU4 -> CPU1 connections
+  Eigen::Matrix<double, 1, CX_N_CPU1> W_CPU1_motor; //!< CPU1 to motor output neuron connections
 
-  /**
-     @defgroup POP Neural population matrices.
-     @brief Matrices used to retain the internal state of each layer.
-     @{
+  /*
+     Neural population matrices.
   */
-  Eigen::Matrix<double, CX_N_TL2, 1> TL2;
-  Eigen::Matrix<double, CX_N_CL1, 1> CL1;
-  Eigen::Matrix<double, CX_N_TB1, 1> TB1;
-  Eigen::Matrix<double, CX_N_CPU4, 1> MEM;
-  Eigen::Matrix<double, CX_N_CPU4, 1> CPU4;
-  Eigen::Matrix<double, CX_N_CPU1, 1> CPU1;
-  /**@}*/
+  Eigen::Matrix<double, CX_N_TL2, 1> TL2; //!< TL2 neuron activities
+  Eigen::Matrix<double, CX_N_CL1, 1> CL1; //!< CL1 neuron activities
+  Eigen::Matrix<double, CX_N_TB1, 1> TB1; //!< TB1 neuron activities
+  Eigen::Matrix<double, CX_N_CPU4, 1> MEM; //!< Memory neuron (CPU4_{t - 1}) activities.
+  Eigen::Matrix<double, CX_N_CPU4, 1> CPU4; //!< CPU4 neuron activities
+  Eigen::Matrix<double, CX_N_CPU1, 1> CPU1; //!< CPU1 neuron activities
+
 
   /**
-     Abstraction of the sigmoid function to function pointer. We can know whether
-     we want noise at construction and this pointer allows the class to determine
-     which method to call, noiselessSigmoid or noisySigmoid, at construction to
-     avoid checking for each call. NOTE: Noise is currently excluded in the
-     constructor.
+     Sigmoid activation function pointer.
+
+     We can know whether we want noise at construction and this
+     pointer allows the class to determine which method to call,
+     noiselessSigmoid or noisySigmoid, at construction to avoid
+     checking for each call. 
+
+     \note This functionality is not currently used by the constructor.
   */
   void (*sigmoid) (Eigen::Ref<Eigen::MatrixXd>, double, double, double);
 
   /**
-     Pass the input through a sigmoid function with the given paramters and
-     noise.
+     Sigmoid activation function with added noise. Note that the
+     result is placed in v.
 
-     @param v The input population.
-     @param slope The slope of the sigmoid.
-     @param bias The bias (l/r shift) of the sigmoid.
-     @param noise The additional noise
+     \param[in,out] v The input population.
+     \param slope The slope of the sigmoid.
+     \param bias The bias (l/r shift) of the sigmoid.
+     \param noise The additional noise
    */
   static void noisySigmoid (Eigen::Ref<Eigen::MatrixXd> v,
                             double slope,
@@ -144,13 +140,13 @@ protected:
                             double noise);
 
   /**
-     Pass the input through a sigmoid function with the given paramters.
-     This function does not add noise to the output.
+     Noiseless sigmoid activation function. Note that the result
+     is placed in v.
 
-     @param v The input population.
-     @param slope The slope of the sigmoid.
-     @param bias The bias (l/r shift) of the sigmoid.
-     @param noise The additional noise
+     \param[in,out] v The input population.
+     \param slope The slope of the sigmoid.
+     \param bias The bias (l/r shift) of the sigmoid.
+     \param noise The additional noise (\b ignored)
    */
   static void noiselessSigmoid (Eigen::Ref<Eigen::MatrixXd> v,
                                 double slope,
@@ -158,17 +154,18 @@ protected:
                                 double noise);
 
   /**
-     Dot product which checks matrix dimensions while allowing Eigen Matrix types
-     to be used as the input format.
+     Dot product which allows Eigen Matrices to be used as input.
 
-     @param a
-     @param b
+     \param a Matrix a
+     \param b Matrix b
+     \return a dot b
    */
   double dot(Eigen::Ref<Eigen::MatrixXd> a, Eigen::Ref<Eigen::MatrixXd> b);
 
   /**
       Generate intra TB1 weights.
-      @param w Weight scaling factor.
+      \param w Weight scaling factor.
+      \return The TB1 -> TB1 weight matrix.
   */
   inline Eigen::Matrix<double, CX_N_TB1, CX_N_TB1> gen_tb1_tb1_weights(double w){
     double sinusoid[CX_N_TB1] =
@@ -184,8 +181,6 @@ protected:
       }
     }
 
-    // MAT_LOG(W);
-    
     return W;
   }
 
@@ -195,7 +190,7 @@ public:
      Constructor. Initialise the model.
    */
   CentralComplex(){
-    // TL2_PREFS
+    // TL2 preferred angles
     tl2_prefs <<
       0,
       0.78539816,
@@ -217,6 +212,10 @@ public:
     // CPU4_MEM
     //cpu4_mem << Eigen::Matrix<double, CX_N_CPU4, 1>::Zero();
 
+    /**
+       Set up anatomical matrices.
+     */
+    
     // Weights from CL1 to TB1: W_CL1_TB1
     W_CL1_TB1 <<
       Eigen::Matrix<double, CX_N_TB1, CX_N_TB1>::Identity(),
@@ -264,7 +263,7 @@ public:
       &CentralComplex::noisySigmoid :
       &CentralComplex::noiselessSigmoid;
 
-    //Initialise neural populations.
+    // Initialise neural populations.
     TL2.setConstant(0);
     CL1.setConstant(0);
     TB1.setConstant(0);
@@ -279,34 +278,39 @@ public:
 
   /**
      Given angular input, compute the TL2 population response.
-     @param theta The angular input (in radians) denoting the agent's current
+     \param[in] theta The angular input (in radians) denoting the agent's current
                   direction.
-     @param output The population response.
+     \param[out] output The population response.
    */
   void tl2_output(double theta, Eigen::Ref<Eigen::MatrixXd> output);
 
   /**
      Compute CL1 response given a current TL2 response.
-     @param[in] tl2 The current TL2 activity matrix.
-     @param[out] cl1 The CL1 activity output
+     \param[in] tl2 The current TL2 activity matrix.
+     \param[out] cl1 The CL1 activity output
    */
   void cl1_output(Eigen::Ref<Eigen::MatrixXd> tl2,
                   Eigen::Ref<Eigen::MatrixXd> cl1);
 
   /**
      Compute TB1 response given a current CL1 response.
-     @param[in] cl1 The current CL1 activity matrix.
-     @param[out] tb1 The TB1 activity output.
+     \param[in] cl1 The current CL1 activity matrix.
+     \param[out] tb1 The TB1 activity output.
   */
   void tb1_output(Eigen::Ref<Eigen::MatrixXd> cl1,
                   Eigen::Ref<Eigen::MatrixXd> tb1);
 
   /**
-     Update the CPU4 layer given the current TB1 (direction) response
+     Update the CPU4 inputs given the current TB1 (direction) response
      and the agent's current speed.
-     @param[in] speed The agent's current speed.
-     @param[in] tb1 The current TB1 activity.
-     @param[out] cpu4_mem The updated (unsigmoided) CPU4 activity.
+
+     \note This function does not sigmoid the output. It just formats
+     the CPU4 input into a single vector which can be sigmoided. This is
+     used to implement the t - 1 term in the CPU4 update rule
+     
+     \param[in] speed The agent's current speed.
+     \param[in] tb1 The current TB1 activity.
+     \param[out] cpu4_mem The updated (unsigmoided) CPU4 activity.
   */
   void cpu4_update(double speed,
                    Eigen::Ref<Eigen::MatrixXd> tb1,
@@ -316,15 +320,15 @@ public:
      Compute the CPU4 layer output. Pass the CPU4 activity through the
      CPU4 sigmoid function.
 
-     @param[in,out] cpu4_mem The CPU4 activity which will be sigmoided.
+     \param[in,out] cpu4_mem The CPU4 activity which will be sigmoided.
   */
   void cpu4_output(Eigen::Ref<Eigen::MatrixXd> cpu4_mem);
 
   /**
      Compute the CPU1 layer output given the current TB1 and CPU4 activities.
-     @param[in] tb1 The current TB1 activity.
-     @param[in] cpu4 The current CPU4 activity.
-     @param[out] cpu1 The CPU1 layer to be updated.
+     \param[in] tb1 The current TB1 activity.
+     \param[in] cpu4 The current CPU4 activity.
+     \param[out] cpu1 The CPU1 layer to be updated.
    */
   void cpu1_output(Eigen::Ref<Eigen::MatrixXd> tb1,
                    Eigen::Ref<Eigen::MatrixXd> cpu4,
@@ -332,26 +336,19 @@ public:
 
   /**
      Compute the motor output from the CPU1 layer activity.
-     @param[in] The current CPU1 population.
-     @return The network output which will be positive or negative depending on
-     @return whether the model is indicating a left or right turn.
+     \param[in] The current CPU1 population.
+     \return The network output which will be positive or negative depending on
+     \return whether the model is indicating a left or right turn.
    */
   double motor_output(Eigen::Ref<Eigen::MatrixXd> cpu1);
 
-  // Monolithic CX Operation
-  /**
-     [Deprecated] A helper function which initialises the model for
-     simple orientation along a goal angle.
-     @param theta The goal angle.
-   */
-  void set_goal_direction(double theta);
 
   /**
      A helper function which wraps model usage, removing the need to call
      each individual function in sequence as in the AntBot.
-     @param theta The current angular input from available cues.
-     @param speed The agent's current speed.
-     @returns The return value of CentralComplex::motor_output.
+     \param theta The current angular input from available cues.
+     \param speed The agent's current speed.
+     \returns The return value of CentralComplex::motor_output.
    */
   double unimodal_monolithic_CX(double theta, double speed);
 
@@ -359,22 +356,18 @@ public:
      Collects the current network activity into a single data so that it can be
      read elsewhere in the ROS sofwtware ecosystem (implemented primarily for
      visualising the CX activity).
-     @param[in,out] activity The data structure to be filled with the network
+     \param[in,out] activity The data structure to be filled with the network
                              state.
    */
   void get_status(std::vector<std::vector<double>> &activity);
 };
 
-//
-// Implementation
-//
-
-//
-// Protected methods
-//
+/*
+  Implementation begins
+ */
 
 /*
-  Original version had a bunch of getters and setters which I don't think
+  The original version had a bunch of getters and setters which I don't think
   were ever used. They've been ommitted unless they become necessary.
 */
 void CentralComplex::noisySigmoid(Eigen::Ref<Eigen::MatrixXd> v,
@@ -418,16 +411,8 @@ void CentralComplex::noiselessSigmoid(Eigen::Ref<Eigen::MatrixXd> v,
   }
 }
 
-// Wrote this before realising that Luca's version isn't a dot
-// product, it's just a basic matrix multiplication. I have no idea
-// why he includes it.
-
-// // Sometimes the matrix objects are Nx1/1xN i.e. vectors.
-// // If we want to dot these, Eigen says no so we do our own.
-// // Make sure both Matrix references are vectors
- double CentralComplex::dot(Eigen::Ref<Eigen::MatrixXd> a,
-                          Eigen::Ref<Eigen::MatrixXd> b){
-   // Local to avoid multiple function calls
+double CentralComplex::dot(Eigen::Ref<Eigen::MatrixXd> a,
+                           Eigen::Ref<Eigen::MatrixXd> b){
   int a_r = a.rows();
   int a_c = a.cols();
   int b_r = b.rows();
@@ -457,17 +442,10 @@ void CentralComplex::noiselessSigmoid(Eigen::Ref<Eigen::MatrixXd> v,
   return res(0,0);
 }
 
-
-//
-// Public
-//
-
 //
 // Layer-wise CX functions; these can be strung together to form a complete
-// network process. This is ported from the AntBot implementation and
-// I never understood the implementation, I've included a monolithic
-// or "black-box" version which takes an input angle and speed, then produces an
-// output. These are here for legacy/convenience/utility should they be required.
+// network process. These can be called manually by a host process or
+// you can use the unimodal_monolithic_CX function to simplify things.
 //
 
 // Compute tl2 output, store in output argument.
@@ -485,12 +463,15 @@ void CentralComplex::tl2_output(double theta, Eigen::Ref<Eigen::MatrixXd> output
   output = output - this->tl2_prefs;
 
   if (std::isnan(theta)){
-    /* If sensor returned NaN for whatever reason, we do not want this to
+    /* 
+       If a sensor returned NaN for whatever reason, we do not want this to
        propagate, setting output to bb_util::defs::PI/2 here will set each
        element to 0 in the following for-loop (cos(pi/2) == 0). This means
        no directional input to the rest of the network. If NaNs are allowed
        to enter the network then they will persist due to the memory circuit.
        (CPU4 gets input from the previous timestep).
+
+       This was occasionally a problem with the polarisation sensor.
     */
     output.setConstant(bb_util::defs::PI/2);
   }
@@ -502,14 +483,14 @@ void CentralComplex::tl2_output(double theta, Eigen::Ref<Eigen::MatrixXd> output
   this->sigmoid(output, this->tl2_slope, this->tl2_bias, this->noise);
 }
 
-// Compute CL1 output, store in m argument
+// Compute CL1 output
 void CentralComplex::cl1_output(Eigen::Ref<Eigen::MatrixXd> tl2,
                                 Eigen::Ref<Eigen::MatrixXd> cl1){
   cl1 = -1 * tl2;
   this->sigmoid(cl1, this->cl1_slope, this->cl1_bias, this->noise);
 }
 
-// Compute TB1 layer output, store in tb1 argument.
+// Compute TB1 layer output
 void CentralComplex::tb1_output(Eigen::Ref<Eigen::MatrixXd> cl1,
                                 Eigen::Ref<Eigen::MatrixXd> tb1){
   double prop_cl1 = 0.667;
@@ -525,8 +506,10 @@ void CentralComplex::tb1_output(Eigen::Ref<Eigen::MatrixXd> cl1,
 }
 
 // Update CPU4 based on TB1 and current speed; result stored in cpu4_mem
-// reference. Note: This is the code from Luca. Tom's code in the paper
-// is different, I want to test both to compare.
+// reference. Note: This is the code from Luca, the equation used in the
+// original paper is slightly different but this version is equivalent to
+// one of the versions given in the associated codebase. The main difference
+// appears to be the lack of TN neurons.
 void CentralComplex::cpu4_update(double speed,
                                  Eigen::Ref<Eigen::MatrixXd> tb1,
                                  Eigen::Ref<Eigen::MatrixXd> cpu4_mem){
@@ -555,16 +538,11 @@ void CentralComplex::cpu4_update(double speed,
 }
 
 // Store CPU4 output in cpu4_mem
-// Now that I've written this out I don't think this method is necessary
-// Update: it's "necessary" due to the fact that sometimes we update CPU4
-// but don't care about the output, i.e you avoid running the sigmoid
-// when you don't need to.
-// Update2: You also need the unsigmoided CPU4 input to feed back into
-// the circuit at the next timestep.
 void CentralComplex::cpu4_output(Eigen::Ref<Eigen::MatrixXd> cpu4_mem){
   this->sigmoid(cpu4_mem, this->cpu4_slope, this->cpu4_bias, this->noise);
 }
 
+// Compute CPU1 activity
 void CentralComplex::cpu1_output(Eigen::Ref<Eigen::MatrixXd> tb1,
                                  Eigen::Ref<Eigen::MatrixXd> cpu4,
                                  Eigen::Ref<Eigen::MatrixXd> cpu1){
@@ -580,57 +558,16 @@ double CentralComplex::motor_output(Eigen::Ref<Eigen::MatrixXd> cpu1){
 //
 // Completed usage functions
 //
-
-/*
-  This was a first approach to taking a "snapshot" and in theory it should
-  work identically to the VM method. The only difference is where the snapshot
-  is stored really. This function is for extremely specific use only. It should
-  only be used in the case where we desire simple orientation, otherwise it won't
-  work.
-*/
-void CentralComplex::set_goal_direction(double theta){
-  double speed = 1;
-  double pi = 3.14159265358979323846; //For convenience...
-
-  // Assuming theta is in radians, flip it by pi. This makes
-  // more sense as a goal direction should be where we want
-  // to go.
-  theta = theta - pi;
-
-  LOG("CX set goal direction");
-
-  this->tl2_output(theta, this->TL2);
-  this->cl1_output(this->TL2, this->CL1);
-  this->tb1_output(this->CL1, this->TB1);
-
-  // Preserve unsigmoided CPU4 for next timestep
-  this->cpu4_update(speed, this->TB1, this->MEM);
-  this->CPU4 = this->MEM;
-
-  this->cpu4_output(this->CPU4);
-
-  LOG("goal direction set successfully");
-}
-
 double CentralComplex::unimodal_monolithic_CX(double theta, double speed){
   double CXMotor = 0;
 
   this->tl2_output(theta, this->TL2);
   this->cl1_output(this->TL2, this->CL1);
   this->tb1_output(this->CL1, this->TB1);
-
-  // Preserve unsigmoided CPU4 for next timestep
-  this->cpu4_update(speed, this->TB1, this->MEM);
-  this->CPU4 = this->MEM;
-
-
-
-  // Worth noting, after this call the CPU4 values all sit at about 0.99....
-  // They are updated, just by minute amounts
+  this->cpu4_update(speed, this->TB1, this->MEM); // Note, this just formats the inputs
+  this->CPU4 = this->MEM; // Preserve CPU4 inputs for next timestep.
   this->cpu4_output(this->CPU4);
-
   this->cpu1_output(this->TB1, this->CPU4, this->CPU1);
-
 
   CXMotor = this->motor_output(this->CPU1);
 

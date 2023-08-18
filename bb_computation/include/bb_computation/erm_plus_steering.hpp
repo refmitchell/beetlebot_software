@@ -2,24 +2,30 @@
 #def STATIC_ERM
 
 /**
-   @file static_erm.hpp
-   @brief Provides a port of the neural cue integration model given by [1]
-   @author Robert Mitchell
+   \file erm_plus_steering.hpp
+   \brief Provides a C++ port of the RingModel cue integration model given by Mitchell
+   et al. (2023) along with an implementation of the fruit-fly steering circuit.
+   \author Robert Mitchell
+   
+   \warning This class is under development and there is no guarantee
+   that it is complete or works at all. A working version of the
+   extended ring model is provided in
+   bb_computation/scripts/extended_ring_model.py. This can be tested
+   with dummy cues by running.
 
-   This header file provides an implementation of the static variant of the
-   head direction circuit cue integration model provided by [1]. This version
-   of the model uses only the default R to E-PG mappings has defined in [1] and
-   does not include any plasticity.
+   \verbatim
+   $ roslaunch bb_launchers ci_dummy.launch
+   \endverbatim
 
-   The number of R neurons is fixed at 8 primarily for ease; it's
-   useful to know the population sizes at compile time. R group sizes
-   are also assumed to be the same size. [1] provided evidence that
-   the number of R neurons does not change the behaviour of the model
-   unless R group sizes are imbalanced.
-
+   This header file is planned to contain a C++ implementation of the 
+   extended_ring_model.RingModel class from Mitchell et al. (2023) alongside
+   an up-to-date goal direction and steering circuit from the fruit fly 
+   connectome.
+   
    References
-   1. Mitchell, Shaverdian, Dacke, and Webb (2023). A model of cue integration
-      as vector summation in the insect brain.
+
+   Mitchell, Shaverdian, Dacke, and Webb (2023). A model of cue integration
+   as vector summation in the insect brain.
  **/
 
 #include <iostream>
@@ -31,19 +37,12 @@
 // Eigen linear algebra library: https://eigen.tuxfamily.org
 #include "bb_util/Eigen/Eigen"
 
-/**
-   @defgroup ERM_PARAMS Ring Model neuron counts
-   @brief Neuron counts for each neuron class in the model.
-   @{
-*/
-
 #define ERM_N_R 8    // TL2 neurons
 #define ERM_N_EPG 8  // CL1a
 #define ERM_N_D7 8   // TB1
 #define ERM_N_PEN 16 // CL2
 #define ERM_N_PEG 16 // CL1b
 
-/**@}*/
 
 /** Matrix printing macro. */
 #define MAT_LOG(x) std::cout << std::endl << x << std::endl;
@@ -52,19 +51,22 @@
 #define LOG(x) std::cout << "erm: " << x << std::endl;
 
 /**
-   @brief Class implementation of the ring model from [1].
+   \brief Class implementation of the ring model from Mitchell et al. 2023).
+
+   
+
+   \warning This class is under active development and there is no guarantee
+   that it works at all. A working version of the extended ring model is provided
+   in bb_computation/scripts/extended_ring_model.py. This can be tested with dummy
+   cues by running.
+   \verbatim
+   $ roslaunch bb_launchers ci_dummy.launch
+   \endverbatim
+   
  */
 class RingModel{
 protected:
-  /**
-     @defgroup NET_PARAM Network parameters
-     @brief the parameters used to define the network dynamics
-  */
-
-  ///
-  /// Neuron counts
-  ///
-  int n_r1 = ERM_N_R;
+  int n_r1 = ERM_N_R; /**< \brief The number of R1 neurons. */
   int n_r2 = ERM_N_R;
   int n_epg = ERM_N_EPG;
   int n_pen = ERM_N_PEN;

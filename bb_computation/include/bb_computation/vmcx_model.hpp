@@ -2,13 +2,18 @@
 #define _VMCX
 
 /**
-   @file vmcx_model.hpp
-   @brief Provides the definition and implementation of the VM extended CX.
+   \file vmcx_model.hpp
+   \brief Provides the definition and implementation of the VM extended CX.
 
    Le Moel et al. 2019 provide a vector memory extension for the Central Complex
    which demonstrates use of the network architecture to store a place memory
    encoded as a displacement vector from a starting location (nest). This file
    provides the VMCX class which implements this extension.
+
+   \b References
+
+   Le Moel et al. (2019) - The central complex as a potential substrate for vector
+   based navigation.
  */
 
 #include <iostream>
@@ -25,7 +30,7 @@
 #include "cx_model.hpp"
 
 /**
-   @brief [V]ector[M]emory[C]entralComple[X]
+   \brief [V]ector[M]emory[C]entralComple[X]
 
    Central complex network capable of storing a single vector memory.
    In the context of the beetle this represents multiple celestial
@@ -107,11 +112,10 @@ public:
   void get_status(std::vector<std::vector<double>>&);
 };
 
-//
-// Public
-//
-// Question: Should I be using this->MEM here or this->CPU4?
-// I think CPU4 is correct here but this may be an issue
+// Note, I had some issues getting this working so tried a few variations
+// of the rule reported by Le Moel et al. (2019). The one which is uncommented
+// was the one which worked. However, others had success implementing the
+// rule from the original paper so I'm not sure why I had issues.
 void VMCX::store_vm(){
   //this->W_VM = -1 * this->CPU4;
   this->clear_vm(); //reset to 0.5
@@ -189,13 +193,7 @@ void VMCX::cpu1_output(Eigen::Ref<Eigen::MatrixXd> tb1,
   this->sigmoid(cpu1, this->cpu1_slope, this->cpu1_bias, this->noise);
 }
 
-// Will need to override CPU1 update rule but wait out to get the rest
-// working first
-
-
-//
 // Format and output VMCX internal status for the
-//
 void VMCX::get_status(std::vector<std::vector<double>> &activity){
   std::vector<double> tl2_vec(this->TL2.data(),
                               this->TL2.data() +
@@ -233,10 +231,6 @@ void VMCX::get_status(std::vector<std::vector<double>> &activity){
                                 active_mat.data() +
                                 active_mat.rows() * active_mat.cols()
                                 );
-
-  // for (int i = 0; i < active_vm.size(); i++){
-  //   ROS_INFO("%f\n", active_vm[i]);
-  // }
 
   activity.push_back(tl2_vec);
   activity.push_back(cl1_vec);

@@ -156,6 +156,8 @@ void manage_vm_callback(const std_msgs::String::ConstPtr& msg){
     cx.activate_vm();
   } else if (!cmd.compare("deactivate")){
     cx.deactivate_vm();
+  } else if (!cmd.compare("clear")){
+    cx.clear_vm();
   } else {
     ROS_INFO("Command %s not recognised", cmd.c_str());
   }

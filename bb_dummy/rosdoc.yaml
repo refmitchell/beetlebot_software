@@ -1,3 +1,2 @@
 - builder: doxygen
-  exclude_patterns: '*/Eigen/*'
   javadoc_autobrief: YES
