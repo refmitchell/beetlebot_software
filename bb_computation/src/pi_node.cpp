@@ -1,8 +1,23 @@
 
 /*
- pi_node.cpp
- Subscribe to a single cue topic which is fed into the CX to allow it to
- control steering
+ \file pi_node.cpp
+ \brief Host a CX model subscibed to a single cue topic.
+
+ This node hosts a CentralComplex model and allows an operator to run a
+ path integration experiment.
+
+ Start this node (make sure the cmd_vel_service is not running) to start
+ the CentralComplex. Drive the robot manually (using turtlebot3_teleop_key
+ or any other suitable method) to a target location. Stop teleoperation.
+ Start the bb_locomotion cmd_vel_service to allow this node to communicate
+ with the motors on the turtlebot. The robot will then home.
+
+ If you actually want to run path integration experiments then there
+ may be ways to streamline this process but as a proof of prinicple
+ this was sufficient.
+
+ \warning If the bb_locomotion cmd_vel_service is running then starting
+ this node will cause the robot to move!
 */
 
 #include <ros/ros.h>
@@ -22,8 +37,7 @@
 #include "bb_util/cue.hpp"
 #include "bb_util/cue_msg.h"
 
-#define GOAL_ANGLE -2.0
-#define TRAVERSE_TIME 30
+#define DEBUG 0
 
 // Init CX
 CentralComplex cx;
@@ -38,11 +52,27 @@ argparse::ArgumentParser parser("parser");
 
 double velocity = 0;
 
+/**
+   Clean up received linear velocity. This function will trim
+   the linear velocity to N decimal places where N is the order
+   of magnitude of the factor.
+
+   \param lin_vel The raw linear velocity
+   \param factor The cleaning factor to use
+   \return The cleaned value
+*/
 inline double clean_velocity(double lin_vel, int factor=100){
   if (factor == 0) return 0;
   return ((double) ((int) (lin_vel * factor))) / factor;
 }
 
+/**
+   Initialise the argument parser
+   \param parser The ArgumentParser object
+   \param argc The command-line argument count
+   \param argv The command-line argument values
+   \return true on success
+*/
 bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   parser.add_argument()
     .names({"-s", "--subscribe"})
@@ -66,9 +96,12 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
-//
-// Publish for graphing
-//
+
+/**
+   Publish the CX status so that it can be plotted by bb_graphics/CX_graphing.
+   \param status The current CX status (can be fetched from the CentralComplex class).
+*/
+
 void cx_status_publish(std::vector<std::vector<double>> &status){
   bb_util::cx_activity msg;
 
@@ -82,9 +115,16 @@ void cx_status_publish(std::vector<std::vector<double>> &status){
   pub.publish(msg);
 }
 
-//
-// Cue callback
-//
+/**
+   Cue received callback. Receive current compass information
+   from the given cue, pass it to the CX and generate a motor 
+   command. The motor command requests will always be sent.
+
+   \warning If bb_locomotion cmd_vel_service is running, then starting
+   this node will cause the robot to move.
+
+   \param cue_msg A bb_util::cue_msg
+*/
 void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   ROS_INFO("Cue info: (R: %f, T: %f)",
            cue_msg->contrast,
@@ -102,27 +142,34 @@ void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   cx.get_status(cx_status);
   cx_status_publish(cx_status);
 
+#if DEBUG
   ROS_INFO("CX_MOTOR: %lf", CXMotor);
+#endif
+  
   //
   // Velocity update
   //
   bb_util::velocity msg;
 
-  // Do not move unless CXMotor sufficiently small
-  // msg.request.linear = 0.02;
-  // if (std::abs(CXMotor) < 0.002){
-  msg.request.linear = 0.1;
-  // }
-
+  // If CXMotor small enough, then allow forward movement,
+  // else set linear velocity to zero and turn on the spot.
+  // Threshold of CXMotor < 1 arbitrarily chosen.
   double angular = 0.7;
+  double linear = 0.1;
+  msg.request.linear = std::abs(CXMotor) < 1 ? linear : 0;
   msg.request.angular = 0;
+  
   if (CXMotor != 0) { msg.request.angular = (CXMotor > 0) ? angular : -angular; }
 
-
   client.call(msg);
-
 }
 
+/**
+   Callback for odometry information, specifically linear velocity.
+   Note that this uses perceived linear velocity, not the intended
+   velocity.
+   \param odom_msg The odometry message.
+*/
 void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
   double linear_velocity = clean_velocity(odom_msg->twist.twist.linear.x);
   velocity = linear_velocity;
@@ -135,12 +182,14 @@ int main(int argc, char **argv){
     return -1;
   }
 
+  // Set pub and sub topics
   std::string sub_topic = parser.get<std::string>("subscribe");
   std::string cx_pub =
     parser.exists("publish") ?
     parser.get<std::string>("publish") :
-    "cx_status";
+    bb_util::defs::CX_STATUS; //"cx_status"
 
+  // Init ROS node
   ros::init(argc, argv, "PI");
   ros::NodeHandle n;
 
@@ -151,11 +200,11 @@ int main(int argc, char **argv){
   // Sub to odometry for internal compass info
   ros::Subscriber odom_sub = n.subscribe("odom", 1000, odomCallback);
 
-  // Request velocity changes from velocity service
-  client = n.serviceClient<bb_util::velocity>("update_velocity");
+  // Request velocity changes from velocity service "update_velocity"
+  client = n.serviceClient<bb_util::velocity>(bb_util::defs::UPDATE_VELOCITY);
 
   // Set up publisher for CX
-  pub = n.advertise<bb_util::cx_activity>("cx_status", 1);
+  pub = n.advertise<bb_util::cx_activity>(cx_pub.c_str(), 1);
 
   ROS_INFO("Running...");
 

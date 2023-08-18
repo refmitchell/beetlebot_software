@@ -1,9 +1,20 @@
 
-/*
- test_mmcx_subscriber.cpp
- Node to test a limited multimodal cue integration implmenetation.
- Need to check my intuition.
+/**
+   \file test_mmcx_subscriber.cpp
+   \brief Test host node for the MMCX cue integration model.
 
+   A host node which was used to test the very early implementation
+   of the cue integration model given by MMCX. This model is no
+   longer up-to-date and should not be used but is included in the
+   codebase for completeness. This file is also included so that the
+   interaction between this node and the cue manager can be seen.
+
+   \note This node is not currently built but can be enabled by 
+   modifying CMakeLists.txt.
+
+   \warning If bb_locomotion cmd_vel_service is running then starting
+   this node will cause the robot to move. The current working status
+   of this node is unknown.
 */
 
 #include <ros/ros.h>
@@ -36,42 +47,32 @@ ros::Publisher pub;
 // Send movement commands to the update_velocity service
 ros::ServiceClient client;
 
-// Server to accept VM commands because it seems like the most
-// direct solution at the moment.
-ros::ServiceServer vm_server;
+/**
+   Clean up received linear velocity. This function will trim
+   the linear velocity to N decimal places where N is the order
+   of magnitude of the factor.
 
-// Weird wee function that can help clean the linear velocity component
-// of the odometry information. There's a little noise which could cause
-// issues and it's more straightforward for now just to remove it.
-// This is by no means required. Didn't use it for the yaw because I
-// don't think there's any advantage to cleaning that up.
+   \param lin_vel The raw linear velocity
+   \param factor The cleaning factor to use
+   \return The cleaned value
+*/
 inline double clean_velocity(double lin_vel, int factor=100){
   if (factor == 0) return 0;
   return ((double) ((int) (lin_vel * factor))) / factor;
 }
 
-//
-// Publish for graphing
-//
-// void cx_status_publish(std::vector<std::vector<double>> &status){
-//   bb_util::vmcx_activity msg;
-//   msg.tl2 = status[0];
-//   msg.cl1 = status[1];
-//   msg.tb1 = status[2];
-//   msg.cpu4 = status[3];
-//   msg.mem = status[4];
-//   msg.cpu1 = status[5];
-//   msg.vm = status[6];
-//   msg.active = status[7];
-//
-//   pub.publish(msg);
-// }
-
 
 /**
- * Cue list update
- */
+   Cue list callback. Receive current compass information from
+   multiple cues, formatted by the cue manager. Pass these to the MMCX
+   and generate a motor command. The motor command requests will
+   always be sent.
 
+   \warning If bb_locomotion cmd_vel_service is running, then starting
+   this node will cause the robot to move.
+
+   \param cue_msg A bb_util::cue_list representing a list of bb_util::cue_msgs.
+*/
 void cue_list_callback(const bb_util::cue_list::ConstPtr& cue_list){
   std::vector<bb_util::cue_msg> cues_from_msg = cue_list->cues;
   std::vector<bb_util::Cue> cues;
@@ -87,7 +88,8 @@ void cue_list_callback(const bb_util::cue_list::ConstPtr& cue_list){
   vel_msg.request.linear = 0;
   client.call(vel_msg);
 
-  // Retrieve cue encodings.
+  // Retrieve cue encodings. This allows the vector encoded by each TL and the CL1
+  // population to be published and plotted by bb_graphics. 
   std::vector<bb_util::Vec2D> encodings;
   bb_util::encoding_status encoding_msg = mmcx.get_cue_encoding(encodings);
   pub.publish(encoding_msg);
@@ -103,10 +105,10 @@ int main(int argc, char **argv){
   ros::Subscriber sub = n.subscribe("cue_list", 1000, cue_list_callback);
 
   // Request velocity changes from velocity service
-  client = n.serviceClient<bb_util::velocity>("update_velocity");
+  client = n.serviceClient<bb_util::velocity>(bb_util::defs::UPDATE_VELOCITY);
 
   // Set up publisher for CX
-  pub = n.advertise<bb_util::encoding_status>("mmcx_encoding_list", 1);
+  pub = n.advertise<bb_util::encoding_status>(bb_util::defs::MMCX_ENCODING, 1);
 
   ROS_INFO("Running...");
 

@@ -67,9 +67,8 @@ namespace bb_util{
     /** 
         Set the relative weight. 
         
-        \note This function was originally meant to be used alongside
-        the bb_computation cue_manager node which is currently not
-        functional.
+        \note This function is exclusively used by the bb_computation
+        cue_manager node.
     */
     void setRelativeWeight(double rw){ relative_weight = rw; }
 
