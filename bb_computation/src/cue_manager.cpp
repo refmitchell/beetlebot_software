@@ -1,11 +1,29 @@
 /**
-   @file cue_manager.cpp
-   @brief ROS Node for wrangling cues from sensory systems into a usable format.
+   \file cue_manager.cpp
+   \brief ROS Node for wrangling cues from sensory systems into a usable format.
 
-   This node will subscribe to a set of cue detection nodes to receive the angle
-   and strength of each available cue. This information will be compiled into a
-   single, regular data structure which can then be fed into a multi-modal
-   Central Complex model.
+   This node will subscribe to a set of cue detection nodes to receive
+   the angle and contrast of each available cue. The contrasts will
+   then be compared and their relative weights set and this information
+   is compiled into a single data structure.
+
+   \remark This node provides a level of abstraction between cues and
+   computational models whereby the computational model (and
+   associated node) can be completely agnostic as to cue types and can
+   instead just work on a vector of Cues.  This means that models can
+   be programmed so as to flexibly adapt to the number of available
+   cues on initialisation.
+
+   \remark This node was designed to work with an older conception of
+   the multimodal cue integration presented in Mitchell et al. (2023)
+   (provided by the MMCX class).  This was a simple extension of the
+   Stone et al. (2017) path integration model (CentralComplex) which
+   used multiple populations of TL neurons. Flexible construction of
+   this model is trivial, the plastic model from Mitchell et al. (2023)
+   may not be so straightforward and has not been attempted.
+
+   \node This node is included for completeness but was not in use
+   by the end of the project.
 */
 
 #include <ros/ros.h>
@@ -16,6 +34,8 @@
 #include "bb_util/cue.hpp"
 #include "bb_util/cue_msg.h"
 #include "bb_util/cue_list.h"
+
+#define DEBUG 0
 
 std::vector<ros::Subscriber> subs; // List of subscriptions
 ros::Publisher pub; // Publishing topic
@@ -32,8 +52,6 @@ void cue_callback(const bb_util::cue_msg::ConstPtr& msg){
   double contrast_sum = 0;
   int goal_idx = -1;
 
-  ROS_INFO("callback");
-
   // Search for the correct element and sum the contrasts
   // of each cue.
   for (int i = 0; i < cues.size(); i++){
@@ -43,6 +61,16 @@ void cue_callback(const bb_util::cue_msg::ConstPtr& msg){
 
   // Normalise the reliabilities to get the weight.
   cue.setRelativeWeight(cue.getContrast() / contrast_sum);
+  
+  if (goal_idx == -1){
+    ROS_FATAL("Cue type [%s] not found by manager. Supported"
+              " types are \"wind\" and \"intensity\".",
+              cue.getType().c_str());
+    ROS_WARN("If you are using a dummy_cue, override the type"
+             " to match one of the supported types. Exiting.");
+    exit(-1);
+  }
+  
   cues[goal_idx] = cue; // Update the cue in the list
 }
 
@@ -87,8 +115,6 @@ int main(int argc, char **argv){
   // Defined for ease, would be better to have this user-defined somewhere
   // else. E.g.a config file.
   std::vector<std::string> cue_topics = {
-    // "dummy_cue_wind",
-    // "dummy_cue_light"
     bb_util::defs::WIND_CUE_TOPIC,
     bb_util::defs::INTENSITY_CUE_TOPIC
   };
@@ -98,13 +124,11 @@ int main(int argc, char **argv){
     "intensity"
   };
 
-
   //
   // Initialisation: Set up subscribers for each cue type
   // and set up the cue list so the callback has something
   // to find.
-  //\
-
+  //
   for (int i = 0; i < cue_topics.size(); i++){
     // Temporary while testing with dummy cues, would be
     // better to have a less brittle solution.
@@ -123,8 +147,11 @@ int main(int argc, char **argv){
     // Check callbacks.
     ros::spinOnce();
 
-    // Translate to bb_util::cue_list and publish.
+    #if DEBUG
     ROS_INFO("%s", cue_list_to_string(cues).c_str());
+    #endif
+    
+    // Translate to bb_util::cue_list and publish.
     pub.publish(cue_list_to_msg_list(cues));
   }
 

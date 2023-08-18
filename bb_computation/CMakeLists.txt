@@ -140,7 +140,7 @@ include_directories(
 
 add_executable(test_vmcx_subscriber src/test_vmcx_subscriber.cpp)
 #add_executable(test_mmcx_subscriber src/test_mmcx_subscriber.cpp)
-#add_executable(cue_manager src/cue_manager.cpp)
+add_executable(cue_manager src/cue_manager.cpp)
 add_executable(test_cue_subscriber src/test_cue_subscriber.cpp)
 add_executable(menotaxis_node src/menotaxis_node.cpp)
 add_executable(pi_node src/pi_node.cpp)
@@ -189,12 +189,12 @@ add_dependencies(
 #   ${catkin_EXPORTED_TARGETS}
 #   )
 
-# add_dependencies(
-#   cue_manager
-#   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#   ${bb_util_EXPORTED_TARGETS}
-#   ${catkin_EXPORTED_TARGETS}
-#   )
+add_dependencies(
+  cue_manager
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${bb_util_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  )
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
@@ -222,10 +222,10 @@ target_link_libraries(
 #   ${catkin_LIBRARIES}
 #   )
 
-# target_link_libraries(
-#   cue_manager
-#   ${catkin_LIBRARIES}
-#   )
+target_link_libraries(
+  cue_manager
+  ${catkin_LIBRARIES}
+  )
 
 #############
 ## Install ##
