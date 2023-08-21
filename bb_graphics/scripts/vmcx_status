@@ -1,44 +1,35 @@
-
 #!/usr/bin/python
 
-# See listerner.py and talker.py for templates
+"""
+vmcx_status
 
-#
-# Imports
-#
+This file starts a ROS subscriber on vmcx_status and animates the
+network activity in real time.  This includes an extra 'vector memory'
+layer which allows visualisation of the VM synapses in the model
+(i.e. the stored vector). This is largely useful for diagnostics.
+This module does not plot TL2 or CL1 activity (though they are 
+in the model). The TL2/CL1 populations don't really do anything
+in this model so they are excluded for plotting space.
+
+The structure of this file is largely dictated by the requirements
+for matplotlib.animation.FuncAnimation. The only 'novel' element is
+the ROS subscriber which sets the underlying data.
+"""
+
 import rospy
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+# Vector Memory activity message
 from bb_util.msg import vmcx_activity
 
-
-#
-# Init global figures
-#
-
-# Plotting layers (Viewing these as bar charts with linked top)
-# Ultimately need to pick something, can ask Barbara if it's okay,
-# given that we have rate populations it might be best to graph those.
-
-# 16 CL1
-# 16 TL2
-# 8 TB1
-# 16 CPU4
-# 16 CPU1
-# 16 VM
-# 16 active (CPU4 + weighted VM)
-
-# Also, what about the "memory" layer? Think this was just a copy of CPU4
-
+# Declare figure
 fig, (tb1_ax, cpu4_ax, vm_ax, active_ax, cpu1_ax) = plt.subplots(5,1)
 
 #
-# Know x ranges and limits in advance,
-# similarly know all Y values will be between 0 and 1
+# Declare global datastructures
 #
-
 tb1_xdata = range(8)
 tb1_ydata = []
 
@@ -61,9 +52,8 @@ xdata = range(360)
 ydata = []
 
 #
-# Line2Ds for blitting
+# Artist objects for blitting
 #
-
 tb1_ln, = tb1_ax.plot([], [], 'g')
 cpu4_ln, = cpu4_ax.plot([], [], 'red')
 vm_ln, = vm_ax.plot([], [], 'yellow')
@@ -76,18 +66,18 @@ cpu1_rgt = cpu1_bar.patches[1]
 
 fig.tight_layout()
 
-# tl2_ln, = tl2_ax.bar([1], [1], color='r')
-# cl1_ln, = cl1_ax.bar([1], [1], color='r')
-# tb1_ln, = tb1_ax.bar([1], [1], color='r')
-# cpu4_ln, = cpu4_ax.bar([1], [1], color='r')
-# cpu1_ln, = cpu1_ax.bar([1], [1], color='r')
-
+# Required for blitting, iterable of all Artists which were updated
+# on the animation callback.
 circuit_ln = [tb1_ln, cpu4_ln, vm_ln, active_ln, cpu1_lft, cpu1_rgt]
 
 #
 # Update ydata based on incoming messages
 #
 def ros_callback(data):
+    """
+    Update local copies of the data (neuron population activities).
+    :param data: The ROS message
+    """    
     global vm_ydata
     global active_ydata
     global tb1_ydata
@@ -111,6 +101,11 @@ def ros_callback(data):
 # Animation initialisation
 #
 def animation_init():
+    """
+    Initialise the plot 'frame' to be used for the animation.
+    (e.g. set titles and axis information)
+    :return: A list of artists to be used by FuncAnimation.
+    """    
     vm_ax.set_xlim(1, 16)
     vm_ax.set_ylim(-0.6, 0.6)
     vm_ax.set_xticks(range(1,17))
@@ -140,6 +135,14 @@ def animation_init():
 # For animation loop
 #
 def animation_callback(frames):
+    """
+    Animation callback (update underlying data).
+    :param frames: Next frame parameter.
+    :return: A list of artists to be updated by FuncAnimation
+
+    Note that the 'frames' parameter is not used directly. It is
+    required for the function argument for FuncAnimation.
+    """    
     global vm_ydata
     global vm_xdata
     global active_ydata
@@ -169,16 +172,18 @@ def animation_callback(frames):
     return circuit_ln
 
 if __name__ == '__main__':
-    rospy.init_node('listener', anonymous=True)
+    # Init ROS node and subscriber
+    rospy.init_node('vmcx_visualisation', anonymous=True)
     rospy.Subscriber("vmcx_status", vmcx_activity, ros_callback)
 
+    # Set up animation  (see matplotlib.animation.FuncAnimation docs)
     ani = FuncAnimation(fig,
                         animation_callback,
                         init_func=animation_init,
                         blit=True,
                         interval=10)
 
-    plt.show()
-    rospy.spin()
+    plt.show() # Show the plot window
+    rospy.spin() # Start the ROS main loop
 
 

@@ -1,5 +1,22 @@
 #!/usr/bin/python
 
+"""
+integration_status
+
+This file is designed to work with the MMCX class from
+bb_computation. Note that this class is out-of-date and should not be
+used. The MMCX class and related code are here for completeness, see
+the bb_computation docs for more information.
+
+This file starts a ROS subscriber on mmcx_encoding_list and 
+animates the decoded vectors from each TL population and the
+CL1 population. This allows us to visualise the vectors encoded
+by each node and how the integration relates to the input vectors.
+
+Warning: The working status of this node is unknown.
+
+"""
+
 #
 # Imports
 #
@@ -10,17 +27,11 @@ from matplotlib.animation import FuncAnimation
 
 from bb_util.msg import vec2d_msg, encoding_status
 
-#
-# Init global figures
-#
-
+# Initialise polar plot for the various vectors
 fig = plt.figure()
-polar_plot_ax = plt.subplot(111, projection='polar')#, polar=True)
+polar_plot_ax = plt.subplot(111, projection='polar')
 
-#
-# Know x ranges and limits in advance,
-# similarly know all Y values will be between 0 and 1
-#
+# Init data to zero vectors
 wind_x = 0
 wind_y = 0
 light_x = 0
@@ -31,9 +42,8 @@ cl1_y = 0
 true_cl_x = 0
 true_cl_y = 0
 
-#
-# Line2Ds for blitting
-#
+
+# Artist objects blitting
 wind_ln, = polar_plot_ax.plot([], [], 'bo')
 light_ln, = polar_plot_ax.plot([], [], 'go')
 cl1_ln, = polar_plot_ax.plot([], [], 'ro')
@@ -42,16 +52,19 @@ polar_plot_ax.set_theta_zero_location("N")
 polar_plot_ax.set_theta_direction(-1)
 
 
-# fig.tight_layout()
-
-# # Required for blitting, iterable of all Artists which were updated
-# # on the animation callback.
+# Required for blitting, iterable of all Artists which were updated
+# on the animation callback.
 status_ln = [wind_ln, light_ln, cl1_ln, true_cl_ln]
 
 #
 # Update ydata based on incoming messages
 #
 def ros_callback(data):
+    """
+    Update local copies of the data (decoded vectors from TL and 
+    CL1 populations).
+    :param data: The ROS message
+    """    
     global wind_x
     global wind_y
     global light_x
@@ -70,10 +83,10 @@ def ros_callback(data):
     light_y = data.tls[1].r * scale
 
     cl1_x = data.cl1.theta * scale
-    cl1_y = 0.8 #data.cl1.r * scale
+    cl1_y = 0.8 # Fix the magnitude of CL1
 
     true_cl_x = data.true_cl1.theta * scale
-    true_cl_y = 0.7#data.true_cl1.y * scale
+    true_cl_y = 0.7
 
     print("wind_x: " + str(wind_x))
     print("wind_y: " + str(wind_y))
@@ -85,7 +98,11 @@ def ros_callback(data):
 # Animation initialisation
 #
 def animation_init():
-#    polar_plot_ax.set_xlim(0, 1)
+    """
+    Initialise the plot 'frame' to be used for the animation.
+    (e.g. set titles and axis information)
+    :return: A list of artists to be used by FuncAnimation.
+    """
     polar_plot_ax.set_ylim(0, 1)
     polar_plot_ax.set_title("Integration Status");
 
@@ -95,6 +112,14 @@ def animation_init():
 # For animation loop
 #
 def animation_callback(frames):
+    """
+    Animation callback (update underlying data).
+    :param frames: Next frame parameter.
+    :return: A list of artists to be updated by FuncAnimation
+
+    Note that the 'frames' parameter is not used directly. It is
+    required for the function argument for FuncAnimation.
+    """    
     global wind_x
     global wind_y
     global light_x
@@ -112,16 +137,18 @@ def animation_callback(frames):
     return status_ln
 
 if __name__ == '__main__':
-    rospy.init_node('integration_status_listener', anonymous=True)
+    # Init ROS node and subscription
+    rospy.init_node('integration_visualisation', anonymous=True)
     rospy.Subscriber("mmcx_encoding_list", encoding_status, ros_callback)
 
+    # Set up animation (see matplotlib.animation.FuncAnimation docs)
     ani = FuncAnimation(fig,
                         animation_callback,
                         init_func=animation_init,
                         blit=True,
                         interval=10)
 
-    plt.show()
-    rospy.spin()
+    plt.show() # Show the animation window
+    rospy.spin() # Start ROS loop
 
 

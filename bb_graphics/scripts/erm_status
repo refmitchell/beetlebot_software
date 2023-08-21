@@ -1,18 +1,29 @@
 #!/usr/bin/python
 
-#
-# Imports
-#
+"""
+erm_status
+
+This file starts a ROS subscriber on erm_status and animates the
+extended ring model activity alongside the plastic R -> EPG
+connections in real time. This is useful for diagnosing problems if
+the robot is not behaving as it's supposed to, and also makes for nice
+demonstrations.
+
+The structure of this file is largely dictated by the requirements
+for matplotlib.animation.FuncAnimation. The only 'novel' element is
+the ROS subscriber which sets the underlying data.
+
+"""
+
 import rospy
 import numpy as np
 import matplotlib.animation as animation
 from matplotlib import pyplot as plt
+
+# Extended Ring Model status message
 from bb_util.msg import erm_status
 
-#
-# Init global figures
-#
-
+# Figure layout
 mosaic = [
     ["r1_epg", "r1_epg", "r1", "r2"],
     ["r1_epg", "r1_epg", "epg", "epg"],
@@ -21,14 +32,20 @@ mosaic = [
     ["r2_epg", "r2_epg", "pen", "pen"],
 ]
 
+# Subplot mosaic requires Matplotlib v3.6; code was written for 3.7.
 fig, ax_dict = plt.subplot_mosaic(mosaic)
 
+# Turn off blank space axis
 ax_dict["blank"].axis('off')
 
+# Show flat array for R->EPG mappings
 init_image = np.ones((8,8))
+
+#
+# Set up artist list for animation.
+#
 r1_epg_artist = ax_dict["r1_epg"].imshow(init_image,animated=True, vmin=0, vmax=0.25)
 r2_epg_artist = ax_dict["r2_epg"].imshow(init_image,animated=True, vmin=0, vmax=0.25)
-
 r1_artist, = ax_dict["r1"].plot([],[], 'tab:red')
 r2_artist, = ax_dict["r2"].plot([],[], 'tab:blue')
 epg_artist, = ax_dict["epg"].plot([],[], 'tab:purple')
@@ -47,10 +64,11 @@ animation_artists = [r1_epg_artist,
 
 fig.tight_layout()
 
-# Data structures
+#
+# Set up initial data
+# 
 w_r1_epg = init_image
 w_r2_epg = init_image
-
 r1_rates = []
 r2_rates = []
 epg_rates = []
@@ -64,6 +82,10 @@ n_epg = 8
 
 # Listen on erm_status topic and update underlying data structures
 def ros_callback(msg):
+    """
+    Update local copies of neuron rates and R->EPG mappings.
+    :param data: The ROS message
+    """
     global w_r1_epg
     global w_r2_epg
     global n_r1
@@ -76,7 +98,6 @@ def ros_callback(msg):
     global pen_rates
     global peg_rates
 
-    # ROS parameter server would probably be better for these...
     n_r1 = msg.n_r1
     n_r2 = msg.n_r2
     n_epg = msg.n_epg
@@ -92,6 +113,11 @@ def ros_callback(msg):
     peg_rates = msg.peg
 
 def animation_init():
+    """
+    Initialise the plot 'frame' to be used for the animation.
+    (e.g. set titles and axis information)
+    :return: A list of artists to be used by FuncAnimation.
+    """    
     global n_r1
     global n_r2
     global n_epg
@@ -133,6 +159,14 @@ def animation_init():
     return animation_artists
 
 def animation_callback(frames):
+    """
+    Animation callback (update underlying data).
+    :param frames: Next frame parameter.
+    :return: A list of artists to be updated by FuncAnimation
+
+    Note that the 'frames' parameter is not used directly. It is
+    required for the function argument for FuncAnimation.
+    """    
     global w_r1_epg
     global w_r2_epg
     global r1_rates
@@ -161,19 +195,16 @@ def animation_callback(frames):
     return animation_artists
 
 if __name__ == "__main__":
-    rospy.init_node('erm_vis')
+    # Init ROS node and subscriber
+    rospy.init_node('erm_visualisation')
     rospy.Subscriber('erm_status', erm_status, ros_callback)
 
+    # Set up animation (see matplotlib docs for FuncAnimation)
     layer_ani = animation.FuncAnimation(fig,
                                         animation_callback,
                                         init_func=animation_init,
                                         blit=True,
                                         interval=10)
 
-    # mapping_ani = animation.ArtistAnimation(fig,
-    #                                         mapping_artists,
-    #                                         blit=True,
-    #                                         interval=10)
-
-    plt.show()
-    rospy.spin()
+    plt.show() # Show the plot window
+    rospy.spin() # Start ROS main loop

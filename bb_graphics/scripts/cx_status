@@ -1,43 +1,34 @@
 #!/usr/bin/python
 
-# See listerner.py and talker.py for templates
+"""
+cx_status
 
-#
-# Imports
-#
+This file starts a ROS subscriber on cx_status and animates the
+central complex activity in real time.  This makes for a useful
+diagnostic tool if the robot is not behaving as it's supposed to,
+and also makes for nice demonstrations.
+
+The structure of this file is largely dictated by the requirements
+for matplotlib.animation.FuncAnimation. The only 'novel' element is
+the ROS subscriber which sets the underlying data.
+"""
+
 import rospy
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+# Central Complex status message type
 from bb_util.msg import cx_activity
 
-
-#
-# Init global figures
-#
-
-# Plotting layers (Viewing these as bar charts with linked top)
-# Ultimately need to pick something, can ask Barbara if it's okay,
-# given that we have rate populations it might be best to graph those.
-
-# 16 CL1
-# 16 TL2
-# 8 TB1
-# 16 CPU4
-# 16 CPU1
-# Might be nice to show sum(CPU1) or something to
-# show the intended output
-
-# Also, what about the "memory" layer? Think this was just a copy of CPU4
-
+# Declare figure
 fig, (tl2_ax, cl1_ax, tb1_ax, cpu4_ax, cpu1_ax) = plt.subplots(5,1)
 
 #
-# Know x ranges and limits in advance,
-# similarly know all Y values will be between 0 and 1
+# Declare global datastructures for the x and y data. Sizes dictated
+# by the number of neurons per layer (see bb_computation CentralComplex
+# class).
 #
-
 tl2_xdata = range(16)
 tl2_ydata = []
 
@@ -60,27 +51,23 @@ xdata = range(360)
 ydata = []
 
 #
-# Line2Ds for blitting
+# Artist objects for blitting; allows the animation module to
+# update only those objects which have changed rather than replotting
+# the full figure every time.
 #
 tl2_ln, = tl2_ax.plot([], [], 'm')
 cl1_ln, = cl1_ax.plot([], [], 'm')
 tb1_ln, = tb1_ax.plot([], [], 'g')
 cpu4_ln, = cpu4_ax.plot([], [], 'orange')
-#cpu1_ln, = cpu1_ax.plot([], [], 'b')
 
+# Bar plots are used for CPU1L and R so we can see the balance between
+# the two populations.
 labels = ['CPU1 Left', 'CPU1 Right']
 cpu1_bar = cpu1_ax.bar(labels, [1,1])
 cpu1_lft = cpu1_bar.patches[0]
 cpu1_rgt = cpu1_bar.patches[1]
 
-
 fig.tight_layout()
-
-# tl2_ln, = tl2_ax.bar([1], [1], color='r')
-# cl1_ln, = cl1_ax.bar([1], [1], color='r')
-# tb1_ln, = tb1_ax.bar([1], [1], color='r')
-# cpu4_ln, = cpu4_ax.bar([1], [1], color='r')
-# cpu1_ln, = cpu1_ax.bar([1], [1], color='r')
 
 # Required for blitting, iterable of all Artists which were updated
 # on the animation callback.
@@ -90,6 +77,10 @@ circuit_ln = [tl2_ln, cl1_ln, tb1_ln, cpu4_ln, cpu1_lft, cpu1_rgt]
 # Update ydata based on incoming messages
 #
 def ros_callback(data):
+    """
+    Update local copies of the data (neuron population activities).
+    :param data: The ROS message
+    """
     global tl2_ydata
     global cl1_ydata
     global tb1_ydata
@@ -105,14 +96,17 @@ def ros_callback(data):
 
     cpu1_lft_ydata = sum(data.cpu1[:8])
     cpu1_rgt_ydata = sum(data.cpu1[8:])
-#    cpu1_ydata = data.cpu1
-
 
 
 #
 # Animation initialisation
 #
 def animation_init():
+    """
+    Initialise the plot 'frame' to be used for the animation.
+    (e.g. set titles and axis information)
+    :return: A list of artists to be used by FuncAnimation.
+    """
     tl2_ax.set_xlim(1, 16)
     tl2_ax.set_ylim(0, 1.2)
     tl2_ax.set_xticks(range(1,17))
@@ -138,10 +132,15 @@ def animation_init():
 
     return circuit_ln
 
-#
-# For animation loop
-#
 def animation_callback(frames):
+    """
+    Animation callback (update underlying data).
+    :param frames: Next frame parameter.
+    :return: A list of artists to be updated by FuncAnimation
+
+    Note that the 'frames' parameter is not used directly. It is
+    required for the function argument for FuncAnimation.
+    """
     global tl2_ydata
     global tl2_xdata
     global cl1_ydata
@@ -171,16 +170,18 @@ def animation_callback(frames):
     return circuit_ln
 
 if __name__ == '__main__':
-    rospy.init_node('listener', anonymous=True)
+    # Init ROS Node and Subscription
+    rospy.init_node('cx_visualisation', anonymous=True)
     rospy.Subscriber("cx_status", cx_activity, ros_callback)
 
+    # Set up animation (see matplotlib docs for FuncAnimation)
     ani = FuncAnimation(fig,
                         animation_callback,
                         init_func=animation_init,
                         blit=True,
                         interval=10)
 
-    plt.show()
-    rospy.spin()
+    plt.show() # Show the plot window
+    rospy.spin() # Start ROS main loop
 
 

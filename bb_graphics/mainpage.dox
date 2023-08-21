@@ -1,0 +1,114 @@
+/**
+\mainpage
+
+This package provides visualisation utilities for testing the different
+available computational models.
+
+Each node is desinged to work with data from a specific computational
+model. The code all follows the same structure (largely dictated by
+the underlying animation utilities provided by
+matplotlib.animation.FuncAnimation).
+
+List of nodes:
+- \b cx_status (bb_computation CentralComplex)
+- \b vmcx_status (bb_computation VMCX)
+- \b erm_status (bb_computation extended_ring_model.RingModel)
+- \b integration_status (bb_computation MMCX)
+
+\section desc Node descriptions
+\subsection cx_status cx_status
+This node produces real-time visual output for each layer of the
+CentralComplex model provided by bb_computation.
+(See bb_computation docs for information on CentralComplex.)
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_graphics cx_status
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/cx_status` [bb_util/cx_activity]
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with any ROS parameters.
+
+
+
+\subsection vmcx_status vmcx_status
+This node produces real-time visual output for the TB1 -> CPU1
+layers of the VMCX model provided by bb_computation. This
+node also animates the vector memory synapses so as to visualise
+the vector stored and the effect on the CPU4 neurons.
+(See bb_computation docs for information on VMCX.)
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_graphics vmcx_status
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/vmcx_status` [bb_util/vmcx_activity]
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with any ROS parameters.
+
+
+
+\subsection erm_status erm_status
+This node produces real-time visual output for each layer of the
+cue integration model given by bb_computation extended_ring_model.RingModel.
+(See bb_computation docs for more information.)
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_graphics erm_status
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/erm_status` [bb_util/erm_status]
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with any ROS parameters.
+
+
+
+\subsection integration_status integration_status
+This node animates the vectors encoded in each TL layer
+and the CL1 layer of the MMCX model. This was meant to be
+an abstract visualisation of the different compass needles
+given by each cue and then the combined compass needle in the
+CL1 layer.
+
+(See bb_computation docs for more information on MMCX.)
+
+\warning The MMCX model is outdated and should not be used.
+This code is included for completeness. Its working status
+is unknown.
+
+\subsubsection usage Usage
+\verbatim
+$ rosrun bb_graphics integration_status
+\endverbatim
+
+\subsubsection topics ROS Topics
+Subscribes to:
+- \b `/mmcx_encoding_list` [bb_util/encoding_status]
+
+\subsubsection services ROS Services
+This node does not interact with any ROS services.
+
+\subsubsection parameters ROS Parameters
+This node does not interact with any ROS parameters.
+*/
