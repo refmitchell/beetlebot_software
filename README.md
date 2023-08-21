@@ -37,3 +37,4 @@ ROS node and describes how the different nodes fit together.
 The documentation can be re-built using:
 
 `$ rosdoc_lite .`
+
