@@ -38,3 +38,12 @@ The documentation can be re-built using:
 
 `$ rosdoc_lite .`
 
+
+## Included work
+
+This repository includes some work which is not my own. Specifically
+the bb_util package the
+[Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) linear
+algebra library and the
+[argparse](https://github.com/jamolnng/argparse/tree/develop) header
+library.
