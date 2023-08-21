@@ -162,10 +162,10 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/talker.py
-  scripts/listener.py
-  scripts/CX_graphing.py
-  scripts/VMCX_graphing.py
+  scripts/cx_status
+  scripts/vmcx_status
+  scripts/erm_status
+  scripts/integration_status
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
