@@ -6,6 +6,9 @@ the on-board processing.
 The [bb_sensors](https://github.com/refmitchell/bb_sensors) package contains
 the code which runs on the robot.
 
+Dependencies can be found in
+[beetlebot_dependencies](https://github.com/refmitchell/beetlebot_dependencies).
+
 ## Usage
 This code is built for ROS1 Noetic which itself depends on Ubuntu 20.04.
 You must be using an Ubuntu 20.04 system with ROS1 Noetic installed.
@@ -16,7 +19,6 @@ listed below) and run catkin_make as usual.
 ### Dependencies
 #### Compile-time
 - [vision_opencv](https://github.com/ros-perception/vision_opencv) (make sure you download the version for ROS Noetic).
-
 Clone this into your catkin workspace
 
 ####  Run-time dependencies
@@ -33,12 +35,10 @@ convenient to include these in my catkin workspace and build them from source.
   available. Make sure you use the ROS Noetic version.
 
 #### Dependency repository
-For convenience, I stored a snapshot of all
-of the above dependencies which is available
-[here](https://github.com/refmitchell/beetlebot_dependencies). If you
-clone the dependency repo into your catkin workspace then the versions
-should all be compatible. There is no guarantee that the code in the
-dependency repository is up-to-date.
+For convenience, I stored a snapshot of all of the above dependencies
+which is linked above. If you clone the dependency repo into your
+catkin workspace then the versions should all be compatible. There is
+no guarantee that the code in the dependency repository is up-to-date.
 
 ## Documentation
 Pre-built documentation is provided per package using rosdoc_lite. Within
