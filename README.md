@@ -13,13 +13,14 @@ You must be using an Ubuntu 20.04 system with ROS1 Noetic installed.
 Clone this repository into your catkin workspace (along with the dependencies
 listed below) and run catkin_make as usual. 
 
-###  Compile-time dependencies
+### Dependencies
+#### Compile-time
 - [vision_opencv](https://github.com/ros-perception/vision_opencv) (make sure you download the version for ROS Noetic).
 
 Clone this into your catkin workspace
 
-###  Run-time dependencies
-This code is designed to be run on a TurtleBot3 (Burger) which requires the
+####  Run-time dependencies
+This code is designed to work with a TurtleBot3 (Burger) which requires the
 following ROS packages. These can be installed on the system but I found it more
 convenient to include these in my catkin workspace and build them from source.
 
@@ -30,6 +31,14 @@ convenient to include these in my catkin workspace and build them from source.
 
 **Note** that each of these repos has a number of branches
   available. Make sure you use the ROS Noetic version.
+
+#### Dependency repository
+For convenience, I stored a snapshot of all
+of the above dependencies which is available
+[here](https://github.com/refmitchell/beetlebot_dependencies). If you
+clone the dependency repo into your catkin workspace then the versions
+should all be compatible. There is no guarantee that the code in the
+dependency repository is up-to-date.
 
 ## Documentation
 Pre-built documentation is provided per package using rosdoc_lite. Within
