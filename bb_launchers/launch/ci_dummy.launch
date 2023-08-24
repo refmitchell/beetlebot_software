@@ -23,8 +23,8 @@
     type="erm_test"
   />
   <node
-    name="erm_visualisation"
+    name="erm_status"
     pkg="bb_graphics"
-    type="erm_visualisation.py"
+    type="erm_status"
   />
 </launch>

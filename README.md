@@ -1,7 +1,10 @@
 # Beetlebot Software
 This repository contains all *remote* software for the Beetlebot platform. The
 intent is that this software be run on a remote machine (e.g. laptop) to limit
-the on-board processing. 
+the on-board processing.
+
+The [bb_sensors](https://github.com/refmitchell/bb_sensors) package contains
+the code which runs on the robot.
 
 ## Usage
 This code is built for ROS1 Noetic which itself depends on Ubuntu 20.04.
@@ -34,15 +37,17 @@ each package, go to doc/html/index.html to view the package documentation.
 This documentation also provides instructions for running each available
 ROS node and describes how the different nodes fit together.
 
-The documentation can be re-built using:
+For each package, the documentation documentation can be re-built using:
 
-`$ rosdoc_lite .`
-
+```
+$ cd bb_<package>
+$ rosdoc_lite .
+```
 
 ## Included work
 
-This repository includes some work which is not my own. Specifically
-the bb_util package the
+This repository includes some work which is not my own. Specifically, within
+the bb_util package, the
 [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) linear
 algebra library and the
 [argparse](https://github.com/jamolnng/argparse/tree/develop) header
