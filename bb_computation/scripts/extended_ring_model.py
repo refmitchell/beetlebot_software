@@ -2,9 +2,17 @@
 extended_ring_model.py
 
 This module contains the orientation cue integration model from
-Mitchell et al. (2023) with minor adaptations to work within
-this codebase. For more information and further references, please
-see that work.
+Mitchell et al. (2023) with some adaptations:
+
+1. R -> E-PG plasticity is now linearly scaled according to the
+   current angular velocity.
+2. Similarly, R influence over E-PG neurons is scaled according to 
+   angular velocity as suggested in the Discussion from the paper.
+3. A simple steering method has been added which will generate a
+   steering command when given a goal direction.
+
+For more information on the basic model and further reading/references,
+please see Mitchell et al. (2023).
 
 References:
 Mitchell et al. (2023) - A model of cue integration as vector summation
@@ -419,6 +427,20 @@ class RingModel():
         weight_onto_epg = np.sum(self.w_r1_epg, axis=1) + np.sum(self.w_r2_epg, axis=1)
         self.w_r1_epg = (self.w_r1_epg.T / weight_onto_epg).T
         self.w_r2_epg = (self.w_r2_epg.T / weight_onto_epg).T
+
+    def steering(goal_direction, neural=False):
+        if not neural:
+            # Current EPG heading in [-np.pi, np.pi]
+            current_theta = self.decode()[decodekeys.epg][0]
+
+            # Signed error between current E-PG angle and desired
+            desired = [np.cos(goal_direction), np.sin(goal_direction)]
+            internal = [np.cos(current_theta), np.sin(current_theta)]
+            det = desired[0]*internal[1] - desired[1]*internal[0]
+            dot = desired[0]*internal[0] + desired[1]*internal[1]
+            error = np.arctan2(det,dot) # Error in Radians
+            
+            return error
 
     def decode(self):
         """
