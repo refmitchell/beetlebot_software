@@ -428,7 +428,7 @@ class RingModel():
         self.w_r1_epg = (self.w_r1_epg.T / weight_onto_epg).T
         self.w_r2_epg = (self.w_r2_epg.T / weight_onto_epg).T
 
-    def steering(goal_direction, neural=False):
+    def steering(self, goal_direction, neural=False):
         if not neural:
             # Current EPG heading in [-np.pi, np.pi]
             current_theta = self.decode()[decodekeys.epg][0]
@@ -440,7 +440,20 @@ class RingModel():
             dot = desired[0]*internal[0] + desired[1]*internal[1]
             error = np.arctan2(det,dot) # Error in Radians
             
-            return error
+            return -error
+
+    def randomise_weights(self):
+        """
+        Randomises the R -> E-PG mappings. In the original paper 'flat' mappings
+        (all connections equal) but randomisation seems to be the more standard 
+        technique.
+        """
+        self.w_r1_epg = np.random.uniform(size=(self.n_r1, self.n_epg))
+        self.w_r2_epg = np.random.uniform(size=(self.n_r2, self.n_epg))
+                                          
+        weight_onto_epg = np.sum(self.w_r1_epg, axis=1) + np.sum(self.w_r2_epg, axis=1)
+        self.w_r1_epg = (self.w_r1_epg.T / weight_onto_epg).T
+        self.w_r2_epg = (self.w_r2_epg.T / weight_onto_epg).T
 
     def decode(self):
         """

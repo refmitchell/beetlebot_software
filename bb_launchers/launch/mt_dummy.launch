@@ -1,0 +1,30 @@
+<launch>
+  <include file="$(find turtlebot3_fake)/launch/turtlebot3_fake.launch"/>
+  <node
+  name="yaw_node"
+  pkg="bb_util"
+  type="yaw"
+  />
+  <node
+    name="dummy_cue_wind"
+    pkg="bb_dummy"
+    type="dummy_cue"
+    args="-a 0 -m 1 -p wind_cue -t wind"
+  />
+  <node
+    name="dummy_cue_intensity"
+    pkg="bb_dummy"
+    type="dummy_cue"
+    args="-a 0 -m 1 -p intensity_cue -t intensity"
+  />
+  <node
+    name="erm_status"
+    pkg="bb_graphics"
+    type="erm_status"
+  />
+  <node
+    name="cmd_vel_service"
+    pkg="bb_locomotion"
+    type="cmd_vel_service"
+  />
+</launch>

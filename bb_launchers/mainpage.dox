@@ -15,7 +15,7 @@ the nodes.
 \subsection ci_dummy ci_dummy
 \subsubsection Usage
 \verbatim
-$ roslaunch bb_launchers ci_dummy.launch
+$ roslaunch bb_launchers sim_ci_demo.launch
 \endverbatim
 This launch file will start the following nodes:
 - bb_util yaw
@@ -35,7 +35,7 @@ simulation package.
 \subsection ci_robot ci_robot
 \subsubsection Usage
 \verbatim
-$ roslaunch bb_launchers ci_robot.launch
+$ roslaunch bb_launchers robot_ci_demo.launch
 \endverbatim
 
 This launch file will start the following nodes:
