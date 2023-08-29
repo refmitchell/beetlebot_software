@@ -107,7 +107,7 @@ def intensity_cue_callback(data):
     global th_intensity
     global w_intensiy
     th_intensity = np.degrees(data.theta)
-    w_intensity = 0.5 if data.contrast > 0.3 else 0
+    w_intensity = 0.5 if data.contrast > 0.1 else 0
 
 
 def get_erm_status_as_msg():

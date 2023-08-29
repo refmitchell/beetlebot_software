@@ -170,10 +170,12 @@ int main(int argc, char **argv){
                 1000,
                 calibrationNotifyCallback);
 
+  ros::Rate rate(10);
   while(ros::ok()){
     ros::spinOnce();
     cue_pub.publish(bb_util::Cue::toMsg(wind_cue));
     ROS_INFO("\n%s", wind_cue.toString().c_str());
+    rate.sleep();
   }
 
   return 0;
