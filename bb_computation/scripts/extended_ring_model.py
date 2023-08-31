@@ -4,12 +4,15 @@ extended_ring_model.py
 This module contains the orientation cue integration model from
 Mitchell et al. (2023) with some adaptations:
 
-1. R -> E-PG plasticity is now linearly scaled according to the
-   current angular velocity.
-2. Similarly, R influence over E-PG neurons is scaled according to 
-   angular velocity as suggested in the Discussion from the paper.
+1. R -> E-PG plasticity can now be linearly scaled according to
+   the current angular velocity input.
+2. If (1) is enabled, R influence over E-PG neurons is scaled 
+   according to ngular velocity as suggested in the Discussion 
+   from Mitchell et al. (2023).
 3. A simple steering method has been added which will generate a
-   steering command when given a goal direction.
+   steering command when given a goal direction. This can either
+   use a basic vector calculation or a bio-inspired (but not anatomical)
+   steering circuit.
 
 For more information on the basic model and further reading/references,
 please see Mitchell et al. (2023).
@@ -44,12 +47,13 @@ class RingModel():
         self.n_r = params.get(rmkeys.n_r, 0) # Set both, default zero.
 
         # R scaling 1.2
-        self.scalar_r_epg = params.get(rmkeys.w_r_epg, -1.4)#)-2) # E-PG -> R
+        self.scalar_r_epg = params.get(rmkeys.w_r_epg, -1.4)#-1.4)#)-2) # E-PG -> R
 
         # E-PG out
         self.scalar_epg_peg = params.get(rmkeys.w_epg_peg, 1.2) # E-PG -> P-EG
         self.scalar_epg_pen = params.get(rmkeys.w_epg_pen, 0.8)#0.7) # E-PG -> P-EN
         self.scalar_epg_d7 = params.get(rmkeys.w_epg_d7, 0.5) # E-PG -> D7
+        self.scalar_epg_pfl3 = params.get(rmkeys.w_epg_pfl3, 1) # E-PG -> PFL3
 
         # D7 out
         self.scalar_d7_peg = params.get(rmkeys.w_d7_peg, -0.3) # D7 -> P-EG
@@ -63,6 +67,9 @@ class RingModel():
         # SM
         self.scalar_sm_pen = params.get(rmkeys.w_sm_pen, 1) # SM -> P-EN
 
+        # FC2 -> PFL3
+        self.scalar_fc2_pfl3 = params.get(rmkeys.w_fc2_pfl3, 1) # FC2 -> PFL3
+
 
         # Rate parameters
         self.r_slope = params.get(rmkeys.r_slope, 4)#4   # R neurons
@@ -75,6 +82,10 @@ class RingModel():
         self.peg_bias = params.get(rmkeys.peg_bias, 3)
         self.pen_slope = params.get(rmkeys.pen_slope, 4) # P-ENs
         self.pen_bias = params.get(rmkeys.pen_bias, 5)
+        self.pfl3_slope = params.get(rmkeys.pfl3_slope, 4) # PFL3s
+        self.pfl3_bias = params.get(rmkeys.pfl3_bias, 4)
+        self.fc2_slope = params.get(rmkeys.fc2_bias, 4) # FC2s
+        self.fc2_bias = params.get(rmkeys.fc2_slope, 1)
 
         # Misc.
         # Default R -> E-PG adjacency modifiers
@@ -99,11 +110,14 @@ class RingModel():
         self.r1_preferences = np.linspace(0, 2*np.pi, self.n_r1, endpoint=False)
         self.r2_preferences = np.linspace(0, 2*np.pi, self.n_r2, endpoint=False)
 
+
         # Non-R neuron counts.
         self.n_epg = 8
         self.n_d7 = 8
         self.n_pen = 16
         self.n_peg = 16
+        self.n_fc2 = 8
+        self.n_pfl3 = 8 # Number of PFL3s going to one LAL
 
         # All neural rate containers as explicit column vectors
         # R neurons
@@ -122,9 +136,19 @@ class RingModel():
         # P-EN neurons
         self.pen_rates = np.zeros((self.n_pen,1))
 
+        # FC2 (goal) neurons
+        self.fc2_rates = np.zeros((self.n_fc2, 1))
+        
+        # PFL3 Left (steering) neurons
+        self.pfl3L_rates = np.zeros((self.n_pfl3, 1))
+
+        # PFL3 Right (steering) neurons
+        self.pfl3R_rates = np.zeros((self.n_pfl3, 1))
+        
         # Adjacency matrices
         # R -> E-PG
         self.epg_preferences = np.linspace(0, 2*np.pi, self.n_epg, endpoint=False)
+
         self.w_r1_epg = self.d_w1 * generate_mapping(self.n_r1,
                                                      self.r1_preferences,
                                                      self.n_epg,
@@ -135,6 +159,8 @@ class RingModel():
                                                      self.epg_preferences)
 
 
+        self.fc2_preferences = np.linspace(0, 2*np.pi, self.n_fc2, endpoint=False)
+        
         weight_onto_epg = np.sum(self.w_r1_epg, axis=1) + np.sum(self.w_r2_epg, axis=1)
         self.w_r1_epg = (self.w_r1_epg.T / weight_onto_epg).T
         self.w_r2_epg = (self.w_r2_epg.T / weight_onto_epg).T
@@ -156,6 +182,15 @@ class RingModel():
         idents = (np.identity(self.n_epg), np.identity(self.n_epg))
         self.w_epg_peg = np.concatenate(idents, axis=0) * self.scalar_epg_peg
 
+        # E-PG -> PFL3 Left
+        self.w_epg_pfl3L = self.scalar_epg_pfl3 * np.identity(self.n_epg)
+
+        # E-PG -> PFL3 Right
+        # (inputs in the E-PGs are right-shifted by one column
+        self.w_epg_pfl3R = self.scalar_epg_pfl3 * np.roll(
+            np.identity(self.n_epg), 1, axis=1
+        )
+
         # P-EG -> E-PG
         idents = (np.identity(self.n_epg), np.identity(self.n_epg))
         self.w_peg_epg = np.concatenate(idents, axis=1) * self.scalar_peg_epg
@@ -170,6 +205,18 @@ class RingModel():
 
         # Delta7 -> Delta7 (RA dynamics)
         self.w_d7_d7 = (np.identity(self.n_d7) - 1) * self.scalar_d7_d7
+
+        # FC2 -> PFL3
+        # (FC2 neurons connect to the same neurons in the left and right populations)
+        self.w_fc2_pfl3 = self.scalar_fc2_pfl3 * np.identity(self.n_fc2)
+
+        # Last steering output for logging/visualisation.
+        self.last_steering_output = 0
+
+        # The maximum rotation speed handlable by the network
+        self.sm_fixed_point = 24
+        self.av_learning_regulation_constant = 0.2
+        self.r_inh_constant = 0.8
 
 
     def reset_rates(self):
@@ -228,8 +275,7 @@ class RingModel():
 
         if av_plasticity and not plasticity: # options should be mutually exclusive
             # Change learning rate
-#            self.learning_rate = (0.1/24) * np.clip(abs(sm), 0, 24)
-            self.learning_rate = (0.2/24) * np.clip(abs(sm), 0, 24)
+            self.learning_rate = (self.av_learning_regulation_constant/self.sm_fixed_point) * np.clip(abs(sm), 0, self.sm_fixed_point)
             self.update_weights()
     #
     # Neuron outputs
@@ -276,7 +322,7 @@ class RingModel():
         :param self_motion: the angular velocity experienced by the agent
         """
         # Map self-motion roughly into 0,1
-        scale = 0.5/24
+        scale = 0.5/self.sm_fixed_point
 
         scaled_sm = np.clip((scale * self_motion) + 0.5, 0, 1)
 
@@ -358,7 +404,8 @@ class RingModel():
             r_inputs = self.r_inhibition*r_inputs
 
         if av_inhibition and not inhibit_rs:
-            av_r_inhibition = np.clip((0.2/24)*abs(av), 0, 0.2)
+            av_r_inhibition = 1 - np.clip(
+                (self.r_inh_constant/self.sm_fixed_point)*abs(av), 0, self.r_inh_constant)
             r_inputs = av_r_inhibition*r_inputs
 
 
@@ -393,6 +440,41 @@ class RingModel():
 
         # print("D7I: {}".format(total_input.reshape(8,)))
         # print("D7O: {}".format(self.d7_rates.reshape(8,)))
+        
+    def fc2_output(self, goal_direction):
+        """
+        Compute FC2 neuron activity for a given goal direction (in radians).
+        Note that this goal is not necessarily coupled to the world but is coupled
+        to the compass. (As in Beetz et al. (2023) and Mussells Pires et al. (2023))
+
+        :param goal_direction: The desired goal direction
+        """
+        fc2_inputs = [np.cos(goal_direction - x) for x in self.fc2_preferences]
+        fc2_inputs = np.array(fc2_inputs)
+        self.fc2_rates = sigmoid(fc2_inputs, self.fc2_slope, self.fc2_bias)
+
+    def pfl3_output(self):
+        """
+        Compute PFL3 neuron activity in the Left and Right PFL populations.
+        These differ in that PFL3 Right cells sample one column to the right
+        of the PFL3 Left neurons in the E-PGs. This is bio-inspired but not
+        anatomically correct.
+        """
+        pfl3L_inputs = np.dot(self.w_fc2_pfl3, self.fc2_rates)
+        pfl3L_inputs += np.dot(self.w_epg_pfl3L, self.epg_rates)
+        
+        pfl3R_inputs = np.dot(self.w_fc2_pfl3, self.fc2_rates)
+        pfl3R_inputs += np.dot(self.w_epg_pfl3R, self.epg_rates)
+
+        self.pfl3L_rates = sigmoid(pfl3L_inputs, self.pfl3_slope, self.pfl3_bias)
+        self.pfl3R_rates = sigmoid(pfl3R_inputs, self.pfl3_slope, self.pfl3_bias)
+
+    def motor_output(self):
+        """
+        Computes a steering command based on PFL3 left and right population 
+        activity imbalances.
+        """
+        return np.sum(self.pfl3L_rates) - np.sum(self.pfl3R_rates)
 
 
     def update_weights(self):
@@ -428,19 +510,55 @@ class RingModel():
         self.w_r1_epg = (self.w_r1_epg.T / weight_onto_epg).T
         self.w_r2_epg = (self.w_r2_epg.T / weight_onto_epg).T
 
-    def steering(self, goal_direction, neural=False):
-        if not neural:
+
+    def steering(self, goal_direction, bio=False):
+        """
+        Generates a left-right steering command which compares a goal direction
+        to the current heading stored in the E-PG population.
+
+        If bio=False, then the perp dot product will be used to determine the
+        correct steering command based on the E-PG population.
+
+        If bio=True, then a bio-inspired steering circuit will be used instead.
+        Note that this circuit is bio-inspired but not anatomical; it operates
+        on the same principle as the steering circuit described by Mussells 
+        Pires et al. (2023; biorxiv). See the Thesis for more information.
+
+        :param goal_direction: The goal direction we want in the E-PG population.
+        :param bio: Use the bio inspired circuit for steering
+        :return: a left-right steering command. It is up to the caller to
+                 determine the correct motor commands to issue to the robot.
+        """
+        if not bio:
             # Current EPG heading in [-np.pi, np.pi]
             current_theta = self.decode()[decodekeys.epg][0]
 
             # Signed error between current E-PG angle and desired
-            desired = [np.cos(goal_direction), np.sin(goal_direction)]
-            internal = [np.cos(current_theta), np.sin(current_theta)]
-            det = desired[0]*internal[1] - desired[1]*internal[0]
-            dot = desired[0]*internal[0] + desired[1]*internal[1]
-            error = np.arctan2(det,dot) # Error in Radians
-            
-            return -error
+            desired = np.array([np.cos(goal_direction), np.sin(goal_direction)])
+            internal = np.array([np.cos(current_theta), np.sin(current_theta)])
+            x_proj = internal[0]*desired[0] + internal[1]*desired[1]
+            y_proj = -internal[0]*desired[1] + internal[1]*desired[0]
+
+            # Gives positive counter clockwise angle (as per standard convention)
+            # of internal from desired. If this angle is positive, the corrective turn
+            # (clockwise) should be negative. 
+            error = np.arctan2(y_proj, x_proj)
+            print("{}:{}:{}".format(np.degrees(current_theta),
+                                    np.degrees(np.arctan2(desired[1], desired[0])),
+                                    np.degrees(error)))
+
+            # Store for logging/vis.
+            self.last_steering_output = error
+            return self.last_steering_output
+
+        # Bio-inspired version
+        # Compute FC2 activity for this goal angle
+        # Compute PFL3L and PFL3R activity for this goal and current EPG
+        # Then compute the motor output from the imbalance in PFL3 populations
+        fc2_output(goal_angle)
+        pfl3_output()
+        self.last_steering_output = motor_output()
+        return self.last_steering_output
 
     def randomise_weights(self):
         """
@@ -469,10 +587,16 @@ class RingModel():
                                                   self.epg_rates)
         ret[decodekeys.d7] = self.__decode_layer(self.epg_preferences,
                                                  self.d7_rates)
+        ret[decodekeys.fc2] = self.__decode_layer(self.fc2_preferences,
+                                                  self.fc2_rates)
+        ret[decodekeys.pfl3L] = self.__decode_layer(self.epg_preferences,
+                                                    self.pfl3L_rates)
+        ret[decodekeys.pfl3R] = self.__decode_layer(self.epg_preferences,
+                                                    self.pfl3R_rates)
         ret[decodekeys.pen] = self.__decode_layer(self.epg_preferences,
-                                           self.pen_rates[:8])
+                                                  self.pen_rates[:8])
         ret[decodekeys.peg] = self.__decode_layer(self.epg_preferences,
-                                           self.peg_rates[:8])
+                                                  self.peg_rates[:8])
 
         # R -> E-PG map decoding (to which directions do R neurons map)
         # R1s
@@ -508,6 +632,7 @@ class RingModel():
         :return: Unused
         """
         change = velocity
+        self.randomise_weights()
         for t in range(time):
             c1+=change
             c2+=change
@@ -517,7 +642,8 @@ class RingModel():
                               w1=w1,
                               w2=w2,
                               plasticity=False,
-                              initialisation=True
+                              initialisation=True,
+                              av_plasticity=True
             )
 
         return c1, c2 # Return cue positions at the end of initialisation

@@ -53,7 +53,7 @@ w_wind = 0.5
 yaw = 0
 total_displacement_vector = np.array([0,0])
 new_beetle = True
-recording_enabled = True
+recording_enabled = False
 orientation_mode = False
 bagfile = None
 
@@ -95,7 +95,7 @@ def wind_cue_callback(data):
     """
     global th_wind
     global w_wind
-    th_wind = np.degrees(data.theta)
+    th_wind = np.degrees(data.theta) + c2_end
     w_wind = 0.5 if data.contrast > 0 else 0
 
 
@@ -106,7 +106,7 @@ def intensity_cue_callback(data):
     """
     global th_intensity
     global w_intensiy
-    th_intensity = np.degrees(data.theta)
+    th_intensity = np.degrees(data.theta) + c1_end
     w_intensity = 0.5 if data.contrast > 0.1 else 0
 
 
@@ -123,6 +123,10 @@ def get_erm_status_as_msg():
     msg.d7 = erm.d7_rates
     msg.pen = erm.pen_rates
     msg.peg = erm.peg_rates
+    msg.fc2 = erm.fc2_rates
+    msg.pfl3L = erm.pfl3L_rates
+    msg.pfl3R = erm.pfl3R_rates
+    msg.steering = erm.last_steering_output
 
     n_r1 = erm.n_r1
     n_r2 = erm.n_r2
@@ -325,7 +329,7 @@ def node():
     # Goal direction w.r.t. E-PG preferences
     goal_direction = 0 # np.random.uniform(-np.pi, np.pi)
     distance_travelled = 0
-    arena_radius = 0.5
+    arena_radius = 2
     
     loop_hz = 10
     rosrate = rospy.Rate(loop_hz)
@@ -340,7 +344,7 @@ def node():
             # If this is a new beetle, randomise the weights 
             if new_beetle:
                 reset_model()
-                # goal_direction = np.random.uniform(-np.pi, np.pi)
+                goal_direction = np.random.uniform(-np.pi, np.pi)
                 print("New beetle")
                 new_beetle = False
                 if recording_enabled:
@@ -355,7 +359,7 @@ def node():
                 inner_angle = np.arccos(dot)
 
                 traverse += inner_angle
-                cmd_vel_service(0, 0.3, 0)
+                cmd_vel_service(0, 0.5, 0)
                 previous = yaw
 
                 # Update the ring model (see wrapper function)
@@ -386,10 +390,11 @@ def node():
                 pub.publish(msg)
     
                 steering = erm.steering(goal_direction)
-                linear = 0.2 if (steering < 4) and not orientation_mode else 0
+                steering = 1*steering
+                linear = 0.2 if (abs(steering) < 1) and not orientation_mode else 0
 
                 # Send movement command
-                cmd_vel_service(linear, 0.1*steering, 0)
+                cmd_vel_service(linear, steering, 0)
                 msg = get_erm_status_as_msg()
                 pub.publish(msg)
                       
@@ -399,6 +404,7 @@ def node():
 
                 # ROS docs say the x,y,z should be in m so the local displacement
                 # should be also. Want to go only for 35cm as with the beetles.
+
                 if magnitude >= arena_radius:
                     context = "stopped"
                     print("Exit complete")

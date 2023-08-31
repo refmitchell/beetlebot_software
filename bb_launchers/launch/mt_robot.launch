@@ -29,7 +29,7 @@
   <node
     name="erm_status"
     pkg="bb_graphics"
-    type="erm_status"
+    type="erm_w_steering"
   />
   <node
     name="cmd_vel_service"

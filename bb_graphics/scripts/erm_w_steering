@@ -1,0 +1,265 @@
+#!/usr/bin/python
+
+"""
+erm_w_steering
+
+This file starts a ROS subscriber on erm_status and animates the
+extended ring model activity alongside the plastic R -> EPG
+connections in real time. This is useful for diagnosing problems if
+the robot is not behaving as it's supposed to, and also makes for nice
+demonstrations. 
+
+This version provides the same outputs as erm_status
+but also includes the steering circuitry.
+
+The structure of this file is largely dictated by the requirements
+for matplotlib.animation.FuncAnimation. The only 'novel' element is
+the ROS subscriber which sets the underlying data.
+
+"""
+
+import rospy
+import numpy as np
+import matplotlib.animation as animation
+from matplotlib import pyplot as plt
+
+# Extended Ring Model status message
+from bb_util.msg import erm_status
+
+# Figure layout
+mosaic = [
+    ["r1_epg", "r1_epg", "r1", "r2"],
+    ["r1_epg", "r1_epg", "epg", "epg"],
+    ["r1_epg", "r1_epg", "d7", "d7"],
+    ["r2_epg", "r2_epg", "peg", "peg"],
+    ["r2_epg", "r2_epg", "pen", "pen"],
+    ["r2_epg", "r2_epg", "fc2", "fc2"],
+    ["steering", "steering", "pfl3L", "pfl3R"]
+]
+
+# Subplot mosaic requires Matplotlib v3.6; code was written for 3.7.
+fig, ax_dict = plt.subplot_mosaic(mosaic, figsize=(8, 8))
+
+# Turn off blank space axis
+# ax_dict["blank"].axis('off')
+
+# Show flat array for R->EPG mappings
+init_image = np.ones((8,8))
+
+#
+# Set up artist list for animation.
+#
+r1_epg_artist = ax_dict["r1_epg"].imshow(init_image,animated=True, vmin=0, vmax=0.25)
+r2_epg_artist = ax_dict["r2_epg"].imshow(init_image,animated=True, vmin=0, vmax=0.25)
+r1_artist, = ax_dict["r1"].plot([],[], 'tab:red')
+r2_artist, = ax_dict["r2"].plot([],[], 'tab:blue')
+epg_artist, = ax_dict["epg"].plot([],[], 'tab:purple')
+peg_artist, = ax_dict["peg"].plot([],[], 'hotpink')
+pen_artist, = ax_dict["pen"].plot([],[], 'tab:green')
+d7_artist, = ax_dict["d7"].plot([],[], 'darkorange')
+fc2_artist, = ax_dict["fc2"].plot([],[], 'darkblue')
+pfl3L_artist, = ax_dict["pfl3L"].plot([],[],'indigo')
+pfl3R_artist, = ax_dict["pfl3R"].plot([],[],'darkmagenta')
+steering_artist, = ax_dict["steering"].plot([],[], color='black', marker='o', ms=10)
+animation_artists = [r1_epg_artist,
+                     r2_epg_artist,
+                     r1_artist,
+                     r2_artist,
+                     epg_artist,
+                     d7_artist,
+                     pen_artist,
+                     peg_artist,
+                     fc2_artist,
+                     pfl3L_artist, 
+                     pfl3R_artist, 
+                     steering_artist
+]
+
+fig.tight_layout()
+
+#
+# Set up initial data
+# 
+w_r1_epg = init_image
+w_r2_epg = init_image
+r1_rates = []
+r2_rates = []
+epg_rates = []
+d7_rates = []
+pen_rates = []
+peg_rates = []
+fc2_rates = []
+pfl3L_rates = []
+pfl3R_rates = []
+steering_x = 0
+
+n_r1 = 8
+n_r2 = 8
+n_epg = 8
+
+# Listen on erm_status topic and update underlying data structures
+def ros_callback(msg):
+    """
+    Update local copies of neuron rates and R->EPG mappings.
+    :param data: The ROS message
+    """
+    global w_r1_epg
+    global w_r2_epg
+    global n_r1
+    global n_r2
+    global n_epg
+    global r1_rates
+    global r2_rates
+    global epg_rates
+    global d7_rates
+    global pen_rates
+    global peg_rates
+    global fc2_rates
+    global pfl3L_rates
+    global pfl3R_rates
+    global steering_x
+
+    n_r1 = msg.n_r1
+    n_r2 = msg.n_r2
+    n_epg = msg.n_epg
+
+    w_r1_epg = np.reshape(msg.r1_epg, (n_r1,n_epg))
+    w_r2_epg = np.reshape(msg.r2_epg, (n_r2,n_epg))
+
+    r1_rates = msg.r1
+    r2_rates = msg.r2
+    epg_rates = msg.epg
+    d7_rates = msg.d7
+    pen_rates = msg.pen
+    peg_rates = msg.peg
+    fc2_rates = msg.fc2
+    pfl3L_rates = msg.pfl3L
+    pfl3R_rates = msg.pfl3R
+    steering_x = msg.steering
+
+def animation_init():
+    """
+    Initialise the plot 'frame' to be used for the animation.
+    (e.g. set titles and axis information)
+    :return: A list of artists to be used by FuncAnimation.
+    """    
+    global n_r1
+    global n_r2
+    global n_epg
+
+    ax_dict["r1_epg"].set_xlim(0,n_r1 - 1)
+    ax_dict["r1_epg"].set_ylim(0,n_epg - 1)
+    ax_dict["r1_epg"].set_title(r"R1 $\rightarrow$ E-PG")
+
+    ax_dict["r2_epg"].set_xlim(0,n_r2 - 1)
+    ax_dict["r2_epg"].set_ylim(0,n_epg - 1)
+    ax_dict["r2_epg"].set_title(r"R2 $\rightarrow$ E-PG")
+
+    ax_dict["r1"].set_xlim(0, n_r1 - 1)
+    ax_dict["r1"].set_ylim(0, 1)
+    ax_dict["r1"].set_title("R1 population")
+
+    ax_dict["r2"].set_xlim(0, n_r2 - 1)
+    ax_dict["r2"].set_ylim(0, 1)
+    ax_dict["r2"].set_title("R2 population")
+
+    ax_dict["epg"].set_xlim(0, n_epg - 1)
+    ax_dict["epg"].set_ylim(0, 1)
+    ax_dict["epg"].set_title("EPG population")
+
+    ax_dict["d7"].set_xlim(0, 7)
+    ax_dict["d7"].set_ylim(0, 1)
+    ax_dict["d7"].set_title("D7 population")
+
+    ax_dict["pen"].set_xlim(0, 15)
+    ax_dict["pen"].set_ylim(0, 1)
+    ax_dict["pen"].set_title("PEN population")
+
+    ax_dict["peg"].set_xlim(0, 15)
+    ax_dict["peg"].set_ylim(0, 1)
+    ax_dict["peg"].set_title("PEG population")
+
+    ax_dict["fc2"].set_xlim(0, 7)
+    ax_dict["fc2"].set_ylim(0, 1)
+    ax_dict["fc2"].set_title("FC2 population")
+
+    ax_dict["pfl3L"].set_xlim(0, 7)
+    ax_dict["pfl3L"].set_ylim(0, 1)
+    ax_dict["pfl3L"].set_title("PFL3L population")
+
+    ax_dict["pfl3R"].set_xlim(0, 7)
+    ax_dict["pfl3R"].set_ylim(0, 1)
+    ax_dict["pfl3R"].set_title("PFL3R population")
+
+    ax_dict["steering"].set_xlim(-5, 5)
+    ax_dict["steering"].set_ylim(-1,1)
+    ax_dict["steering"].set_yticks([])
+    ax_dict["steering"].set_title("Steering")    
+
+    fig.tight_layout()
+
+    return animation_artists
+
+def animation_callback(frames):
+    """
+    Animation callback (update underlying data).
+    :param frames: Next frame parameter.
+    :return: A list of artists to be updated by FuncAnimation
+
+    Note that the 'frames' parameter is not used directly. It is
+    required for the function argument for FuncAnimation.
+    """    
+    global w_r1_epg
+    global w_r2_epg
+    global r1_rates
+    global r2_rates
+    global epg_rates
+    global d7_rates
+    global pen_rates
+    global peg_rates
+    global fc2_rates
+    global pfl3L_rates
+    global pfl3R_rates
+    global steering_x
+    global animation_artists
+
+    r1_xdata = range(len(r1_rates))
+    r2_xdata = range(len(r2_rates))
+    epg_xdata = range(len(epg_rates))
+    d7_xdata = range(len(d7_rates))
+    pen_xdata = range(len(pen_rates))
+    peg_xdata = range(len(peg_rates))
+    fc2_xdata = range(len(fc2_rates))
+    pfl3L_xdata = range(len(pfl3L_rates))
+    pfl3R_xdata = range(len(pfl3R_rates))
+
+    animation_artists[0].set_data(w_r1_epg)
+    animation_artists[1].set_data(w_r2_epg)
+    animation_artists[2].set_data(r1_xdata,r1_rates)
+    animation_artists[3].set_data(r2_xdata,r2_rates)
+    animation_artists[4].set_data(epg_xdata,epg_rates)
+    animation_artists[5].set_data(d7_xdata,d7_rates)
+    animation_artists[6].set_data(pen_xdata,pen_rates)
+    animation_artists[7].set_data(peg_xdata,peg_rates)
+    animation_artists[8].set_data(fc2_xdata,fc2_rates)
+    animation_artists[9].set_data(pfl3L_xdata,pfl3L_rates)
+    animation_artists[10].set_data(pfl3R_xdata,pfl3R_rates)
+    animation_artists[11].set_data(steering_x, 0)
+    
+
+    return animation_artists
+
+if __name__ == "__main__":
+    # Init ROS node and subscriber
+    rospy.init_node('erm_visualisation')
+    rospy.Subscriber('erm_status', erm_status, ros_callback)
+
+    # Set up animation (see matplotlib docs for FuncAnimation)
+    layer_ani = animation.FuncAnimation(fig,
+                                        animation_callback,
+                                        init_func=animation_init,
+                                        blit=True,
+                                        interval=10)
+
+    plt.show() # Show the plot window
+    rospy.spin() # Start ROS main loop

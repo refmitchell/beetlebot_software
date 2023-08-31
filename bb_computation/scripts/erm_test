@@ -16,8 +16,9 @@ from rospy.numpy_msg import numpy_msg
 use_efference = True
 
 erm = RingModel()
+#erm.randomise_weights()
 c1_end, c2_end = erm.initialise()
-print(erm.epg_rates)
+
 
 # Globals
 angular_velocity = 0
@@ -40,14 +41,14 @@ def efference_av_callback(data):
 def wind_cue_callback(data):
     global th_wind
     global w_wind
-    th_wind = np.degrees(data.theta)
+    th_wind = np.degrees(data.theta)# + c2_end
     w_wind = 0.5 if data.contrast > 0 else 0
 
 
 def intensity_cue_callback(data):
     global th_intensity
     global w_intensiy
-    th_intensity = np.degrees(data.theta)
+    th_intensity = np.degrees(data.theta)# + c1_end
     w_intensity = 0.5 if data.contrast > 0.1 else 0
 
 
@@ -112,6 +113,8 @@ def node():
     loop_hz = 10
     rosrate = rospy.Rate(loop_hz)
 
+
+#    erm.randomise_weights()
     while not rospy.is_shutdown():
         # Convert Rad/s to Deg/s then scale for loop rate.
         av = -(np.degrees(angular_velocity)) / loop_hz
