@@ -62,7 +62,7 @@ class RingModel():
 
         # PB out
         self.scalar_peg_epg = params.get(rmkeys.w_peg_epg, 0.5) # P-EG -> E-PG
-        self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.4) # P-EN -> E-PG
+        self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.7) # P-EN -> E-PG
 
         # SM
         self.scalar_sm_pen = params.get(rmkeys.w_sm_pen, 1) # SM -> P-EN
@@ -214,7 +214,7 @@ class RingModel():
         self.last_steering_output = 0
 
         # AV regulated plasticity additional parameters
-        self.sm_fixed_point = 24 # 24 # Decrease increases learning rate
+        self.sm_fixed_point = 30 # 24 # Decrease increases learning rate
         self.av_learning_regulation_constant = 0.2 # Increase increases learning rate
         self.r_inh_slope = 5/6 # Increase increases R inhibition (works for scalar_pen_epg = 2)
         self.max_r_inh = 0.2 # Decrease increases maximum R inhibition
