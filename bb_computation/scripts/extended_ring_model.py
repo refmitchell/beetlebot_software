@@ -213,10 +213,11 @@ class RingModel():
         # Last steering output for logging/visualisation.
         self.last_steering_output = 0
 
-        # The maximum rotation speed handlable by the network
-        self.sm_fixed_point = 24
-        self.av_learning_regulation_constant = 0.2
-        self.r_inh_constant = 0.8
+        # AV regulated plasticity additional parameters
+        self.sm_fixed_point = 24 # 24 # Decrease increases learning rate
+        self.av_learning_regulation_constant = 0.2 # Increase increases learning rate
+        self.r_inh_slope = 5/6 # Increase increases R inhibition (works for scalar_pen_epg = 2)
+        self.max_r_inh = 0.2 # Decrease increases maximum R inhibition
 
 
     def reset_rates(self):
@@ -404,8 +405,11 @@ class RingModel():
             r_inputs = self.r_inhibition*r_inputs
 
         if av_inhibition and not inhibit_rs:
+            # R inhibition tied to angular velocity.
             av_r_inhibition = 1 - np.clip(
-                (self.r_inh_constant/self.sm_fixed_point)*abs(av), 0, self.r_inh_constant)
+                (self.r_inh_slope)*abs(av), self.max_r_inh, 1)
+#            av_r_inhibition = 0 if av > 0 else 1
+#            av_r_inhibition = 1
             r_inputs = av_r_inhibition*r_inputs
 
 
@@ -417,7 +421,6 @@ class RingModel():
 
         if self.show_inputs:
             print("EPGI: {}".format(total_input.reshape(8,)))
-
 
 
 
@@ -723,7 +726,9 @@ def sigmoid(x, slope, bias):
     :param slope: The steepness of the curve
     :param bias: A left/right shift of the curve
     """
-    return 1 / (1 + np.exp(-(x * slope - bias)))
+    gaussian_noise = np.random.normal(0, 0.01, size=x.shape)
+    activated_input = 1 / (1 + np.exp(-(x * slope - bias)))
+    return activated_input + gaussian_noise
 
 
 
