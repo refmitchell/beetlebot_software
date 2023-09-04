@@ -57,6 +57,7 @@ recording_enabled = False
 orientation_mode = False
 bagfile = None
 
+odom_info_received = False
 
 def efference_av_callback(data):
     """
@@ -75,6 +76,7 @@ def odom_callback(msg):
     """
     global yaw
     global total_displacement_vector
+    global odom_info_received
     x = msg.pose.pose.position.x
     y = msg.pose.pose.position.y
     orientation = msg.pose.pose.orientation
@@ -86,6 +88,7 @@ def odom_callback(msg):
     ]
     _, _, yaw = euler_from_quaternion(iterable_orientation)
     total_displacement_vector = np.array([x,y])
+    odom_info_received = True
     
 
 def wind_cue_callback(data):
@@ -230,7 +233,7 @@ def model_update_wrapper(loop_hz):
                      av,
                      w1=w_intensity/(w_intensity + w_wind),
                      w2=w_wind/(w_intensity+w_wind),
-                     av_plasticity=True
+                     av_plasticity=True,
     )
 
     model_state_msg = get_erm_status_as_msg()
@@ -313,7 +316,8 @@ def node():
     global yaw
     global total_displacement_vector
     global new_beetle
-
+    global odom_info_received
+    
     rospy.init_node("erm_node")
 
     # Rospy subscribers are implicitly started in their own threads
@@ -329,49 +333,77 @@ def node():
     # Goal direction w.r.t. E-PG preferences
     goal_direction = 0 # np.random.uniform(-np.pi, np.pi)
     distance_travelled = 0
-    arena_radius = 2
+    arena_radius = 10
     
-    loop_hz = 10
+    loop_hz = 5
     rosrate = rospy.Rate(loop_hz)
 
     context = "stopped"
 
     while not rospy.is_shutdown():
         if context == "dance" or context == "just_dance":
+            # Wait until we have new odometry information
+            while not odom_info_received:
+                print("waiting for odom")
+                rosrate.sleep()
+
             traverse = 0 # Total distance covered.
-            previous = yaw
+            y_traverse=0
 
             # If this is a new beetle, randomise the weights 
             if new_beetle:
                 reset_model()
                 goal_direction = np.random.uniform(-np.pi, np.pi)
-                print("New beetle")
+                print("New beetle, internal goal {} degrees".format(np.degrees(goal_direction)))
                 new_beetle = False
                 if recording_enabled:
                     new_rosbag() # Open new rosbag file
 
+            # Update ring model and take initial position
+            msg = model_update_wrapper(loop_hz)
+            pub.publish(msg)
+
+            previous_epg = erm.decode()["epg"][0]
+            previous = yaw
+                    
             print("Dancing...")
+
             while True:
-                current_vec = np.array([np.cos(yaw), np.sin(yaw)])
-                previous_vec = np.array([np.cos(previous), np.sin(previous)])
-        
-                dot = np.clip(-1,1,np.dot(current_vec, previous_vec))
-                inner_angle = np.arccos(dot)
-
-                traverse += inner_angle
-                cmd_vel_service(0, 0.5, 0)
-                previous = yaw
-
-                # Update the ring model (see wrapper function)
-                msg = model_update_wrapper(loop_hz)
-                pub.publish(msg)
-                
                 # Loop end condition, done here so as to avoid
                 # sleeping for 10ms before checking the condition at
                 # the start of the loop.
                 if traverse >= 2*np.pi:
                     context = "orientate" if context == "dance" else "stopped"
                     break
+
+                current = yaw
+                current_epg = erm.decode()["epg"][0] # Read current EPG angle
+    
+                current_vec = np.array([np.cos(current), np.sin(current)])
+                previous_vec = np.array([np.cos(previous), np.sin(previous)])
+                dot = np.clip(-1,1,np.dot(current_vec, previous_vec))
+                inner_angle = np.arccos(dot)
+                y_traverse += inner_angle
+
+                previous_vec = np.array([np.cos(previous_epg), np.sin(previous_epg)])
+                current_vec = np.array([np.cos(current_epg), np.sin(current_epg)])
+                x_proj = current_vec[0]*previous_vec[0] + current_vec[1]*previous_vec[1]
+                y_proj = -current_vec[0]*previous_vec[1] + current_vec[1]*previous_vec[0]
+                signed_angular_change = -np.arctan2(y_proj, x_proj)
+
+                # Work out amount traversed since previous reading
+                traverse += signed_angular_change
+                print("Y, E: {},{}".format(y_traverse, traverse))
+
+                cmd_vel_service(0, 0.2, 0)
+                previous_epg = current_epg
+                previous = current
+
+                # Update the ring model (see wrapper function)
+                msg = model_update_wrapper(loop_hz)
+                pub.publish(msg)
+                
+
 
                 rosrate.sleep()
 
@@ -388,10 +420,19 @@ def node():
                 # Update model and generate steering command
                 msg = model_update_wrapper(loop_hz)
                 pub.publish(msg)
-    
-                steering = erm.steering(goal_direction)
-                steering = 1*steering
-                linear = 0.2 if (abs(steering) < 1) and not orientation_mode else 0
+                bio=True
+                steering = erm.steering(goal_direction, bio=bio)
+
+                if bio:
+                    # Steering circuit corrections are minute
+                    steering = 10*steering
+                    linear = 0.2 if (abs(steering) < 0.05) and not orientation_mode else 0
+                else:
+                    steering = 1*steering
+                    linear = 0.2 if (abs(steering) < 0.2) and not orientation_mode else 0
+                                
+
+                print("{}, {}".format(yaw,steering))
 
                 # Send movement command
                 cmd_vel_service(linear, steering, 0)
@@ -427,6 +468,7 @@ def node():
             # context == "stopped", wait for input
             print_instructions()            
             context = process_input(getch.getch())
+            odom_info_received = False
 
         rosrate.sleep()
 

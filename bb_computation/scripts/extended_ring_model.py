@@ -53,7 +53,7 @@ class RingModel():
         self.scalar_epg_peg = params.get(rmkeys.w_epg_peg, 1.2) # E-PG -> P-EG
         self.scalar_epg_pen = params.get(rmkeys.w_epg_pen, 0.8)#0.7) # E-PG -> P-EN
         self.scalar_epg_d7 = params.get(rmkeys.w_epg_d7, 0.5) # E-PG -> D7
-        self.scalar_epg_pfl3 = params.get(rmkeys.w_epg_pfl3, 1) # E-PG -> PFL3
+        self.scalar_epg_pfl3 = params.get(rmkeys.w_epg_pfl3, 0.2) # E-PG -> PFL3
 
         # D7 out
         self.scalar_d7_peg = params.get(rmkeys.w_d7_peg, -0.3) # D7 -> P-EG
@@ -83,7 +83,7 @@ class RingModel():
         self.pen_slope = params.get(rmkeys.pen_slope, 4) # P-ENs
         self.pen_bias = params.get(rmkeys.pen_bias, 5)
         self.pfl3_slope = params.get(rmkeys.pfl3_slope, 4) # PFL3s
-        self.pfl3_bias = params.get(rmkeys.pfl3_bias, 4)
+        self.pfl3_bias = params.get(rmkeys.pfl3_bias, 3)
         self.fc2_slope = params.get(rmkeys.fc2_bias, 4) # FC2s
         self.fc2_bias = params.get(rmkeys.fc2_slope, 1)
 
@@ -214,10 +214,10 @@ class RingModel():
         self.last_steering_output = 0
 
         # AV regulated plasticity additional parameters
-        self.sm_fixed_point = 30 # 24 # Decrease increases learning rate
-        self.av_learning_regulation_constant = 0.2 # Increase increases learning rate
-        self.r_inh_slope = 5/6 # Increase increases R inhibition (works for scalar_pen_epg = 2)
-        self.max_r_inh = 0.2 # Decrease increases maximum R inhibition
+        self.sm_fixed_point = 31 # 24 # Decrease increases learning rate
+        self.av_learning_regulation_constant = 0.3 # Increase increases learning rate
+        self.r_inh_slope = 5/6 # Increase increases R inhibition prop. to angular velocity
+        self.max_r_inh = 0.2 # Decrease increases maximum R inhibition (prop. to AV)
 
 
     def reset_rates(self):
@@ -453,7 +453,7 @@ class RingModel():
         :param goal_direction: The desired goal direction
         """
         fc2_inputs = [np.cos(goal_direction - x) for x in self.fc2_preferences]
-        fc2_inputs = np.array(fc2_inputs)
+        fc2_inputs = np.array(fc2_inputs).reshape((self.n_fc2,1))
         self.fc2_rates = sigmoid(fc2_inputs, self.fc2_slope, self.fc2_bias)
 
     def pfl3_output(self):
@@ -558,9 +558,9 @@ class RingModel():
         # Compute FC2 activity for this goal angle
         # Compute PFL3L and PFL3R activity for this goal and current EPG
         # Then compute the motor output from the imbalance in PFL3 populations
-        fc2_output(goal_angle)
-        pfl3_output()
-        self.last_steering_output = motor_output()
+        self.fc2_output(goal_direction)
+        self.pfl3_output()
+        self.last_steering_output = self.motor_output()
         return self.last_steering_output
 
     def randomise_weights(self):
@@ -726,7 +726,7 @@ def sigmoid(x, slope, bias):
     :param slope: The steepness of the curve
     :param bias: A left/right shift of the curve
     """
-    gaussian_noise = np.random.normal(0, 0.01, size=x.shape)
+    gaussian_noise = np.random.normal(0, 0.0001, size=x.shape)
     activated_input = 1 / (1 + np.exp(-(x * slope - bias)))
     return activated_input + gaussian_noise
 
