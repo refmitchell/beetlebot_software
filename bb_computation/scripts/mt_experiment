@@ -369,7 +369,7 @@ def node():
     # Goal direction w.r.t. E-PG preferences
     goal_direction = 0 # np.random.uniform(-np.pi, np.pi)
     distance_travelled = 0
-    arena_radius = 2
+    arena_radius = 5
     
     loop_hz = 5
     rosrate = rospy.Rate(loop_hz)
@@ -451,24 +451,32 @@ def node():
             previous_displacement = total_displacement_vector
             local_displacement_vector = np.array([0.0,0.0])
             start_time = time.time()
+            last_error = 0
+            error_i = 0
             print("Moving...")
             while True:
                 # Update model and generate steering command
                 msg = model_update_wrapper(loop_hz)
                 pub.publish(msg)
                 bio=True
-                imbalance = erm.steering(goal_direction, bio=bio)
+                error = erm.steering(goal_direction, bio=bio)
 
                 if bio:
                     # Steering circuit corrections are minute
-                    steering = 1*imbalance
-                    linear = 0.2 if (abs(imbalance) < 0.05) and not orientation_mode else 0
+                    error_p = 3*error
+                    error_i += 0.02*error
+                    error_d = 0.1*(error - last_error)
+                    steering = error_p + error_d + error_i 
+
+                    linear = 0.2 if (abs(steering) < 0.02) and not orientation_mode else 0
+                    #linear = np.clip(-4*steering + 0.2, 0, 0.2)
                 else:
-                    steering = 1*imabalance
+                    steering = 1*imbalance
                     linear = 0.2 if (abs(steering) < 0.2) and not orientation_mode else 0
                                 
 
-                print("{}, {}".format(yaw,steering))
+                print("{}, {}, E: {}".format(yaw,steering,error))
+                last_error = error
 
                 # Send movement command
                 cmd_vel_service(linear, steering, 0)
