@@ -179,9 +179,9 @@ def print_instructions():
     print("r -> toggle recording status ({})".format(rec_str))
     print("o -> toggle orientation mode ({}): the robot will just turn to the goal direction"
           .format(orientation_str))
-    print("l -> toggle light input ({}): if enabled, intensity cues are ignored"
+    print("l -> toggle light input ({}): if disabled, light cues are ignored"
           .format(intensity_input_str))
-    print("w -> toggle wind input ({}): if enabled, wind cues are"
+    print("w -> toggle wind input ({}): if disabled, wind cues are ignored"
           .format(wind_input_str))
     print("=================================================================")
 
