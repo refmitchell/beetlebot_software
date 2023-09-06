@@ -62,7 +62,7 @@ class RingModel():
 
         # PB out
         self.scalar_peg_epg = params.get(rmkeys.w_peg_epg, 0.5) # P-EG -> E-PG
-        self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.7) # P-EN -> E-PG
+        self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.4) # P-EN -> E-PG
 
         # SM
         self.scalar_sm_pen = params.get(rmkeys.w_sm_pen, 1) # SM -> P-EN
@@ -214,7 +214,7 @@ class RingModel():
         self.last_steering_output = 0
 
         # AV regulated plasticity additional parameters
-        self.sm_fixed_point = 31 # 24 # Decrease increases learning rate
+        self.sm_fixed_point = 27 # 24 # Decrease increases learning rate
         self.av_learning_regulation_constant = 0.3 # Increase increases learning rate
         self.r_inh_slope = 5/6 # Increase increases R inhibition prop. to angular velocity
         self.max_r_inh = 0.2 # Decrease increases maximum R inhibition (prop. to AV)
@@ -408,8 +408,7 @@ class RingModel():
             # R inhibition tied to angular velocity.
             av_r_inhibition = 1 - np.clip(
                 (self.r_inh_slope)*abs(av), self.max_r_inh, 1)
-#            av_r_inhibition = 0 if av > 0 else 1
-#            av_r_inhibition = 1
+
             r_inputs = av_r_inhibition*r_inputs
 
 
@@ -477,7 +476,8 @@ class RingModel():
         Computes a steering command based on PFL3 left and right population 
         activity imbalances.
         """
-        return np.sum(self.pfl3L_rates) - np.sum(self.pfl3R_rates)
+        return np.sum(self.pfl3R_rates) - np.sum(self.pfl3L_rates)
+#        return np.sum(self.pfl3L_rates) - np.sum(self.pfl3R_rates)
 
 
     def update_weights(self):

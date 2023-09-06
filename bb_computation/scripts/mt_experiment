@@ -57,6 +57,11 @@ recording_enabled = False
 orientation_mode = False
 bagfile = None
 
+# Toggle cue inputs in case contrast thresholding is
+# unreliable.
+intensity_input = True
+wind_input = True
+
 odom_info_received = False
 
 def efference_av_callback(data):
@@ -108,7 +113,7 @@ def intensity_cue_callback(data):
     :param data: ROS mesage [bb_util/cue_msg]
     """
     global th_intensity
-    global w_intensiy
+    global w_intensity
     th_intensity = np.degrees(data.theta) + c1_end
     w_intensity = 0.5 if data.contrast > 0.1 else 0
 
@@ -151,8 +156,13 @@ def print_instructions():
     """
     global recording_enabled
     global orientation_mode
+    global intensity_input
+    global wind_input
+    
     rec_str = "enabled" if recording_enabled else "disabled"
     orientation_str = "enabled" if orientation_mode else "disabled"
+    intensity_input_str =  "enabled" if intensity_input else "disabled"
+    wind_input_str =  "enabled" if wind_input else "disabled"
     
     print("=================================================================")
     print("This node generates scripted behaviour for the BeetleBot modality")
@@ -169,6 +179,10 @@ def print_instructions():
     print("r -> toggle recording status ({})".format(rec_str))
     print("o -> toggle orientation mode ({}): the robot will just turn to the goal direction"
           .format(orientation_str))
+    print("l -> toggle light input ({}): if enabled, intensity cues are ignored"
+          .format(intensity_input_str))
+    print("w -> toggle wind input ({}): if enabled, wind cues are"
+          .format(wind_input_str))
     print("=================================================================")
 
 def process_input(inchar):
@@ -180,6 +194,8 @@ def process_input(inchar):
     global new_beetle
     global recording_enabled
     global orientation_mode
+    global intensity_input
+    global wind_input         
 
     inchar = str(inchar)
     if inchar == "g":
@@ -199,6 +215,12 @@ def process_input(inchar):
     elif inchar == "o":
         orientation_mode = not orientation_mode
         return "stopped"
+    elif inchar == "l":
+        intensity_input = not intensity_input
+        return "stopped"
+    elif inchar == "w":
+        wind_input = not wind_input
+        return "stopped"          
     elif inchar == "e":
         print("Exiting...")
         close_rosbag()
@@ -223,16 +245,30 @@ def model_update_wrapper(loop_hz):
     global th_intensity
     global erm
     global bagfile
+    global intensity_input
+    global wind_input
     
     # Convert Rad/s to Deg/s then scale for loop rate.
     av = -(np.degrees(angular_velocity)) / loop_hz
-    w_intensity = w_intensity / (w_intensity + w_wind)
-    w_wind = 1 - w_intensity
+
+    # Create a local intensity weight variable which is set only if
+    # lights_out_mode is disabled. Otherwise intensity should be given
+    # zero weight.
+    lw_intensity = w_intensity if intensity_input else 0
+    lw_wind = w_wind if wind_input else 0          
+
+    try:
+        lw_intensity = lw_intensity / (lw_intensity + lw_wind)
+        lw_wind = 1 - lw_intensity
+    except ZeroDivisionError as z:
+        lw_intensity = 0
+        lw_wind = 0 
+
     erm.update_state(th_intensity,
                      th_wind,
                      av,
-                     w1=w_intensity/(w_intensity + w_wind),
-                     w2=w_wind/(w_intensity+w_wind),
+                     w1=lw_intensity,
+                     w2=lw_wind,
                      av_plasticity=True,
     )
 
@@ -333,7 +369,7 @@ def node():
     # Goal direction w.r.t. E-PG preferences
     goal_direction = 0 # np.random.uniform(-np.pi, np.pi)
     distance_travelled = 0
-    arena_radius = 10
+    arena_radius = 2
     
     loop_hz = 5
     rosrate = rospy.Rate(loop_hz)

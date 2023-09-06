@@ -1,0 +1,18 @@
+<launch>
+  <include file="$(find turtlebot3_fake)/launch/turtlebot3_fake.launch"/>
+  <node
+  name="yaw_node"
+  pkg="bb_util"
+  type="yaw"
+  />
+  <node
+    name="erm_status"
+    pkg="bb_graphics"
+    type="erm_w_steering"
+  />
+  <node
+    name="cmd_vel_service"
+    pkg="bb_locomotion"
+    type="cmd_vel_service"
+  />
+</launch>
