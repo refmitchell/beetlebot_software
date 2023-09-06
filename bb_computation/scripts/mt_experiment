@@ -384,7 +384,7 @@ def node():
                 rosrate.sleep()
 
             traverse = 0 # Total distance covered.
-            y_traverse=0
+            y_traverse = 0
 
             # If this is a new beetle, randomise the weights 
             if new_beetle:
@@ -457,14 +457,14 @@ def node():
                 msg = model_update_wrapper(loop_hz)
                 pub.publish(msg)
                 bio=True
-                steering = erm.steering(goal_direction, bio=bio)
+                imbalance = erm.steering(goal_direction, bio=bio)
 
                 if bio:
                     # Steering circuit corrections are minute
-                    steering = 10*steering
-                    linear = 0.2 if (abs(steering) < 0.05) and not orientation_mode else 0
+                    steering = 1*imbalance
+                    linear = 0.2 if (abs(imbalance) < 0.05) and not orientation_mode else 0
                 else:
-                    steering = 1*steering
+                    steering = 1*imabalance
                     linear = 0.2 if (abs(steering) < 0.2) and not orientation_mode else 0
                                 
 

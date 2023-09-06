@@ -476,8 +476,8 @@ class RingModel():
         Computes a steering command based on PFL3 left and right population 
         activity imbalances.
         """
-        #return np.sum(self.pfl3R_rates) - np.sum(self.pfl3L_rates)
-        return np.sum(self.pfl3L_rates) - np.sum(self.pfl3R_rates)
+        return np.sum(self.pfl3R_rates) - np.sum(self.pfl3L_rates)
+        #return np.sum(self.pfl3L_rates) - np.sum(self.pfl3R_rates)
 
 
     def update_weights(self):
