@@ -6,11 +6,6 @@
     type="yaw"
   />
   <node
-    name="erm_test"
-    pkg="bb_computation"
-    type="erm_test"
-  />
-  <node
     name="erm_status"
     pkg="bb_graphics"
     type="erm_status"

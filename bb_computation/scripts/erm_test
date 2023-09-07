@@ -17,7 +17,8 @@ use_efference = True
 
 erm = RingModel()
 #erm.randomise_weights()
-c1_end, c2_end = erm.initialise()
+# erm.randomise_weights()
+erm.initialise(w1=0, w2=0, velocity=0)
 
 
 # Globals
@@ -111,7 +112,7 @@ def node():
 
     pub = rospy.Publisher("erm_status", numpy_msg(erm_status), queue_size=10)
 
-    loop_hz = 10
+    loop_hz = 5
     rosrate = rospy.Rate(loop_hz)
 
 
@@ -120,15 +121,18 @@ def node():
         # Convert Rad/s to Deg/s then scale for loop rate.
         av = -(np.degrees(angular_velocity)) / loop_hz
 
-
-        # print(w_intensity)
-        # w_intensity = w_intensity / (w_intensity + w_wind)
-        # w_wind = 1 - w_intensity
+        try:
+            lw_intensity = w_intensity / (w_intensity + w_wind)
+            lw_wind = 1 - lw_intensity
+        except ZeroDivisionError as z:
+            lw_intensity = 0
+            lw_wind = 0
+        
         erm.update_state(th_intensity,
                          th_wind,
                          av,
-                         w1=w_intensity,
-                         w2=w_wind,
+                         w1=lw_intensity,
+                         w2=lw_wind,
                          av_plasticity=True
         )
 

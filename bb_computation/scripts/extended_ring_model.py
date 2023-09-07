@@ -61,7 +61,7 @@ class RingModel():
         self.scalar_d7_d7 = params.get(rmkeys.w_d7_d7, 0.1) # 0.1# D7 -> D7
 
         # PB out
-        self.scalar_peg_epg = params.get(rmkeys.w_peg_epg, 0.5) # P-EG -> E-PG
+        self.scalar_peg_epg = params.get(rmkeys.w_peg_epg, 0.55) # 0.5 # P-EG -> E-PG
         self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.7) # P-EN -> E-PG
 
         # SM
@@ -214,10 +214,9 @@ class RingModel():
         self.last_steering_output = 0
 
         # AV regulated plasticity additional parameters
-        self.sm_fixed_point = 28 # 24 # Decrease increases learning rate
-        self.av_learning_regulation_constant = 0.3 # Increase increases learning rate
-        self.r_inh_slope = 5/6 # Increase increases R inhibition prop. to angular velocity
-        self.max_r_inh = 0.2 # Decrease increases maximum R inhibition (prop. to AV)
+        self.sm_fixed_point = 24 # 24 # Decrease increases learning rate
+        self.av_learning_regulation_constant = 0.2 # Increase increases learning rate
+        self.r_inh_slope = 1/6 # Increase increases R inhibition prop. to angular velocity
 
 
     def reset_rates(self):
@@ -407,7 +406,8 @@ class RingModel():
         if av_inhibition and not inhibit_rs:
             # R inhibition tied to angular velocity.
             av_r_inhibition = 1 - np.clip(
-                (self.r_inh_slope)*abs(av), self.max_r_inh, 1)
+                (self.r_inh_slope)*abs(av), 0, 0.8)#  0.8)
+#            print(av_r_inhibition)
 
             r_inputs = av_r_inhibition*r_inputs
 
