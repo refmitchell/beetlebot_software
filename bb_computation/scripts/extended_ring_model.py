@@ -62,7 +62,7 @@ class RingModel():
 
         # PB out
         self.scalar_peg_epg = params.get(rmkeys.w_peg_epg, 0.5) # P-EG -> E-PG
-        self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.4) # P-EN -> E-PG
+        self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.7) # P-EN -> E-PG
 
         # SM
         self.scalar_sm_pen = params.get(rmkeys.w_sm_pen, 1) # SM -> P-EN
@@ -214,7 +214,7 @@ class RingModel():
         self.last_steering_output = 0
 
         # AV regulated plasticity additional parameters
-        self.sm_fixed_point = 27.75 # 24 # Decrease increases learning rate
+        self.sm_fixed_point = 28 # 24 # Decrease increases learning rate
         self.av_learning_regulation_constant = 0.3 # Increase increases learning rate
         self.r_inh_slope = 5/6 # Increase increases R inhibition prop. to angular velocity
         self.max_r_inh = 0.2 # Decrease increases maximum R inhibition (prop. to AV)
@@ -726,7 +726,7 @@ def sigmoid(x, slope, bias):
     :param slope: The steepness of the curve
     :param bias: A left/right shift of the curve
     """
-    gaussian_noise = np.random.normal(0, 0.0001, size=x.shape)
+    gaussian_noise = np.random.normal(0, 0.001, size=x.shape)
     activated_input = 1 / (1 + np.exp(-(x * slope - bias)))
     return activated_input + gaussian_noise
 

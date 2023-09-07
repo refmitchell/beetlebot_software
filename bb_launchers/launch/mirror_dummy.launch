@@ -8,7 +8,7 @@
   <node
     name="erm_status"
     pkg="bb_graphics"
-    type="erm_w_steering"
+    type="erm_status"
   />
   <node
     name="cmd_vel_service"

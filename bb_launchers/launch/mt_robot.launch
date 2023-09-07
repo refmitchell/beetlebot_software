@@ -24,7 +24,7 @@
       name="intensity_detector"
       pkg="bb_detection"
       type="intensity_cue_detector"
-      args="-m cv -s green_frames -n cv_green_node -v"
+      args="-m bv -s green_frames -n bv_green_node -v"
   />
   <node
     name="erm_status"

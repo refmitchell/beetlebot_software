@@ -369,7 +369,7 @@ def node():
     # Goal direction w.r.t. E-PG preferences
     goal_direction = 0 # np.random.uniform(-np.pi, np.pi)
     distance_travelled = 0
-    arena_radius = 5
+    arena_radius = 0.3
     
     loop_hz = 5
     rosrate = rospy.Rate(loop_hz)
@@ -404,6 +404,8 @@ def node():
                     
             print("Dancing...")
 
+            wait_time = 10
+            start_time = time.time()
             while True:
                 # Loop end condition, done here so as to avoid
                 # sleeping for 10ms before checking the condition at
@@ -411,6 +413,8 @@ def node():
                 if traverse >= 2*np.pi:
                     context = "orientate" if context == "dance" else "stopped"
                     break
+
+
 
                 current = yaw
                 current_epg = erm.decode()["epg"][0] # Read current EPG angle
@@ -431,7 +435,11 @@ def node():
                 traverse += signed_angular_change
                 print("Y, E: {},{}".format(y_traverse, traverse))
 
-                cmd_vel_service(0, 0.2, 0)
+                angular = 0.2
+                if (time.time() - start_time) < wait_time:
+                    angular = 0
+                
+                cmd_vel_service(0, angular, 0)
                 previous_epg = current_epg
                 previous = current
 
@@ -460,18 +468,20 @@ def node():
                 pub.publish(msg)
                 bio=True
                 error = erm.steering(goal_direction, bio=bio)
-
+                duration = time.time() - start_time
                 if bio:
                     # Steering circuit corrections are minute
                     error_p = 3*error
                     error_i += 0.02*error
                     error_d = 0.1*(error - last_error)
-                    steering = error_p + error_d + error_i 
+                    pid = error_p + error_d + error_i
+                    steering = 0.5*pid
 
-                    linear = 0.2 if (abs(steering) < 0.02) and not orientation_mode else 0
-                    #linear = np.clip(-4*steering + 0.2, 0, 0.2)
+                    linear = 0.05 if (abs(steering) < 0.05) and not orientation_mode else 0
+
+
                 else:
-                    steering = 1*imbalance
+                    steering = 1*error
                     linear = 0.2 if (abs(steering) < 0.2) and not orientation_mode else 0
                                 
 
@@ -497,7 +507,7 @@ def node():
 
                 previous_displacement = total_displacement_vector
 
-                duration = time.time() - start_time
+
                 if orientation_mode and duration > 20:
                     context="stopped"
                     print("(orientation mode) Time elapsed")
