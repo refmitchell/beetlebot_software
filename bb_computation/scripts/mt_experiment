@@ -107,7 +107,7 @@ def wind_cue_callback(data):
     global th_wind
     global w_wind
     th_wind = np.degrees(data.theta) 
-    w_wind = 0.5 if data.contrast > 0 else 0
+    w_wind = 0.5 #if data.contrast > 0 else 0
 
 
 def intensity_cue_callback(data):
@@ -422,7 +422,7 @@ def node():
                 # Loop end condition, done here so as to avoid
                 # sleeping for 10ms before checking the condition at
                 # the start of the loop.
-                if traverse >= 2*np.pi:
+                if y_traverse >= 2*np.pi:
                     context = "orientate" if context == "dance" else "stopped"
                     break
 
@@ -482,12 +482,11 @@ def node():
                 error = erm.steering(goal_direction, bio=bio)
                 duration = time.time() - start_time
                 if bio:
-                    # Steering circuit corrections are minute
                     error_p = 3*error
                     error_i += 0.02*error
                     error_d = 0.1*(error - last_error)
-                    pid = error_p + error_d + error_i
-                    steering = 0.5*pid
+                    pid = error_p + error_d# + error_i
+                    steering = 0.5*pid # Scale as large inputs affect network stability
 
                     linear = 0.05 if (abs(steering) < 0.05) and not orientation_mode else 0
 

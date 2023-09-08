@@ -61,7 +61,7 @@ class RingModel():
         self.scalar_d7_d7 = params.get(rmkeys.w_d7_d7, 0.1) # 0.1# D7 -> D7
 
         # PB out
-        self.scalar_peg_epg = params.get(rmkeys.w_peg_epg, 0.55) # 0.5 # P-EG -> E-PG
+        self.scalar_peg_epg = params.get(rmkeys.w_peg_epg, 0.6) # 0.5 # P-EG -> E-PG
         self.scalar_pen_epg = params.get(rmkeys.w_pen_epg, 1.7) # P-EN -> E-PG
 
         # SM
@@ -216,7 +216,7 @@ class RingModel():
         # AV regulated plasticity additional parameters
         self.sm_fixed_point = 24 # 24 # Decrease increases learning rate
         self.av_learning_regulation_constant = 0.2 # Increase increases learning rate
-        self.r_inh_slope = 1/6 # Increase increases R inhibition prop. to angular velocity
+        self.r_inh_slope = 1/10 #1/6# Increase increases R inhibition prop. to angular velocity
 
 
     def reset_rates(self):
