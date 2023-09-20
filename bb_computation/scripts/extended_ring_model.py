@@ -214,9 +214,9 @@ class RingModel():
         self.last_steering_output = 0
 
         # AV regulated plasticity additional parameters
-        self.sm_fixed_point = 24 # 24 # Decrease increases learning rate
-        self.av_learning_regulation_constant = 0.2 # Increase increases learning rate
-        self.r_inh_slope = 1/10 #1/6# Increase increases R inhibition prop. to angular velocity
+        self.sm_fixed_point = 20.9 # 24 # Decrease increases learning rate
+        self.av_learning_regulation_constant = 0.1 # Increase increases learning rate
+        self.r_inh_slope = 5/6 #1/10 #1/6# Increase increases R inhibition prop. to angular velocity
 
 
     def reset_rates(self):

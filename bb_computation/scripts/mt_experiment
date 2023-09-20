@@ -37,6 +37,7 @@ from dict_key_definitions import *
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
+from std_msgs.msg import String
 from rospy.numpy_msg import numpy_msg
 
 from tf.transformations import euler_from_quaternion
@@ -46,6 +47,7 @@ erm = RingModel()
 erm.initialise(w1=0, w2=0, velocity=0) # Also randomises the weights
 
 # Declare globals
+dance_dir = 1
 angular_velocity = 0
 th_intensity = 0
 th_wind = 0
@@ -107,7 +109,7 @@ def wind_cue_callback(data):
     global th_wind
     global w_wind
     th_wind = np.degrees(data.theta) 
-    w_wind = 0.5 #if data.contrast > 0 else 0
+    w_wind = 0.5 if data.contrast > 0 else 0
 
 
 def intensity_cue_callback(data):
@@ -118,7 +120,7 @@ def intensity_cue_callback(data):
     global th_intensity
     global w_intensity
     th_intensity = np.degrees(data.theta) 
-    w_intensity = 0.5 if data.contrast > 0.1 else 0
+    w_intensity = 0.5 if data.contrast > 0.3 else 0
 
 
 def get_erm_status_as_msg():
@@ -261,6 +263,7 @@ def model_update_wrapper(loop_hz):
     global bagfile
     global intensity_input
     global wind_input
+    global context
     
     # Convert Rad/s to Deg/s then scale for loop rate.
     av = -(np.degrees(angular_velocity)) / loop_hz
@@ -296,6 +299,10 @@ def model_update_wrapper(loop_hz):
         av_msg = Float64()
         av_msg.data = angular_velocity
         bagfile.write('angular_velocity', av_msg)
+
+        context_msg = String()
+        context_msg.data = context
+        bagfile.write('context', context_msg)
 
     return model_state_msg
 
@@ -367,6 +374,7 @@ def node():
     global new_beetle
     global odom_info_received
     global context
+    global dance_dir
     
     rospy.init_node("erm_node")
 
@@ -398,14 +406,8 @@ def node():
             traverse = 0 # Total distance covered.
             y_traverse = 0
 
-            # If this is a new beetle, randomise the weights 
-            if new_beetle:
 
-                goal_direction = np.random.uniform(-np.pi, np.pi)
-                print("New beetle, internal goal {} degrees".format(np.degrees(goal_direction)))
-                new_beetle = False
-                if recording_enabled:
-                    new_rosbag() # Open new rosbag file
+                
 
             # Update ring model and take initial position
             msg = model_update_wrapper(loop_hz)
@@ -447,7 +449,7 @@ def node():
                 traverse += signed_angular_change
                 print("Y, E: {},{}".format(y_traverse, traverse))
 
-                angular = 0.2
+                angular = 0.2*dance_dir
                 if (time.time() - start_time) < wait_time:
                     angular = 0
                 
@@ -463,6 +465,7 @@ def node():
 
                 rosrate.sleep()
 
+#            dance_dir *= -1
             cmd_vel_service(0, 0, 0) # All stop
             print("Dance complete")
         elif context == "orientate":
@@ -531,9 +534,19 @@ def node():
 
         else:
             # context == "stopped", wait for input
+
+            # If this is a new beetle, randomise the weights 
+            if new_beetle:
+                goal_direction = np.random.uniform(-np.pi, np.pi)
+                print("New beetle, internal goal {} degrees".format(np.degrees(goal_direction)))
+                new_beetle = False
+                if recording_enabled:
+                    new_rosbag() # Open new rosbag file
+
             odom_info_received = False
             msg = model_update_wrapper(loop_hz)
             pub.publish(msg)
+
 
         rosrate.sleep()
 
