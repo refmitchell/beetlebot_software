@@ -621,7 +621,7 @@ class RingModel():
 
         return ret
 
-    def initialise(self, c1=0, c2=0, w1=0.5, w2=0.5, time=500, velocity=24):
+    def initialise(self, c1=0, c2=0, w1=0.5, w2=0.5, time=500, velocity=24, use_defaults=False):
         """
         Initialisation routine. Should be called before any experiment to place
         the model in a known start state.
@@ -648,6 +648,22 @@ class RingModel():
                               initialisation=True,
                               av_plasticity=True
             )
+
+        if use_defaults:
+            self.w_r1_epg = self.d_w1 * generate_mapping(self.n_r1,
+                                                         self.r1_preferences,
+                                                         self.n_epg,
+                                                         self.epg_preferences)
+            self.w_r2_epg = self.d_w2 * generate_mapping(self.n_r2,
+                                                         self.r2_preferences,
+                                                         self.n_epg,
+                                                         self.epg_preferences)
+
+        
+            weight_onto_epg = np.sum(self.w_r1_epg, axis=1) + np.sum(self.w_r2_epg, axis=1)
+            self.w_r1_epg = (self.w_r1_epg.T / weight_onto_epg).T
+            self.w_r2_epg = (self.w_r2_epg.T / weight_onto_epg).T
+            
 
         return c1, c2 # Return cue positions at the end of initialisation
 

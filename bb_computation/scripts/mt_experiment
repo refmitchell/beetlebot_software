@@ -43,11 +43,11 @@ from rospy.numpy_msg import numpy_msg
 from tf.transformations import euler_from_quaternion
 
 # Init ring model
-erm = RingModel()
-erm.initialise(w1=0, w2=0, velocity=0) # Also randomises the weights
+erm = RingModel({"d_w1":0.5, "d_w2":0.5})
+erm.initialise(w1=0, w2=0, velocity=0, use_defaults=False) # Also randomises the weights
 
 # Declare globals
-dance_dir = 1
+dance_dir = 1 # (1 for left, -1 for right, alternating can be enabled below)
 angular_velocity = 0
 th_intensity = 0
 th_wind = 0
@@ -56,7 +56,7 @@ w_wind = 0.5
 yaw = 0
 total_displacement_vector = np.array([0,0])
 new_beetle = True
-recording_enabled = False
+recording_enabled = True
 orientation_mode = False
 bagfile = None
 
@@ -274,6 +274,7 @@ def model_update_wrapper(loop_hz):
     lw_intensity = w_intensity if intensity_input else 0
     lw_wind = w_wind if wind_input else 0          
 
+    # Weight normalisation
     try:
         lw_intensity = lw_intensity / (lw_intensity + lw_wind)
         lw_wind = 1 - lw_intensity
@@ -312,8 +313,14 @@ def reset_model():
     randomise the weights.
     """
     global erm
-    erm = RingModel()
-    erm.initialise(w1=0, w2=0, velocity=0) # Also randomises the weights
+    # Used during the tent experiments
+    # erm = RingModel()
+    # erm.initialise(w1=0, w2=0, velocity=0) # Also randomises the weights
+
+    # Alternative initialisation. d_wX allows you to set a default weight for each
+    # cue used only if use_defaults is set to true at initialiastion.
+    erm = RingModel({"d_w1":0.5, "d_w2":0.5})
+    erm.initialise(w1=0, w2=0, velocity=0, use_defaults=False) # Also randomises the weights    
 
 def new_rosbag():
     """
@@ -465,7 +472,7 @@ def node():
 
                 rosrate.sleep()
 
-#            dance_dir *= -1
+            #dance_dir *= -1 # Alternate dance direction
             cmd_vel_service(0, 0, 0) # All stop
             print("Dance complete")
         elif context == "orientate":
