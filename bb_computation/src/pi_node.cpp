@@ -153,9 +153,9 @@ void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   // If CXMotor small enough, then allow forward movement,
   // else set linear velocity to zero and turn on the spot.
   // Threshold of CXMotor < 1 arbitrarily chosen.
-  double angular = 0.7;
+  double angular = 0.3;
   double linear = 0.1;
-  msg.request.linear = std::abs(CXMotor) < 1 ? linear : 0;
+  msg.request.linear = std::abs(CXMotor) < 0.5 ? linear : 0;
   msg.request.angular = 0;
   
   if (CXMotor != 0) { msg.request.angular = (CXMotor > 0) ? angular : -angular; }

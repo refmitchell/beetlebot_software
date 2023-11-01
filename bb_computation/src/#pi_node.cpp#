@@ -1,24 +1,23 @@
 
-/**
-   \file test_vmcx_subscriber.cpp
-   \brief Node which runs the vector memory model from Le Moel et al. (2019).
+/*
+ \file pi_node.cpp
+ \brief Host a CX model subscibed to a single cue topic.
 
-   Node to test the functionality of the Le Moel et al. (2019) vector memory
-   model.
+ This node hosts a CentralComplex model and allows an operator to run a
+ path integration experiment.
 
-   The node currently tracks direction by using the raw beetlebot IMU but
-   this could easily be switched to use a bb_util::Cue. 
+ Start this node (make sure the cmd_vel_service is not running) to start
+ the CentralComplex. Drive the robot manually (using turtlebot3_teleop_key
+ or any other suitable method) to a target location. Stop teleoperation.
+ Start the bb_locomotion cmd_vel_service to allow this node to communicate
+ with the motors on the turtlebot. The robot will then home.
 
-   To use, start the node at the 'home' location and drive it manually to
-   a 'feeder' location (e.g. using turtlebot_teleop_key). You then need to
-   send vm_command service request (defined in srv/vm_command.srv) with
-   the "store" command. This will store the current PI status in the vector
-   memory. The robot constantly publishes motor commands, to engage the motors
-   start bb_locomotion cmd_vel_service. The robot should now home (it will loop
-   when it gets back to where it thinks home is). If you then send another
-   service request, this time with the "activate" command, the vector memory
-   neuron will be activated and the robot should navigate back out to the
-   'feeder' location. 
+ If you actually want to run path integration experiments then there
+ may be ways to streamline this process but as a proof of prinicple
+ this was sufficient.
+
+ \warning If the bb_locomotion cmd_vel_service is running then starting
+ this node will cause the robot to move!
 */
 
 #include <ros/ros.h>
@@ -28,20 +27,19 @@
 #include <tf/transform_datatypes.h>
 #include "std_msgs/String.h"
 
-#include "bb_computation/vm_command.h"
 #include "bb_computation/cx_model.hpp"
 #include "bb_computation/vmcx_model.hpp"
 
 #include "bb_util/velocity.h"
-#include "bb_util/vmcx_activity.h"
-#include "bb_util/cue_msg.h"
+#include "bb_util/cx_activity.h"
 #include "bb_util/argparse.h"
+#include "bb_util/cue.hpp"
+#include "bb_util/cue_msg.h"
 
-#define GOAL_ANGLE -2.0
-#define TRAVERSE_TIME 30
+#define DEBUG 0
 
 // Init CX
-VMCX cx;
+CentralComplex cx;
 
 // Broadcast CX status
 ros::Publisher pub;
@@ -49,16 +47,19 @@ ros::Publisher pub;
 // Send movement commands to the update_velocity service
 ros::ServiceClient client;
 
-// Server to accept VM commands because it seems like the most
-// direct solution at the moment.
-ros::Subscriber vm_sub;
-
-// Global linear velocity
-double velocity = 0;
-
 argparse::ArgumentParser parser("parser");
 
-// Clean the linear velocity prior to passing it into the CX
+double velocity = 0;
+
+/**
+   Clean up received linear velocity. This function will trim
+   the linear velocity to N decimal places where N is the order
+   of magnitude of the factor.
+
+   \param lin_vel The raw linear velocity
+   \param factor The cleaning factor to use
+   \return The cleaned value
+*/
 inline double clean_velocity(double lin_vel, int factor=100){
   if (factor == 0) return 0;
   return ((double) ((int) (lin_vel * factor))) / factor;
@@ -78,7 +79,7 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
     .required(true);
   parser.add_argument()
     .names({"-p", "--publish"})
-    .description("Override the VMCX status publisher.")
+    .description("Override the CX status publisher.")
     .required(false);
 
   parser.enable_help();
@@ -94,11 +95,14 @@ bool initParser(argparse::ArgumentParser &parser, int argc, char **argv){
   return true;
 }
 
-//
-// Publish for graphing
-//
+
+/**
+   Publish the CX status so that it can be plotted by bb_graphics/CX_graphing.
+   \param status The current CX status (can be fetched from the CentralComplex class).
+*/
+
 void cx_status_publish(std::vector<std::vector<double>> &status){
-  bb_util::vmcx_activity msg;
+  bb_util::cx_activity msg;
 
   msg.tl2 = status[0];
   msg.cl1 = status[1];
@@ -106,15 +110,20 @@ void cx_status_publish(std::vector<std::vector<double>> &status){
   msg.cpu4 = status[3];
   msg.mem = status[4];
   msg.cpu1 = status[5];
-  msg.vm = status[6];
-  msg.active = status[7];
 
   pub.publish(msg);
 }
 
-//
-// Cue callback
-//
+/**
+   Cue received callback. Receive current compass information
+   from the given cue, pass it to the CX and generate a motor 
+   command. The motor command requests will always be sent.
+
+   \warning If bb_locomotion cmd_vel_service is running, then starting
+   this node will cause the robot to move.
+
+   \param cue_msg A bb_util::cue_msg
+*/
 void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   ROS_INFO("Cue info: (R: %f, T: %f)",
            cue_msg->contrast,
@@ -123,14 +132,19 @@ void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   // Msg unpack
   //
   float current_angle = cue_msg->theta;
-  double CXMotor = cx.unimodal_VMCX(current_angle, velocity);
+
+  // Get motor output from CX
+  double CXMotor = cx.unimodal_monolithic_CX(current_angle, velocity);
 
   // Get status
   std::vector<std::vector<double>> cx_status;
   cx.get_status(cx_status);
   cx_status_publish(cx_status);
 
-
+#if DEBUG
+  ROS_INFO("CX_MOTOR: %lf", CXMotor);
+#endif
+  
   //
   // Velocity update
   //
@@ -139,13 +153,15 @@ void cueCallback(const bb_util::cue_msg::ConstPtr& cue_msg){
   // If CXMotor small enough, then allow forward movement,
   // else set linear velocity to zero and turn on the spot.
   // Threshold of CXMotor < 1 arbitrarily chosen.
-  double angular = 0.3;
+  double angular = 0.7;
   double linear = 0.1;
-  msg.request.linear = std::abs(CXMotor) < 0.5 ? linear : 0;
+  msg.request.linear = std::abs(CXMotor) < 1 ? linear : 0;
   msg.request.angular = 0;
   
   if (CXMotor != 0) { msg.request.angular = (CXMotor > 0) ? angular : -angular; }
 
+
+  
   client.call(msg);
 }
 
@@ -160,29 +176,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
   velocity = linear_velocity;
 }
 
-
-// Really quick and dirty method to manage the VM status
-void manage_vm_callback(const std_msgs::String::ConstPtr& msg){
-  std::string cmd = msg->data;
-  ROS_INFO("%s", cmd.c_str());
-  if (!cmd.compare("toggle")){
-    cx.toggle_vm(); // Will print the current state
-  } else if (!cmd.compare("store")){
-    cx.store_vm();
-  } else if (!cmd.compare("activate")){
-    cx.activate_vm();
-  } else if (!cmd.compare("deactivate")){
-    cx.deactivate_vm();
-  } else if (!cmd.compare("clear")){
-    cx.clear_vm();
-  } else {
-    ROS_INFO("Command %s not recognised", cmd.c_str());
-  }
-}
-
 int main(int argc, char **argv){
-  ros::init(argc, argv, "test_cx_subscriber");
-  ros::NodeHandle n;
   if (!initParser(parser, argc, argv)) return -1;
   if (parser.exists("help")){
     parser.print_help();
@@ -191,21 +185,27 @@ int main(int argc, char **argv){
 
   // Set pub and sub topics
   std::string sub_topic = parser.get<std::string>("subscribe");
+  std::string cx_pub =
+    parser.exists("publish") ?
+    parser.get<std::string>("publish") :
+    bb_util::defs::CX_STATUS; //"cx_status"
+
+  // Init ROS node
+  ros::init(argc, argv, "PI");
+  ros::NodeHandle n;
 
   // ROS networking
-
   // Get cue - Sub to visual cues
-  ros::Subscriber sub = n.subscribe(sub_topic.c_str(), 1000, cueCallback);
+  ros::Subscriber cue_sub = n.subscribe(sub_topic.c_str(), 1000, cueCallback);
+
+  // Sub to odometry for internal compass info
   ros::Subscriber odom_sub = n.subscribe("odom", 1000, odomCallback);
 
-  // Request velocity changes from velocity service
-  client = n.serviceClient<bb_util::velocity>("update_velocity");
-
-  // Set up VM Server
-  vm_sub = n.subscribe("vm_management", 1000, manage_vm_callback);
+  // Request velocity changes from velocity service "update_velocity"
+  client = n.serviceClient<bb_util::velocity>(bb_util::defs::UPDATE_VELOCITY);
 
   // Set up publisher for CX
-  pub = n.advertise<bb_util::vmcx_activity>("vmcx_status", 1);
+  pub = n.advertise<bb_util::cx_activity>(cx_pub.c_str(), 1);
 
   ROS_INFO("Running...");
 
