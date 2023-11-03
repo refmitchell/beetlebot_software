@@ -84,7 +84,7 @@ protected:
   double cpu4_bias = 2.5; //!< CPU4 activation bias
 
   /** CPU4 memory gain */
-  double cpu4_mem_gain = 0.0005;  //0.005, default
+  double cpu4_mem_gain = 0.005;  //0.005, default
 
   /** CPU4 memory loss*/
   double cpu4_mem_loss = 0.00026; //0.0026, default

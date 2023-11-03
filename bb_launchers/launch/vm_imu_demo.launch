@@ -13,7 +13,7 @@
   <node
     name="vmcx_status"
     pkg="bb_graphics"
-    type="cmcx_status"
+    type="vmcx_status"
   />
 </launch>
 
